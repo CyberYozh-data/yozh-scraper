@@ -173,7 +173,7 @@ dropdown to switch between scraper and crawler.
   details, CyberYozh proxy integration (all 5 types + GEO targeting + proxy
   discovery endpoints), MCP tools, proxy-type → CyberYozh category mapping,
   tests.
-- **[yozh-crawler/README.md](yozh-crawler/README.md)** — crawler service:
+- **[open-crawler/README.md](open-crawler/README.md)** — crawler service:
   features, API reference, configuration env vars, `enable_scraping` toggle
   semantics, MCP tools, architecture diagram, known limitations, running
   without Docker.
