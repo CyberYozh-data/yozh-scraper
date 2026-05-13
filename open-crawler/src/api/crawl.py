@@ -40,6 +40,14 @@ async def get_crawl(job_id: str, app_req: FastapiRequest) -> CrawlJobRecord:
     return rec
 
 
+@router.get("/{job_id}/results", response_model=CrawlJobRecord, operation_id="get_crawl_results")
+async def get_crawl_results(job_id: str, app_req: FastapiRequest) -> CrawlJobRecord:
+    store = app_req.app.state.job_store
+    rec = store.get(job_id)
+    if rec is None:
+        raise HTTPException(status_code=404, detail="job_not_found")
+    return rec
+
 
 @router.get("/{job_id}/events", operation_id="stream_crawl_events")
 async def stream_events(job_id: str, app_req: FastapiRequest) -> StreamingResponse:

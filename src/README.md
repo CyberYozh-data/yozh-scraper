@@ -1,4 +1,4 @@
-# Open Scraper — Service Docs
+# Yozh Scraper — Service Docs
 
 Web-scraping API built on Playwright. Renders any URL in a real browser and
 returns structured data (CSS/XPath extraction), raw HTML, and/or a full-page
@@ -516,7 +516,7 @@ Each result in `results[]` contains:
 
 ## MCP Integration
 
-Open Scraper exposes all its API tools via the
+Yozh Scraper exposes all its API tools via the
 [Model Context Protocol](https://modelcontextprotocol.io/) at `/mcp`. This
 lets AI assistants use the scraper directly as a tool — no extra code
 required.
@@ -539,7 +539,7 @@ Add to `~/.claude/settings.json`:
 ```json
 {
   "mcpServers": {
-    "open-scraper": {
+    "yozh-scraper": {
       "type": "http",
       "url": "http://localhost:8000/mcp"
     }

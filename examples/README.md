@@ -1,10 +1,10 @@
-# 📚 Examples - Open Scraper Usage Examples
+# 📚 Examples - Yozh Scraper Usage Examples
 
-Examples of using Open Scraper for various web scraping tasks.
+Examples of using Yozh Scraper for various web scraping tasks.
 
 ## Quick start
 
-1. Make sure that Open Scraper is running:
+1. Make sure that Yozh Scraper is running:
 ```bash
 cd ../
 poetry run python -m src.main
@@ -31,7 +31,7 @@ python examples/basic_scraping.py
 
 ### AI & Chat
 * **huggingface_chat_scraping.py** - Scrapping the free Huggingface chat interface
-* **agent.py** - LangChain agent with MCP integration — chat interface that scrapes pages via open-scraper tools
+* **agent.py** - LangChain agent with MCP integration — chat interface that scrapes pages via yozh-scraper tools
 
 ### E-commerce
 * **ecommerce_product_scraping.py** - Scraping product cards from books.toscrape.com
@@ -48,7 +48,7 @@ python examples/basic_scraping.py
 
 ## LangChain Agent (MCP)
 
-`agent.py` connects to open-scraper via MCP (Model Context Protocol) and exposes its tools to a LangChain ReAct agent. This allows you to interact with the scraper through a natural language chat interface.
+`agent.py` connects to Yozh Scraper via MCP (Model Context Protocol) and exposes its tools to a LangChain ReAct agent. This allows you to interact with the scraper through a natural language chat interface.
 
 **Run:**
 ```bash
@@ -128,7 +128,7 @@ print(f"Saved {len(screenshots)} screenshots")
 ## Troubleshooting
 
 ### The "Connection refused" error
-Make sure that Open Scraper is running:
+Make sure that Yozh Scraper is running:
 
 ```bash
 poetry run python -m src.main

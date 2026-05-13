@@ -109,7 +109,7 @@ Add both servers to `~/.claude/settings.json`:
 ```json
 {
   "mcpServers": {
-    "open-scraper": {
+    "yozh-scraper": {
       "type": "http",
       "url": "http://localhost:8000/mcp"
     },

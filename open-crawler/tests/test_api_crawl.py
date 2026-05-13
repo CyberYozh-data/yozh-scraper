@@ -88,6 +88,43 @@ def test_get_crawl_not_found_returns_404():
     assert resp.json()["detail"] == "job_not_found"
 
 
+# ─── GET /crawl/{job_id}/results ──────────────────────────────────────────────
+
+def test_get_crawl_results_returns_record():
+    store = MagicMock()
+    store.get.return_value = _make_record("crawl_abc", "running")
+
+    client = _make_client(store)
+    resp = client.get("/crawl/crawl_abc/results")
+
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["job_id"] == "crawl_abc"
+    assert data["status"] == "running"
+
+
+def test_get_crawl_results_not_found_returns_404():
+    store = MagicMock()
+    store.get.return_value = None
+
+    client = _make_client(store)
+    resp = client.get("/crawl/does_not_exist/results")
+
+    assert resp.status_code == 404
+    assert resp.json()["detail"] == "job_not_found"
+
+
+def test_get_crawl_results_payload_matches_get_crawl():
+    store = MagicMock()
+    store.get.return_value = _make_record("crawl_abc", "running")
+
+    client = _make_client(store)
+    record = client.get("/crawl/crawl_abc").json()
+    alias = client.get("/crawl/crawl_abc/results").json()
+
+    assert record == alias
+
+
 # ─── DELETE /crawl/{job_id} ───────────────────────────────────────────────────
 
 def test_cancel_crawl_soft_returns_cancelled_true():
@@ -138,4 +175,3 @@ def test_cancel_already_done_returns_cancelled_false():
 
     assert resp.status_code == 200
     assert resp.json()["cancelled"] is False
-
