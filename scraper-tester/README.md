@@ -1,7 +1,7 @@
 # Scraper Tester
 
 Lightweight web UI for manually driving both the [**Yozh Scraper**](../src/README.md)
-and [**open-crawler**](../open-crawler/README.md) APIs. A thin Node.js
+and [**open-crawler**](../yozh-crawler/README.md) APIs. A thin Node.js
 (Express) server on `http://localhost:7000` serves a single-page frontend with
 tabs for every workflow.
 

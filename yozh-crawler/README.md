@@ -148,7 +148,7 @@ MCP tab with a target dropdown (Scraper / Crawler) for interactive tool calls.
 ## Architecture
 
 ```
-open-crawler/src/
+yozh-crawler/src/
 ├── app.py            # FastAPI factory + lifespan (ScraperClient, JobStore, JobRunner)
 ├── main.py           # uvicorn entry
 ├── settings.py       # Pydantic BaseSettings (env)
@@ -183,7 +183,7 @@ Fetch flow per page:
 ## Running locally without Docker
 
 ```bash
-cd open-crawler
+cd yozh-crawler
 pip install -r requirements.txt
 cp .env.example .env         # edit SCRAPER_URL if your scraper is elsewhere
 python -m uvicorn src.main:app --reload --host 0.0.0.0 --port 8001

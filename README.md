@@ -8,7 +8,7 @@ tester and MCP exposure on both services.
 | Service | Port | Docs | What it does |
 |---|---|---|---|
 | **Scraper** ([`src/`](src/README.md)) | `8000` | [src/README.md](src/README.md) | Async job API — renders a URL in a real browser, returns extracted fields / raw HTML / full-page screenshot. Built-in CyberYozh proxy integration. |
-| **Crawler** ([`open-crawler/`](open-crawler/README.md)) | `8001` | [open-crawler/README.md](open-crawler/README.md) | Walks a site from a seed URL; fetches every page through the scraper over HTTP; streams results via SSE. Dedup, scope, rate-limiting, retries. |
+| **Crawler** ([`open-crawler/`](yozh-crawler/README.md)) | `8001` | [open-crawler/README.md](yozh-crawler/README.md) | Walks a site from a seed URL; fetches every page through the scraper over HTTP; streams results via SSE. Dedup, scope, rate-limiting, retries. |
 | **Tester** ([`scraper-tester/`](scraper-tester/README.md)) | `7000` | [scraper-tester/README.md](scraper-tester/README.md) | Node.js + vanilla HTML UI for both services — every knob as a form, live progress, MCP explorer. |
 
 Both API services mount an **MCP endpoint** at `/mcp` (Streamable HTTP) and
@@ -173,7 +173,7 @@ dropdown to switch between scraper and crawler.
   details, CyberYozh proxy integration (all 5 types + GEO targeting + proxy
   discovery endpoints), MCP tools, proxy-type → CyberYozh category mapping,
   tests.
-- **[open-crawler/README.md](open-crawler/README.md)** — crawler service:
+- **[open-crawler/README.md](yozh-crawler/README.md)** — crawler service:
   features, API reference, configuration env vars, `enable_scraping` toggle
   semantics, MCP tools, architecture diagram, known limitations, running
   without Docker.

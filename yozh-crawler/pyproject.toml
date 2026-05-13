@@ -1,5 +1,5 @@
 [project]
-name = "open-crawler"
+name = "yozh-crawler"
 version = "0.1.0"
 description = "Crawler service on top of open-scraper. Takes a seed URL, walks links, streams results via SSE."
 requires-python = ">=3.10"

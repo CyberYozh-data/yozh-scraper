@@ -10,7 +10,7 @@ services:
     shm_size: "1gb"
 
   open-crawler:
-    build: ./open-crawler
+    build: yozh-crawler
     ports:
       - "8001:8001"
     environment:
