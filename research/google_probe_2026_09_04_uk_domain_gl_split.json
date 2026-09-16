@@ -1,0 +1,158 @@
+[
+ {
+  "label": "co.uk+gl=gb (baseline)",
+  "run": 0,
+  "url": "https://www.google.co.uk/search?q=best+laptop+2026&gl=gb&hl=en",
+  "status": "done",
+  "http": 200,
+  "final_url": "https://www.google.co.uk/search?q=best+laptop+2026&gl=gb&hl=en&sei=RCibat2CGJSJ9u8Pi73nmQM",
+  "blocked": false,
+  "took_ms": 12159,
+  "warnings": [
+   "attempt 1/3 shortened to 35938ms of the requested 45000ms to fit the p"
+  ],
+  "goto_hrefs": 82,
+  "direct_h3_hrefs": 0,
+  "any_h3": 9,
+  "cites": 18,
+  "translate_leaks": 0,
+  "bytes": 1345474,
+  "sample_goto": "https://www.google.com/goto?url=CAESpAEB6zswFcoeTo73-odr5THinyCLlz3IjuW7ycVBhlvkzVlaWrazOIb-5Wt0WUCiKQui2UTEwc2Z6G2EF-_XK-GNtd4OBxF-4-ZY_l1k-kAM6MLDmp0t4MKTQm7Y-hhzxypuCLxGcPK_hHH5_hB_8PfLWDzHVEn0KPZohJZwTPETMxMLe0IZjM0U6RxaN5_8kXL5FbuGCI0Dxd82fBGecfiVOAU0zg"
+ },
+ {
+  "label": "co.uk+gl=gb (baseline)",
+  "run": 1,
+  "url": "https://www.google.co.uk/search?q=best+laptop+2026&gl=gb&hl=en",
+  "status": "done",
+  "http": 200,
+  "final_url": "https://www.google.co.uk/search?q=best+laptop+2026&gl=gb&hl=en&sei=UyibarOSCIiD9u8P4PiUqQc",
+  "blocked": false,
+  "took_ms": 12010,
+  "warnings": [
+   "attempt 1/3 shortened to 35983ms of the requested 45000ms to fit the p"
+  ],
+  "goto_hrefs": 25,
+  "direct_h3_hrefs": 0,
+  "any_h3": 9,
+  "cites": 18,
+  "translate_leaks": 0,
+  "bytes": 930934,
+  "sample_goto": "https://www.google.com/goto?url=CAESpAEB6zswFTAApgEY0RA653dhVC7zXFVjJnG1gJOMS2pfeWBSWOb4kSE92rcAEQIR7luuaqfQFPUPwrNuh2WAvemMmawaLmi8zsK4qy4f4DJ5Gth5slFl7HedWdEPAq7aBJNPleBepa4LpOH65k1785e7Sfvu0Zjd7o3b_x27lWW2maENEfbE01cMHiQ2Sj55KKFn87p4sNt8cE-y677YFtw0VKZYvg"
+ },
+ {
+  "label": "com+gl=gb",
+  "run": 0,
+  "url": "https://www.google.com/search?q=best+laptop+2026&gl=gb&hl=en",
+  "status": "done",
+  "http": null,
+  "final_url": "",
+  "blocked": false,
+  "took_ms": 0,
+  "warnings": [
+   "ReadTimeout"
+  ],
+  "sample_goto": null
+ },
+ {
+  "label": "com+gl=gb",
+  "run": 1,
+  "url": "https://www.google.com/search?q=best+laptop+2026&gl=gb&hl=en",
+  "status": "done",
+  "http": 200,
+  "final_url": "https://www.google.com/search?q=best+laptop+2026&gl=gb&hl=en&sei=gSibaqDELKKdkdUP1e-SsAY",
+  "blocked": false,
+  "took_ms": 25260,
+  "warnings": [
+   "attempt 1/3 shortened to 36239ms of the requested 45000ms to fit the p",
+   "attempt 2/3 shortened to 33824ms of the requested 45000ms to fit the p",
+   "attempt 3/3 shortened to 31188ms of the requested 45000ms to fit the p"
+  ],
+  "goto_hrefs": 27,
+  "direct_h3_hrefs": 0,
+  "any_h3": 9,
+  "cites": 18,
+  "translate_leaks": 0,
+  "bytes": 1368208,
+  "sample_goto": "https://www.google.com/goto?url=CAESmQEB6zswFeIWRLHLm5QI66-OhZCv7QldqKjitESd8p3QG22N8Z6Q1GuhQCwSNtuleSB-AerGorH9VAZFkiTNn_WQQDtOAsLeBu8Zkjip_zHMNzw7lGdaSEMi9DCJE7G52yUEoijVYaBFlL0uVOuPjQ7gI5WouovYVNUlMfUMbTTRtokr717MuJ4yHnlL0kErPd0xF4yQv6X4rFU"
+ },
+ {
+  "label": "co.uk+gl=us",
+  "run": 0,
+  "url": "https://www.google.co.uk/search?q=best+laptop+2026&gl=us&hl=en",
+  "status": "done",
+  "http": 200,
+  "final_url": "https://www.google.co.uk/search?q=best+laptop+2026&gl=us&hl=en&sei=jyibaoSgEIyskdUP0sn72A8",
+  "blocked": false,
+  "took_ms": 16556,
+  "warnings": [
+   "attempt 1/3 shortened to 35981ms of the requested 45000ms to fit the p"
+  ],
+  "goto_hrefs": 27,
+  "direct_h3_hrefs": 0,
+  "any_h3": 10,
+  "cites": 20,
+  "translate_leaks": 0,
+  "bytes": 776660,
+  "sample_goto": "https://www.google.com/goto?url=CAESYQHrOzAVvaol1yYetMY-9cK-tlY-hu0xFGxev4ZmURF4WlWC7QI6Wgynbn5mSpEtG9-Ej4LfXsZ12oZJXLq4KKult-gDIqpMsM3WozxPJ02rj0YeWn11T2Li5b7sceEcQuI"
+ },
+ {
+  "label": "co.uk+gl=us",
+  "run": 1,
+  "url": "https://www.google.co.uk/search?q=best+laptop+2026&gl=us&hl=en",
+  "status": "done",
+  "http": 200,
+  "final_url": "https://www.google.co.uk/search?q=best+laptop+2026&gl=us&hl=en&sei=oSibasjsHImE7M8P-NXjuAw",
+  "blocked": false,
+  "took_ms": 11774,
+  "warnings": [
+   "attempt 1/3 shortened to 35781ms of the requested 45000ms to fit the p"
+  ],
+  "goto_hrefs": 38,
+  "direct_h3_hrefs": 0,
+  "any_h3": 8,
+  "cites": 16,
+  "translate_leaks": 0,
+  "bytes": 1094074,
+  "sample_goto": "https://www.google.com/goto?url=CAESZAHrOzAVIAkyMM6d-eUXN2uD1rwtjLVT1Ydkftmyhm_YLzvBRFlvweJfKOOgVXAZODL_AiIi1attyGrQMtveiQuSTiL6s98rTQY5j2SDis-FBjzvA8MyOeCrp8OGXSDvRB-WmZU"
+ },
+ {
+  "label": "com+gl=us (baseline)",
+  "run": 0,
+  "url": "https://www.google.com/search?q=best+laptop+2026&gl=us&hl=en",
+  "status": "done",
+  "http": 200,
+  "final_url": "https://www.google.com/search?q=best+laptop+2026&gl=us&hl=en&sei=ryibapmkMKfDnsEPzJrKyQU",
+  "blocked": false,
+  "took_ms": 11659,
+  "warnings": [
+   "attempt 1/3 shortened to 35846ms of the requested 45000ms to fit the p"
+  ],
+  "goto_hrefs": 67,
+  "direct_h3_hrefs": 0,
+  "any_h3": 8,
+  "cites": 16,
+  "translate_leaks": 0,
+  "bytes": 1382100,
+  "sample_goto": "https://www.google.com/goto?url=CAESZAHrOzAVzkgnywU3tRuJ5NbiXwh3E5ufY_o1h-_rV99PGQy5e1cSqmSUTkGQUCh6KVSCrHGUIWGTodpFfxymlec6PHYl4xS1NlD2Dthpfs8yrNxjUDlwS-diuWP-q-YmWTxw1OI"
+ },
+ {
+  "label": "com+gl=us (baseline)",
+  "run": 1,
+  "url": "https://www.google.com/search?q=best+laptop+2026&gl=us&hl=en",
+  "status": "done",
+  "http": 200,
+  "final_url": "https://www.google.com/search?q=best+laptop+2026&gl=us&hl=en&sei=vCibaon9PL6H9u8PmfGM2Ao",
+  "blocked": false,
+  "took_ms": 12291,
+  "warnings": [
+   "attempt 1/3 shortened to 35868ms of the requested 45000ms to fit the p"
+  ],
+  "goto_hrefs": 68,
+  "direct_h3_hrefs": 0,
+  "any_h3": 9,
+  "cites": 18,
+  "translate_leaks": 0,
+  "bytes": 1262432,
+  "sample_goto": "https://www.google.com/goto?url=CAESZAHrOzAVV-zvaNdcuiwjtIS-8gU1NNmPgThCMIzYHEQ-WAhfDJnj9QoRWCKaNQahu_YvQHvGp1OKul64golaoH_I_oBOHHbS_yl4kLJm8VwksEoikAoWtLzxvfZ2Ji0SkXXLXVE"
+ }
+]

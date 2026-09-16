@@ -1,7 +1,7 @@
 {
   "name": "yandex_search_camoufox",
   "source": "yandex",
-  "description": "Yandex SERP results. Returns title/link/snippet/result_block arrays with one slot per result. Every field is anchored on the SAME organic block (li.serp-item .Organic) and digs its value out of that block's html, so a result missing its snippet yields null in its own slot instead of shifting every later row. The list item is NOT the row unit: a serp-item can carry no organic block (a widget such as 'Люди ищут') or two (a grouped result), measured live at 13 items/12 results (kz) and 13 items/14 results (am). ADS ARE INCLUDED: a paid block carries the same .Organic markup and is emitted as a row whose link is a yabs.yandex.ru/count/... tracker — filter on the link if you need organic-only. wait_until is 'load' because Yandex streams results in: at domcontentloaded one live run returned 2 of 18 results with no error. Links are unescaped after the html capture (lxml re-serialises '&' as '&amp;'); snippets read the whole OrganicText subtree, so a leading date span is concatenated onto the body rather than replacing it. Selectors verified against live ru/am/kz captures 2026-07-26: 18/18/18/18, 14/14/14/14, 12/12/12/12, zero nulls. Every 2026-07-26 number above — those captures, the 13-items/12-results and 13-items/14-results counts, and the domcontentloaded run that returned 2 of 18 — was measured on Camoufox, this preset's only engine before the 2026-08-27 split. ENGINE: Camoufox, fingerprint_profile=windows_on_host — a Windows claim over this host's real AMD GPU vendor. Windows rather than the honest Linux because measurement put an honest Linux claim at 15 and 23 retries against 1 and 8 for Windows (see src/browser/fingerprint_profile.py). MEASURED 2026-08-27 (n=2 per locale, 4 runs per engine, research/preset_audit_dual_engine_2026_08_27.json): 4/4 runs returned data — 27 and 27 rows on moscow and 13 and 15 on ru, against 21 and 23 and 12 and 12 for yandex_search_chromium, so more rows in all four matched cells. That row-count margin at n=2 per locale is the whole basis for preferring this variant, and it is NOT an access margin: the prediction that the Chromium twin would be captcha'd was falsified — all eight runs across both engines ended HTTP 200 with the block heuristic silent and returned data. Both engines sell ads as organic: on moscow 11 and 12 of 27 rows here (14 of 21 and 14 of 23 on the twin) were yabs.yandex.ru/count/… trackers, against 0 and 1 on ru — filter on the link. MEASURED 2026-08-28 (retest of the same twenty presets through the same harness after the five audit fixes; n=2 per locale, 92 runs, research/preset_audit_dual_engine_2026_08_28.json): 3/4 runs returned data (22, 21, 13 rows) against 4/4 on 08-27. The loss is new and unrelated to the five fixes: moscow#1 ended on yandex.ru/showcaptcha at HTTP 200 with the block heuristic fired and 3 retries spent -- SmartCaptcha, which this preset has met before. Row counts on the runs that landed are in the same band as 08-27 (13-27 then, 13-22 now). ru-RU announced on all four runs in both rounds; this preset never had the locale draw.",
+  "description": "UPDATE 2026-09-05: timeout_ms 45000 -> 34000 (per-phase; see test_builtin_timeout_fits_the_first_attempt). The 45000 figures below are the 2026-08-28 state. Yandex SERP results. Returns title/link/snippet/result_block arrays with one slot per result. Every field is anchored on the SAME organic block (li.serp-item .Organic) and digs its value out of that block's html, so a result missing its snippet yields null in its own slot instead of shifting every later row. The list item is NOT the row unit: a serp-item can carry no organic block (a widget such as 'Люди ищут') or two (a grouped result), measured live at 13 items/12 results (kz) and 13 items/14 results (am). ADS ARE INCLUDED: a paid block carries the same .Organic markup and is emitted as a row whose link is a yabs.yandex.ru/count/... tracker — filter on the link if you need organic-only. wait_until is 'load' because Yandex streams results in: at domcontentloaded one live run returned 2 of 18 results with no error. Links are unescaped after the html capture (lxml re-serialises '&' as '&amp;'); snippets read the whole OrganicText subtree, so a leading date span is concatenated onto the body rather than replacing it. Selectors verified against live ru/am/kz captures 2026-07-26: 18/18/18/18, 14/14/14/14, 12/12/12/12, zero nulls. Every 2026-07-26 number above — those captures, the 13-items/12-results and 13-items/14-results counts, and the domcontentloaded run that returned 2 of 18 — was measured on Camoufox, this preset's only engine before the 2026-08-27 split. ENGINE: Camoufox, fingerprint_profile=windows_on_host — a Windows claim over this host's real AMD GPU vendor. Windows rather than the honest Linux because measurement put an honest Linux claim at 15 and 23 retries against 1 and 8 for Windows (see src/browser/fingerprint_profile.py). MEASURED 2026-08-27 (n=2 per locale, 4 runs per engine, research/preset_audit_dual_engine_2026_08_27.json): 4/4 runs returned data — 27 and 27 rows on moscow and 13 and 15 on ru, against 21 and 23 and 12 and 12 for yandex_search_chromium, so more rows in all four matched cells. That row-count margin at n=2 per locale is the whole basis for preferring this variant, and it is NOT an access margin: the prediction that the Chromium twin would be captcha'd was falsified — all eight runs across both engines ended HTTP 200 with the block heuristic silent and returned data. Both engines sell ads as organic: on moscow 11 and 12 of 27 rows here (14 of 21 and 14 of 23 on the twin) were yabs.yandex.ru/count/… trackers, against 0 and 1 on ru — filter on the link. MEASURED 2026-08-28 (retest of the same twenty presets through the same harness after the five audit fixes; n=2 per locale, 92 runs, research/preset_audit_dual_engine_2026_08_28.json): 3/4 runs returned data (22, 21, 13 rows) against 4/4 on 08-27. The loss is new and unrelated to the five fixes: moscow#1 ended on yandex.ru/showcaptcha at HTTP 200 with the block heuristic fired and 3 retries spent -- SmartCaptcha, which this preset has met before. Row counts on the runs that landed are in the same band as 08-27 (13-27 then, 13-22 now). ru-RU announced on all four runs in both rounds; this preset never had the locale draw.",
   "kind": "builtin",
   "url_template": "https://yandex.ru/search/?text={query}&lr={lr}",
   "request_defaults": {
@@ -16,7 +16,7 @@
     "browser_engine": "camoufox",
     "wait_until": "load",
     "wait_for_selector": "li.serp-item",
-    "timeout_ms": 45000,
+    "timeout_ms": 34000,
     "block_assets": false,
     "fingerprint_profile": "windows_on_host"
   },
@@ -206,19 +206,28 @@
       "titles": {
         "type": "array",
         "items": {
-          "type": "string"
+          "type": [
+            "string",
+            "null"
+          ]
         }
       },
       "links": {
         "type": "array",
         "items": {
-          "type": "string"
+          "type": [
+            "string",
+            "null"
+          ]
         }
       },
       "snippets": {
         "type": "array",
         "items": {
-          "type": "string"
+          "type": [
+            "string",
+            "null"
+          ]
         }
       }
     }
@@ -226,6 +235,6 @@
   "self_heal": true,
   "prompt_schema": null,
   "llm_extract_prompt": null,
-  "version": 3,
-  "updated_at": 1785024000.0
+  "version": 4,
+  "updated_at": 1788566400
 }

@@ -625,3 +625,63 @@ def test_engine_override_omits_an_unset_fingerprint_profile():
     override = _engine_override(SearchRequest(query="x", browser_engine="camoufox"))
 
     assert "fingerprint_profile" not in override
+
+
+def _google_block(title: str, href: str, snippet: str) -> str:
+    """One `div.tF2Cxc` as Google ships it since 2026-08: the organic href is a
+    RELATIVE `/goto?url=` stub, so the block carries no http anchor at all."""
+    return (
+        f'<div class="tF2Cxc"><div class="yuRUbf"><a href="{href}"><h3>{title}</h3>'
+        f'<cite>https://a.example › p</cite></a></div>'
+        f'<div class="VwiC3b" data-sncf="1">{snippet}</div></div>'
+    )
+
+
+class TestGoogleResultsTakeTheResolvedLinksColumn:
+    def test_the_resolved_link_is_the_url(self):
+        data = {
+            "result_blocks": [_google_block("First", "/goto?url=CAES1", "s1"),
+                              _google_block("Second", "/goto?url=CAES2", "s2")],
+            "links": ["https://a.example/1", "https://b.example/2"],
+        }
+        res = _parse_results(data, ENGINES["google"])
+        assert [(r.title, r.url) for r in res] == [("First", "https://a.example/1"), ("Second", "https://b.example/2")]
+
+    def test_a_stub_that_did_not_resolve_drops_its_row(self):
+        """The aligned column is authoritative: a raw `/goto` stub is not a
+        destination, and inventing one from the block would be worse."""
+        data = {
+            "result_blocks": [_google_block("First", "/goto?url=CAES1", "s1"),
+                              _google_block("Second", "/goto?url=CAES2", "s2")],
+            "links": ["https://a.example/1", "/goto?url=CAES2"],
+        }
+        res = _parse_results(data, ENGINES["google"])
+        assert [(r.title, r.url) for r in res] == [("First", "https://a.example/1")]
+
+    def test_a_row_the_preset_nulled_stays_dropped_even_if_the_block_has_an_anchor(self):
+        """The bing shape the first version of this rule got wrong. bing_search's
+        `links` pipeline nulls anything still on bing.com — an ad, an undecodable
+        wrapper — and the block still carries the raw `/ck/a` anchor. Falling
+        back to that anchor resurrected, re-decoded, exactly the URL the preset
+        author had excluded. A None in an aligned column means "not a result"."""
+        block = ('<li class="b_algo"><h2><a href="https://www.bing.com/ck/a?!&&p=x&u=a1aHR0cHM6Ly9hZHMuZXhhbXBsZQ&ntb=1">'
+                 'Excluded</a></h2><div class="b_caption"><p class="b_lineclamp2">s</p></div></li>')
+        data = {"result_blocks": [block, block.replace("Excluded", "Kept")],
+                "links": [None, "https://kept.example/"]}
+        res = _parse_results(data, ENGINES["bing"])
+        assert [(r.title, r.url) for r in res] == [("Kept", "https://kept.example/")]
+
+    def test_a_misaligned_links_column_is_ignored_rather_than_zipped_wrong(self):
+        data = {
+            "result_blocks": [_google_block("First", "/goto?url=CAES1", "s1"),
+                              _google_block("Second", "/goto?url=CAES2", "s2")],
+            "links": ["https://a.example/1"],
+        }
+        assert _parse_results(data, ENGINES["google"]) == []
+
+    def test_without_a_links_column_google_blocks_yield_nothing(self):
+        """Pins what `/api/v1/search?engine=google` returned before this: every
+        block dropped, because `_first_http_link` finds no http anchor in a
+        block whose only href is the stub."""
+        data = {"result_blocks": [_google_block("First", "/goto?url=CAES1", "s1")]}
+        assert _parse_results(data, ENGINES["google"]) == []

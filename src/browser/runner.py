@@ -22,6 +22,7 @@ from playwright.async_api import (
 )
 from playwright_stealth import Stealth
 
+from src.browser.launch_env import browser_env
 from src.browser.page_io import read_content_settling_navigation
 from src.browser.teardown import TEARDOWN_TIMEOUT_S as _TEARDOWN_TIMEOUT_S, close_quietly
 from src.proxy.models import ProxyConfig
@@ -125,6 +126,53 @@ MOBILE = {
     "is_mobile": True,
     "has_touch": True,
 }
+# A 2004-era feature phone. It exists for one measured reason: Google serves a
+# JavaScript-free WML/XHTML-Mobile layout at `/wml/search` to a short WHITELIST
+# of legacy User-Agents, and that layout ships real `/url?q=` links instead of
+# the opaque `/goto?url=CAES…` stubs the JS SERP now returns. Measured
+# 2026-09-11, same endpoint and query, only the UA varying: the six strings
+# below return 11-12 result blocks; `NokiaN70 (SymbianOS/8.1)` and
+# `NokiaN97 (SymbianOS/9.4)`, which are NOT on the list, return an "Update your
+# browser" page with zero results, as does a current Chrome UA.
+#
+# Stated plainly, because the per-engine UA rule is otherwise absolute: NO
+# engine we ship can truly back this claim. Our TLS is Chromium's or Gecko's,
+# not a Symbian phone's. It is offered anyway because the endpoint keys on the
+# UA and not on the handshake (measured: plain `curl`, with no browser TLS at
+# all, gets the same page), and because the alternative -- a caller smuggling
+# the UA through `headers` -- was worse: it worked only on the engines that
+# also had no Client Hints to contradict it, and `meta.applied_user_agent`
+# reported a string that was never sent.
+#
+# What makes it coherent rather than merely spoofed is that Client Hints are
+# SUPPRESSED for it (see `apply_page_masking`): a phone of this era sends no
+# `Sec-CH-UA` at all. Measured on the wire: without that suppression the
+# request goes out as `Nokia7610…` carrying `Sec-CH-UA: "HeadlessChrome";v="143"`
+# and `Sec-CH-UA-Platform: "Windows"` -- two headers contradicting the UA and
+# each other, which is a louder tell than the honest Chrome UA it replaced.
+LEGACY_WAP = {
+    # One of the six, fixed rather than rotated: the whitelist is what matters,
+    # and a stable string keeps a reproduction reproducible.
+    "user_agent": "Nokia7610/2.0 (5.0509.0) SymbianOS/7.0s Series60/2.1 "
+                  "Profile/MIDP-2.0 Configuration/CLDC-1.0",
+    "viewport": {"width": 176, "height": 208},
+    "locale": "en-US",
+    "timezone_id": "America/New_York",
+    "color_scheme": "light",
+    # Deliberately NOT `is_mobile`/`has_touch`. Playwright Firefox has no mobile
+    # emulation and refuses the context outright, and Firefox is one of the
+    # engines this device is measured working on. What `is_mobile` would buy
+    # here is viewport-meta handling and `Sec-CH-UA-Mobile` -- the first is
+    # irrelevant to a layout we fetch with `render: false`, and the second is
+    # suppressed anyway.
+    # Read by `apply_page_masking`; the UA alone cannot say it, because a
+    # non-Chrome UA is also how an iPhone preset looks and that one keeps its
+    # Client Hints skipped-but-present behaviour.
+    "suppress_client_hints": True,
+}
+
+
+_DEVICE_PRESETS = {"desktop": DESKTOP, "mobile": MOBILE, "legacy_wap": LEGACY_WAP}
 
 
 def _chrome_ua_metadata(user_agent: str) -> dict | None:
@@ -213,6 +261,24 @@ async def apply_page_masking(
         return
     try:
         ua = getattr(context, "_applied_user_agent", None)
+        # `is True`, not truthiness: a MagicMock context auto-creates any
+        # attribute asked of it and the result is truthy, so a loose check
+        # turned this branch on for every mock-based test in the suite -- and
+        # would turn it on for any future double just as silently.
+        if getattr(context, "_suppress_client_hints", False) is True and isinstance(ua, str):
+            # A device that predates Client Hints must send NONE, and "none" is
+            # not the same as "the ones we failed to align". Measured on the
+            # wire with a Nokia UA: skipping the override entirely leaves
+            # `Sec-CH-UA: "HeadlessChrome";v="143"` + `Sec-CH-UA-Platform:
+            # "Windows"`, while sending the override WITHOUT `userAgentMetadata`
+            # removes both headers and empties `navigator.userAgentData.brands`.
+            # Sending empty brands instead still emits a bare
+            # `Sec-CH-UA-Platform: ""`, which no real client does.
+            cdp = await context.new_cdp_session(page)
+            await cdp.send("Emulation.setUserAgentOverride", {
+                "userAgent": ua, "platform": "",
+            })
+            return
         ua_metadata = _chrome_ua_metadata(ua) if isinstance(ua, str) else None
         if ua_metadata is None:
             # The one no-op that actually happens in production, and it used to
@@ -246,6 +312,64 @@ async def apply_page_masking(
 
 
 _CHROME_UA_VERSION_RE = re.compile(r"Chrome/\d+(?:\.\d+)*")
+
+
+# Headers that state WHAT THE BROWSER IS. The engine owns them, because only
+# the engine can back them: the UA is cross-checked against the TLS handshake,
+# and the Client-Hints family against `navigator.userAgentData` and against the
+# CDP metadata we set from the UA we actually stated.
+#
+# Dropping the UA alone is not enough, and briefly made things worse: four of
+# the header presets `scraper-tester/public/app.js` shipped until this change
+# sent `sec-ch-ua`, `sec-ch-ua-platform` and `sec-ch-ua-mobile` next to the UA
+# as one set. Remove only the UA and firefox goes out with its honest
+# `Firefox/144` beside `sec-ch-ua: "Google Chrome";v="124"` -- two headers now
+# contradicting each other, where before they at least agreed. The whole set is
+# engine-owned or none of it is.
+#
+# Canonical spellings, matched case-insensitively; the canonical name is what
+# `ignored_request_fields` reports, so the warning text does not vary with how
+# the caller happened to capitalise.
+_ENGINE_OWNED_HEADERS: dict[str, str] = {
+    "user-agent": "User-Agent",
+    "sec-ch-ua": "Sec-CH-UA",
+    "sec-ch-ua-arch": "Sec-CH-UA-Arch",
+    "sec-ch-ua-bitness": "Sec-CH-UA-Bitness",
+    "sec-ch-ua-full-version": "Sec-CH-UA-Full-Version",
+    "sec-ch-ua-full-version-list": "Sec-CH-UA-Full-Version-List",
+    "sec-ch-ua-mobile": "Sec-CH-UA-Mobile",
+    "sec-ch-ua-model": "Sec-CH-UA-Model",
+    "sec-ch-ua-platform": "Sec-CH-UA-Platform",
+    "sec-ch-ua-platform-version": "Sec-CH-UA-Platform-Version",
+    "sec-ch-ua-wow64": "Sec-CH-UA-Wow64",
+}
+
+
+def strip_engine_owned_headers(
+    headers: dict[str, str] | None,
+) -> tuple[dict[str, str], list[str]]:
+    """Caller headers minus the ones only the engine can back, and their names.
+
+    Both runners enforce this rule and they had drifted apart once already,
+    which is what made it reachable through the public API on firefox/webkit --
+    so it lives in one function rather than in a copy per runner. Each caller
+    keeps its own log line: they legitimately differ in what they can name.
+
+    Returns the NAMES, never the values. Echoing a User-Agent we did not send is
+    the bug being closed, and the names are ours rather than the target's, so
+    naming them hands nobody a lever into the substring classifier that reads
+    `warnings` (see `egress_warnings`, which withholds hostnames for the
+    opposite reason).
+    """
+    kept: dict[str, str] = {}
+    dropped: list[str] = []
+    for key, value in (headers or {}).items():
+        canonical = _ENGINE_OWNED_HEADERS.get(key.lower())
+        if canonical is None:
+            kept[key] = value
+        else:
+            dropped.append(f"headers[{canonical!r}]")
+    return kept, sorted(set(dropped))
 
 
 def _align_ua_to_engine(user_agent: str, browser_version: str) -> str:
@@ -432,6 +556,17 @@ def looks_like_captcha_or_block(html: str, *, final_url: str | None = None) -> b
         # ordinary words apart, and either alone would flag a small error page
         # a caller deliberately scraped.
         "sorry! something went wrong",
+        # Akamai Bot Manager's behavioural interstitial, served at HTTP 200
+        # from the requested URL with no redirect, so neither the status code
+        # nor `final_url` says anything. Measured 2026-09-11 on
+        # `suchen.mobile.de/fahrzeuge/details.html`: 2.5-2.7 KB, no `<title>`,
+        # zero `data-testid` nodes, an obfuscated sensor script and this
+        # container. 6 of 6 runs of the shipped `mobile_de_ad_*` presets landed
+        # on it and were reported as `selector_not_found` -- a recipe problem,
+        # which it is not: the exit was refused. Matched on Akamai's own
+        # element id rather than on the visible text, which is localised.
+        "sec-if-cpt-container",
+        "scf-akamai-protected-by",
     )
     if any(signal in html_lower for signal in strong_signals):
         return True
@@ -455,8 +590,13 @@ def warmup_origin(target_url: str) -> str | None:
 class WarmupOutcome:
     """What the warmup did, and why it did not.
 
-    `applied` is the descriptor of a warmup that ran; `error` names one that was
-    configured and failed. Both None means none was configured — a distinction
+    Three states, not two. `applied` is the descriptor of a warmup that ran;
+    `error` names one that was configured and failed; `blocked` marks one that
+    ran fine and landed on a challenge page -- nothing raised, so `error` is
+    None and `applied` is truthful, but the exit was already turned away.
+    `applied["blocked"]` carries the same flag onward, because that dict
+    reaches the caller on every return path. Both `applied` and `error` None
+    means none was configured — a distinction
     the old `dict | None` return could not make, so a warmup failing on every
     single attempt was indistinguishable from one nobody asked for. That cost a
     working day on the google presets, whose homepage warmup navigated into a
@@ -465,6 +605,11 @@ class WarmupOutcome:
 
     applied: dict | None = None
     error: str | None = None
+    # The warmup NAVIGATED, and landed on a block page. Distinct from `error`:
+    # nothing raised, `applied` legitimately describes what ran, and the fetch
+    # that follows may still succeed -- but the exit was already refused once
+    # before the real navigation, which is the cheapest place to learn it.
+    blocked: bool = False
 
 
 async def run_warmup(
@@ -510,8 +655,39 @@ async def run_warmup(
         # is blind to those hops. Non-fatal either way — but without this the
         # warmup was the one navigation with a pre-flight and no landing check.
         await assert_landing_public(response, page.url, resolve=resolve)
+        # The warmup is a navigation like any other and can be refused like any
+        # other -- a homepage warmup landing on `/sorry/` or `/showcaptcha` is
+        # the exit being turned away BEFORE the request we care about. This hop
+        # had a pre-flight and a landing check for egress and no block check at
+        # all, so it reported success and the refusal reached the caller only
+        # as an empty result page later.
+        # Read AFTER the dwell, not at goto-return. Eight shipped presets dwell
+        # 10 s, and a challenge reached by JS or meta-refresh rather than an
+        # HTTP redirect arrives inside that window -- invisible to a snapshot
+        # taken at `domcontentloaded`. The main navigation re-reads `page.url`
+        # after settling for exactly this reason. Reading late cannot add a
+        # false positive: `redirected_to_block` still compares against
+        # `warm_url`, and a late in-app push to `/en/` matches neither path.
         await page.wait_for_timeout(dwell)
-        return WarmupOutcome(applied={"type": wtype, "url": str(warm_url), "dwell_ms": dwell})
+        landed_on_block = redirected_to_block(str(warm_url), page.url)
+        if landed_on_block:
+            # The caller learns this from `applied_warmup`; the log is where an
+            # operator correlates it with the exit that was in use, which the
+            # response deliberately never names.
+            log.warning(
+                "warmup landed on a block page: %s -> %s", warm_url, page.url
+            )
+        return WarmupOutcome(
+            applied={
+                "type": wtype, "url": str(warm_url), "dwell_ms": dwell,
+                # Rides on `applied` rather than on a field of its own: every
+                # FetchResult return in both runners already carries
+                # `applied_warmup`, so a third state cannot be dropped on the
+                # error paths the way a parallel field was -- twice.
+                "blocked": landed_on_block,
+            },
+            blocked=landed_on_block,
+        )
     except Exception as exc:  # pylint: disable=broad-except
         log.warning("warmup failed (non-fatal) for %s: %s", warm_url, exc)
         # Named with the URL, because "warmup failed" without it does not say
@@ -734,6 +910,14 @@ class FetchResult:
     # denied redirect hop or sub-resource is explainable. Without it the caller
     # sees only a raw transport error and reads it as a proxy fault.
     egress_denied: list[str] = field(default_factory=list)
+    # Request fields the engine could not honour and dropped. `warnings` is the
+    # only place a caller ever learns this: the scraper-tester UI shipped four
+    # User-Agent header presets until this change removed them, so "I picked
+    # chrome_win and nothing happened" is a real operator experience rather
+    # than a hypothetical one, and the header is still sendable by hand. A
+    # worker log the caller cannot read is not an answer -- the same argument
+    # `field_guards` makes for a substituted field.
+    ignored_request_fields: list[str] = field(default_factory=list)
 
 
 class PlaywrightRunner:
@@ -810,7 +994,13 @@ class PlaywrightRunner:
                         "--force-webrtc-ip-handling-policy",
                     ])
             browser_type = getattr(self._playwright, self._engine)
-            launch_kwargs = {"headless": self.headless}
+            # Not this process's environment: the browser renders
+            # caller-supplied URLs under --no-sandbox and has no business
+            # holding the service token, the LLM keys or the proxy passwords.
+            launch_kwargs: dict[str, object] = {
+                "headless": self.headless,
+                "env": browser_env(),
+            }
             # Drive a real Google Chrome (channel="chrome") instead of the bundled
             # Chromium when configured — real branding/codecs and a populated
             # navigator.plugins, and a newer engine. Chromium-only; the bundled
@@ -927,7 +1117,7 @@ class PlaywrightRunner:
         resolve_dns: bool | None = None,
     ) -> BrowserContext:
         assert self._browser is not None
-        preset = DESKTOP if device == "desktop" else MOBILE
+        preset = _DEVICE_PRESETS.get(device, DESKTOP)
         # A caller-supplied viewport overrides the device preset. window.screen
         # is set to the same size (below) so screen and innerWidth stay
         # consistent — a window larger than the screen is a fingerprint tell.
@@ -962,17 +1152,53 @@ class PlaywrightRunner:
                     timezone_id,
                 )
 
-        effective_headers = dict(headers) if headers else {}
+        # Measured 2026-09-11 through `fetch()` against a live header echo,
+        # caller sending `Nokia7610/2.0 ... SymbianOS/7.0s`:
+        #   chromium  wire UA stayed the preset's Chrome/143 -- the context UA
+        #             outranks `extra_http_headers`, so the header was already
+        #             a no-op, just a silent one.
+        #   firefox   wire UA WAS `Nokia7610`, Sec-CH-UA absent, while
+        #             `applied_user_agent` reported `Firefox/144`.
+        #   webkit    same, reporting `Safari/26` -- a string never sent, in the
+        #             field read first when a scrape comes back blocked.
+        effective_headers, dropped_headers = strip_engine_owned_headers(headers)
+        if dropped_headers:
+            log.warning(
+                "%s: dropping %s (the engine states the only identity its "
+                "transport can back); see meta.applied_user_agent for what was "
+                "sent", self._engine, ", ".join(dropped_headers),
+            )
         if accept_language and not any(k.lower() == "accept-language" for k in effective_headers):
             effective_headers["Accept-Language"] = accept_language
 
         # Advertise the real engine major in the UA (and, via _chrome_ua_metadata
         # below, in Sec-CH-UA) so we don't claim an old Chrome while exposing a
-        # newer engine's features. Only meaningful on Chromium — Firefox/WebKit
-        # keep the preset UA, and Camoufox owns its own UA.
-        effective_ua = preset["user_agent"]
-        if self._engine == "chromium":
+        # newer engine's features.
+        #
+        # A UA is only safe to state when the TRANSPORT agrees with it. The
+        # desktop preset's UA is a Chrome string, and a server reads far more
+        # than the header: measured 2026-09-06 against a TLS mirror, our
+        # Firefox sent `Chrome/124 (Windows)` while its JA4 was
+        # `t13d1717h2_5b57614c22b0` (Firefox), its HTTP/2 settings hash was
+        # Firefox's, and it sent no Sec-CH-UA at all — because Firefox has no
+        # Client Hints. Three axes contradicting the header at once; no real
+        # user produces that. WebKit had the same shape with Safari's TLS.
+        # So the Chrome UA is stated only by the engine that can back it, and
+        # Firefox/WebKit keep their own true UA (Camoufox owns its own).
+        effective_ua = preset["user_agent"] if self._engine == "chromium" else None
+        if preset.get("suppress_client_hints"):
+            # The one identity every engine states verbatim. It carries no
+            # `Chrome/` token to align, and with Client Hints suppressed there
+            # is nothing left for the engine to contradict it with -- Firefox
+            # and WebKit emit no Client Hints at all, and Chromium is made to
+            # emit none. TLS still says what the engine is; the docstring on
+            # LEGACY_WAP says so out loud.
+            effective_ua = preset["user_agent"]
+        elif self._engine == "chromium":
             effective_ua = _align_ua_to_engine(effective_ua, self._browser.version)
+        elif preset.get("is_mobile") and self._engine == "webkit":
+            # An iPhone Safari UA on WebKit is coherent — same engine family.
+            effective_ua = preset["user_agent"]
 
         context = await self._browser.new_context(
             user_agent=effective_ua,
@@ -991,6 +1217,9 @@ class PlaywrightRunner:
         # Stash applied fingerprint on the context so fetch() can surface it
         # in FetchResult without needing to re-derive the values.
         context._applied_user_agent = effective_ua  # type: ignore[attr-defined]
+        context._suppress_client_hints = bool(  # type: ignore[attr-defined]
+            preset.get("suppress_client_hints")
+        )
         context._applied_locale = locale  # type: ignore[attr-defined]
         context._applied_timezone = timezone_id  # type: ignore[attr-defined]
         context._applied_accept_language = (  # type: ignore[attr-defined]
@@ -1063,6 +1292,12 @@ class PlaywrightRunner:
         addons: list[str] | None = None,
         warmup: dict | None = None,
     ) -> FetchResult:
+        # Derived here rather than round-tripped through the context: `headers`
+        # is right there, and a stash the reader defaults to "nothing dropped"
+        # fails open -- losing the write would silently restore the old silence
+        # with a green suite, which is how this class of bug survives here.
+        _, ignored_request_fields = strip_engine_owned_headers(headers)
+
         # Before `start()`, so a refused target costs neither a browser launch
         # nor a proxy lease AT THIS BOUNDARY — `EphemeralPlaywrightRunner` and
         # the queue layer both do their own setup before calling in, so this is
@@ -1080,6 +1315,7 @@ class PlaywrightRunner:
                 ok=False,
                 error=EGRESS_BLOCKED_ERROR,
                 element_status="no_screenshot",
+                ignored_request_fields=list(ignored_request_fields),
             )
 
         await self.start()
@@ -1147,6 +1383,32 @@ class PlaywrightRunner:
             await apply_page_masking(
                 context, page, engine=self._engine, stealth=stealth,
             )
+
+            # Firefox and WebKit keep their own UA (we state no override for
+            # them), so the stash is None and `meta.applied_user_agent` --
+            # documented as the UA that was actually sent, and the first field
+            # anyone reads when a scrape comes back blocked -- would report
+            # nothing. Read the real one off the page, the way CamoufoxRunner
+            # already does for the same reason. INSIDE this try on purpose: it
+            # is an await, and everything between the acquire guard and the
+            # fetch try below is unguarded, so a cancellation there (the queue
+            # runs each scrape under asyncio.wait_for) would escape with the
+            # page, context, SOCKS bridge and egress guard all unclosed.
+            # `except Exception` keeps an evaluate failure non-fatal while
+            # still letting BaseException reach the teardown below.
+            if getattr(context, "_applied_user_agent", None) is None:
+                try:
+                    context._applied_user_agent = await page.evaluate(  # type: ignore[attr-defined]
+                        "() => navigator.userAgent"
+                    )
+                except Exception as exc:  # pylint: disable=broad-except
+                    # Warning, not debug: this field is what someone reads
+                    # first when a scrape comes back blocked, and debug is off
+                    # in production, so a silent null would be unexplainable.
+                    log.warning(
+                        "user-agent readback failed for engine=%s: %s",
+                        self._engine, exc,
+                    )
         except BaseException:
             await _teardown()
             raise
@@ -1176,6 +1438,7 @@ class PlaywrightRunner:
             # target is usually the REASON for the error.
             if egress_guard is not None:
                 result.egress_denied = list(egress_guard.denied)
+            result.ignored_request_fields = list(ignored_request_fields)
             return result
 
         try:

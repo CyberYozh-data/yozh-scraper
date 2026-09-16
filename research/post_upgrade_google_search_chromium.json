@@ -1,0 +1,309 @@
+[
+ {
+  "preset": "google_search_chromium",
+  "locale": "de",
+  "run": 0,
+  "params": {
+   "query": "best laptop 2026"
+  },
+  "job_id": "req_d6d0527dd939929bb3122360",
+  "status": "done",
+  "meta": {
+   "fetch_ok": false,
+   "status_code": 200,
+   "final_url": "https://www.google.com/sorry/index?continue=https://www.google.de/search%3Fq%3Dbest%2Blaptop%2B2026%26gl%3Dde%26hl%3Dde%26sei%3Dnc2ZaoeqKb3Xxc8PmNDikAY&hl=de&q=EgQFCgTmGJ6b59QGIjC3K4AvsvVY_QH7X6w5N3zw",
+   "retries": 3,
+   "proxy_type": "prem_res_rotating",
+   "applied_locale": "de-DE",
+   "applied_timezone": "Europe/Berlin",
+   "error": null
+  },
+  "took_ms": 30550,
+  "job_error": null,
+  "warnings": [
+   "Captcha/block detected by heuristic",
+   "status_code=200",
+   "attempt 1/3 shortened to 35930ms of the requested 45000ms to fit the page-task ceiling",
+   "attempt 2/3 shortened to 33777ms of the requested 45000ms to fit the page-task ceiling",
+   "attempt 3/3 shortened to 29438ms of the requested 45000ms to fit the page-task ceiling"
+  ],
+  "data": null,
+  "fill": {
+   "titles": 0.0,
+   "links": 0.0
+  },
+  "entries": 0,
+  "has_data": false,
+  "elapsed_s": 33.0
+ },
+ {
+  "preset": "google_search_chromium",
+  "locale": "de",
+  "run": 1,
+  "params": {
+   "query": "best laptop 2026"
+  },
+  "job_id": "req_5e92fc2056f716c92b33b546",
+  "status": "done",
+  "meta": {
+   "fetch_ok": true,
+   "status_code": 200,
+   "final_url": "https://www.google.de/search?q=best+laptop+2026&gl=de&hl=de&sei=ks2Zav2-NrTqi-gP8OfbsAU",
+   "retries": 0,
+   "proxy_type": "prem_res_rotating",
+   "applied_locale": "de-DE",
+   "applied_timezone": "Europe/Berlin",
+   "error": null
+  },
+  "took_ms": 12151,
+  "job_error": null,
+  "warnings": [
+   "attempt 1/3 shortened to 35987ms of the requested 45000ms to fit the page-task ceiling"
+  ],
+  "data": {
+   "titles": [
+    "Best Laptops (2026): My Top Recommendations After ...",
+    "Best Laptops 2026: Our benchmarked picks for productivity ...",
+    "Laptops in Tests: Aktueller Vergleich 2026",
+    "The Best Laptops We've Tested (September 2026)",
+    "The 15 Best Laptops of 2026 | Reviews by Wirecutter",
+    "Laptop-Test 2026: Die besten Notebooks aller Klassen im ...",
+    "Best laptops 2026: Premium, budget, gaming, 2-in-1, and ..."
+   ],
+   "links": [
+    "/goto?url=CAESYQHrOzAVneC6EJtZI0eEKpHpngXDo7fn3HUqxnMYkyVFnJTbHGCtscW093F90ESkc2JzlDei6a2z1HhLb-Q9OmvQqEDrHBLqGgxgWNtNWkQxVbpR9zQbJKrauiHBi2gMOA8",
+    "/goto?url=CAESaQHrOzAVVdOrMj_5yZGt2wuIq6tyzDqTfajd6RhmA9jYPUEm-qsiadkzXbd3Mp9CRfwHZn9IxJ7704vDy7COKvNzQOrhLTodLMhkNP_plTvcnV-1wBCqK56FxuPn965eZBoP-K_nJWzpqA",
+    "/goto?url=CAESzQEB6zswFdSB6kPzIeivc_fJklIZW7fYfOP4SxypaoesxnFiD3F9HxOwjQi22R04MaixGCvkgNo_-e_sRKnlYlAmDKn6Mz0LujdK4noVGm9jm9dChx829v2zh0q4IF4SgN8c3erjWBUJD1Tm7zeww-QaD30AM5e5eeREAkapyD-t_Y3XueC-3563OtJ46-KHrp6xJMLz_b0_9nIghE3-5oum-ZT6VPeL9W_goBeFl7BV6BUhBsXU6Pv8m3EF_roIbiYhahdE8uZvtV9OOdoW",
+    "/goto?url=CAESZAHrOzAV8gsFHq_0ApgLfbJe3iBMPiND4edQzGFwUwydaGJNnCg6vi59D_--XDy8lCHMLo5-6BZ_OqKOhyIUdEi6_uxINOkDxb8pj02PfAsUCKXRsb8PRPCjTrQXAam9V6LR-YA",
+    "/goto?url=CAEScAHrOzAV1tD6e53smWkI5LK_2LwF1GDSXGzXbiYkOXl7LgedaJENXBF7KtNMYdBLVDmxJ_QePd3jQtM4EtYBCmLXkaCZuUmKw50fg-SgiwL28g_09kIx_xIby7YR142D0wFDI7wKudjcGcs2Lp6r2pA",
+    "/goto?url=CAESegHrOzAVRToNHOkFvYNcho4AvGVToJ43tLmZApr75_AHmn8NNmyxVjs45a_pirH_eRd9iiw22KoWQ-y7EL1NlIBB8d_xGhi6ok8Hadd9PZFMjHDlOp2omFD5atewYLsyiXb24HXvgiweRNrmN6JegLL4jfL017rqybtJ",
+    "/goto?url=CAEScwHrOzAVr5z4LX35uLvHWSzwCFYt1yupeC7-yJgmwbUmtxsaNJb3GmMuMn9SfazlLHtzQg4q4hanVt_77rCRwwHJkhokEfokruBrq5claj4IpSUBsHS76Gpul7QhpPx_F33Z2MwPlGArT8BIvLl93DJFgHo"
+   ],
+   "snippets": [
+    "vor 6 Tagen — The Laptops I Recommend Most Apple MacBook Air (M5, 2026) Dell XPS 13 (2026) The standout option is still the Lenovo Chromebook Plus 14.",
+    "05.08.2026 — Best Laptops You Can Buy Today · 1. MacBook Air (M5) · 2. Dell XPS 14 (DA14260) · 3. Lenovo Yoga Slim 7i Aura Edition · 4. HP OmniBook Ultra · 5 ...",
+    "29.04.2026 — Der beste Laptop: Apple MacBook Pro 16 M5 Max (2026) · Preis-Leistungs-Tipp: Acer Aspire 14 AI · Apples Preis-Leistungs-Alternative: Apple MacBook ...",
+    "vor 3 Tagen — Our current best laptop for most people is the 14-inch HP OmniBook 5, a stellar-value OLED notebook with incredible 34-hour battery life,",
+    "vor 3 Tagen — The best overall Top pick, The best Windows laptop Lenovo Yoga 7i 2-in-1 (14\" Intel, 2026) great: fast performance, terrific battery life, a ...",
+    "24.08.2026 — Unsere Empfehlungen auf einen Blick · Acer Swift 16 AI · Apple MacBook Neo · Alienware 16X Aurora · MSI Prestige Flip 14 AI+ · Apple 15-inch MacBook ...",
+    "PCWorld calls the Acer Swift 16 AI the best overall laptop. It delivers fast, responsive performance thanks to Intel's Panther Lake platform, handles ..."
+   ],
+   "result_blocks__slimmed_rows": 7
+  },
+  "fill": {
+   "titles": 1.0,
+   "links": 1.0
+  },
+  "entries": 7,
+  "has_data": true,
+  "elapsed_s": 15.0
+ },
+ {
+  "preset": "google_search_chromium",
+  "locale": "uk",
+  "run": 0,
+  "params": {
+   "query": "best laptop 2026"
+  },
+  "job_id": "req_71a6da0c44e532d849d62921",
+  "status": "done",
+  "meta": {
+   "fetch_ok": false,
+   "status_code": 200,
+   "final_url": "https://www.google.com/sorry/index?continue=https://www.google.co.uk/search%3Fq%3Dbest%2Blaptop%2B2026%26gl%3Dgb%26hl%3Den%26sei%3Dic2ZasXtLcmT9u8Pgv3swQQ&hl=en&q=EgRa1KJIGIqb59QGIjAuRzdGxjP1CjP4_u7Du",
+   "retries": 3,
+   "proxy_type": "prem_res_rotating",
+   "applied_locale": "en-GB",
+   "applied_timezone": "Europe/London",
+   "error": null
+  },
+  "took_ms": 21968,
+  "job_error": null,
+  "warnings": [
+   "Captcha/block detected by heuristic",
+   "status_code=200",
+   "attempt 1/3 shortened to 35919ms of the requested 45000ms to fit the page-task ceiling",
+   "attempt 2/3 shortened to 33910ms of the requested 45000ms to fit the page-task ceiling",
+   "attempt 3/3 shortened to 32032ms of the requested 45000ms to fit the page-task ceiling"
+  ],
+  "data": null,
+  "fill": {
+   "titles": 0.0,
+   "links": 0.0
+  },
+  "entries": 0,
+  "has_data": false,
+  "elapsed_s": 24.1
+ },
+ {
+  "preset": "google_search_chromium",
+  "locale": "uk",
+  "run": 1,
+  "params": {
+   "query": "best laptop 2026"
+  },
+  "job_id": "req_bf8bc21f3e2f4a388c2e74ae",
+  "status": "done",
+  "meta": {
+   "fetch_ok": false,
+   "status_code": 200,
+   "final_url": "https://www.google.com/sorry/index?continue=https://www.google.co.uk/search%3Fq%3Dbest%2Blaptop%2B2026%26gl%3Dgb%26hl%3Den%26sei%3Dis2ZatqFB5mL9u8Pk-Oj2Qs&hl=en&q=EgSox12tGIqb59QGIjAfRRFSDJuA7s0W4M_Qi",
+   "retries": 3,
+   "proxy_type": "prem_res_rotating",
+   "applied_locale": "en-GB",
+   "applied_timezone": "Europe/London",
+   "error": null
+  },
+  "took_ms": 22446,
+  "job_error": null,
+  "warnings": [
+   "Captcha/block detected by heuristic",
+   "status_code=200",
+   "attempt 1/3 shortened to 35968ms of the requested 45000ms to fit the page-task ceiling",
+   "attempt 2/3 shortened to 34135ms of the requested 45000ms to fit the page-task ceiling",
+   "attempt 3/3 shortened to 31996ms of the requested 45000ms to fit the page-task ceiling"
+  ],
+  "data": null,
+  "fill": {
+   "titles": 0.0,
+   "links": 0.0
+  },
+  "entries": 0,
+  "has_data": false,
+  "elapsed_s": 24.1
+ },
+ {
+  "preset": "google_search_chromium",
+  "locale": "us",
+  "run": 0,
+  "params": {
+   "query": "best laptop 2026"
+  },
+  "job_id": "req_627c88f03bb3461aaf1d5c47",
+  "status": "done",
+  "meta": {
+   "fetch_ok": true,
+   "status_code": 200,
+   "final_url": "https://www.google.com/search?q=best+laptop+2026&gl=us&hl=en&sei=fc2ZauvoNJ3s7M8Ps5yYmAg",
+   "retries": 0,
+   "proxy_type": "prem_res_rotating",
+   "applied_locale": "en-GB",
+   "applied_timezone": "Europe/London",
+   "error": null
+  },
+  "took_ms": 10518,
+  "job_error": null,
+  "warnings": [
+   "attempt 1/3 shortened to 35759ms of the requested 45000ms to fit the page-task ceiling"
+  ],
+  "data": {
+   "titles": [
+    "Best Laptops (2026): My Top Recommendations After ...",
+    "What laptop to but in 2026 : r/BuyItForLife",
+    "Best Laptops 2026: Our benchmarked picks for productivity ...",
+    "Best Windows laptop of 2026, tested by editors",
+    "Laptops",
+    "Best Laptop and Portable Lightweight Ultrabook in 2026",
+    "The Best Laptops We've Tested (September 2026)",
+    "The 5 Best Laptops Under $1000 of 2026",
+    "The best laptops that I recommend to just about anyone"
+   ],
+   "links": [
+    "/goto?url=CAESYQHrOzAVUXLTtipK33v2rj76dTFzHkz1BEWpPeUdxVaBL2Snk0rlJ8s4r-2ZMSRWRMA8Bbykopwpj6SlS0pmxBcJa_pURre7ARHF7_iu_cA5BgHFBVUh7TOrfeafzTzFDV8",
+    "/goto?url=CAESigEB6zswFa9ECePS-3Yevt_2vHqAHvxdXcESLfYHWSdWmyJPmkV8FpUcLP0mQR60akNPi0GL4aK1GCEE32IXKP68O6WYZLxK0c6Hk-8osdPRlOmA_vf5n1wdkr1gQ1CvU311ocqcV0t8J_8aXOkiT7bzQCjozzDtxXUz6pS_Arzf8mnhldkwD9v-QlU",
+    "/goto?url=CAESaQHrOzAVAwAVtANkmKrpJRvew68NIdvYFC3EL7Ei_Faks0mieQErXHgV1XJWzP2bCIdja-0_3--OelgBPm5uSj4wWsa6fR1GLCdmpcrGmfShDOKCWQV_WvsKRQvC6ZHMSWWhvbF47A4GcQ",
+    "/goto?url=CAESdwHrOzAVAi8fz5FCTDWvuhpPVtZCRUndB87wxgrk5LyM41lXDH-lTRhdzEpfLMWh0DECvF2EaExmxMCkzvSmUD64KIQvGCsEp5WKoPpnIAaJdwqJZ3-BKSg_Fwgt6Flz9ualWdK9bFmmG-yL34n7MBdTx9n6zQ6U",
+    "/goto?url=CAESZAHrOzAV8zIDBeXigkwPvLFkkIFjawZQ7reYkrdmHPCi7l7_207WEJb1iszPoO-66qhEilOBG3KyWFb9I_mGZ8cVLyVK0hmN5TSUiX0AKbasLlTbfz4lEZZo8ATO8CkDnWrU-9s",
+    "/goto?url=CAESbAHrOzAVnrtLAjpGkU1t0_5Be94dFQSpb_KxCeKP8sDpvMkDOXy3X92hA8RM6vHA72egTmheyK0PSYyXgGQB1OE8BS7w2uVINlEVeAV7ZfSDzWanAIQ5QwdyeOJ9KIwjCKpFSH09U78IBh67_Q",
+    "/goto?url=CAESZAHrOzAVnlWS3h9pW6YREsCEWiYc72-CZsan51xGlykfSuZZ6QUEI5pU_LOIaUb1aeFZBcj37kgxukzdSYH0Do6i5M-qaY_c0RQjus6ub5Uyrfd8_hgqC0j24TcLFYPQyYxpEYQ",
+    "/goto?url=CAESdgHrOzAVObaGPCWV0Kz2AyLlAE8g2N1d8qMyJGIo1n_mbc1RgVoWV6ymvAFuin-qOoJkoo_TFfh6ED25VvcXlkXgM-LSlsrrDNFxEGR1U93CddKFwaCMJe1MWBlM-NGnfqeINY6Hn08IDs98As0ltbwQnrtQC0w",
+    "/goto?url=CAESiQEB6zswFeOUF87WDFuxmYL4qyVevXm0kp2qVXfJ2Xa3CfNd_cHc02fArEP4bt1u4kyDvvHDO7InvbD6Ehgr53xa4viAl7aeh2L9k0YT9VGbXGmukmbB2Ji1I5ITifB1maHDijgfYhzstVS4fg5t3EeifugGRmmEtLjf9T7SMzsHXzeo8JTbyMJNvw"
+   ],
+   "snippets": [
+    "6 days ago — Dell XPS 13 (2026) The standout option is still the Lenovo Chromebook Plus 14. I recommend the Acer Chromebook Plus 516, it's the best laptop ...",
+    "Asus Zenbook 14'. A Flip model with touchscreen if you can, touchscreens are really underrated. But if you want some real gaming go for an Asus ...Read more",
+    "Aug 5, 2026 — Best Laptops You Can Buy Today · 1. MacBook Air (M5) · 2. Dell XPS 14 (DA14260) · 3. Lenovo Yoga Slim 7i Aura Edition · 4. HP OmniBook Ultra · 5 ...Read more",
+    "We tested top Windows laptops, from highly portable ultrabooks to heavy-duty workstations, to help you find one that's worth buying.",
+    "8 hours ago — Laptops. Laptop reviews and best lists from our experts to help you find the best laptop for your specific needs.Read more",
+    "Aug 21, 2026 — The best options include premium 16-inch ultraportables such as the Razer Blade 16, Asus ROG Zephyrus G16 and ProArt P16, Lenovo Yoga Pro 9i, or ...Read more",
+    "3 days ago — Our Top Tested Picks · HP OmniBook 5 14 · Apple MacBook Air 13-Inch (2026, M5) · Dell XPS 13 (2026) · Apple MacBook Neo · Dell XPS 14 (2026).Read more",
+    "The best laptop under $1000 we've tested is the Dell XPS 13 (2026), specifically the configuration with 16GB of memory, as it'll handle heavier multitasking ...",
+    "May 16, 2026 — The 2025 models of the Zephyrus G14 and G16 are still easy recommendations in 2026, especially if you can find a deal. The 2026 revision is a ...Read more"
+   ],
+   "result_blocks__slimmed_rows": 9
+  },
+  "fill": {
+   "titles": 1.0,
+   "links": 1.0
+  },
+  "entries": 9,
+  "has_data": true,
+  "elapsed_s": 12.0
+ },
+ {
+  "preset": "google_search_chromium",
+  "locale": "us",
+  "run": 1,
+  "params": {
+   "query": "best laptop 2026"
+  },
+  "job_id": "req_fd87e07ca5fab40ae728d4e3",
+  "status": "done",
+  "meta": {
+   "fetch_ok": true,
+   "status_code": 200,
+   "final_url": "https://www.google.com/search?q=best+laptop+2026&gl=us&hl=en&sei=hc2ZaoDPIoqD9u8PyLGy0QM",
+   "retries": 1,
+   "proxy_type": "prem_res_rotating",
+   "applied_locale": "en-GB",
+   "applied_timezone": "Europe/London",
+   "error": null
+  },
+  "took_ms": 18391,
+  "job_error": null,
+  "warnings": [
+   "attempt 1/3 shortened to 35777ms of the requested 45000ms to fit the page-task ceiling",
+   "attempt 2/3 shortened to 33279ms of the requested 45000ms to fit the page-task ceiling"
+  ],
+  "data": {
+   "titles": [
+    "Best Laptops (2026): My Top Recommendations After ...",
+    "The Best Laptops We've Tested (September 2026)",
+    "What laptop to but in 2026 : r/BuyItForLife",
+    "Best Windows laptop of 2026, tested by editors",
+    "Best Laptops 2026: Our benchmarked picks for ...",
+    "Laptops",
+    "The 8 Best Laptops of 2026",
+    "The 15 Best Laptops of 2026 | Reviews by Wirecutter"
+   ],
+   "links": [
+    "/goto?url=CAESYQHrOzAVFIdL_uXg1fRM2FPQQvMa6e61OhcHzLgHuVjRyXdG3GAnfRW-7C3oy7WyLoAN_0UZ_HcS6Z8ZSPUv0hEx088O7bUAtggzzA4OuQAHXYz29Tmg2cKfPvqh0A1Wi8Y",
+    "/goto?url=CAESZAHrOzAVaPwI4KxmRRqoAJhWFrc7dsmM4sl9s1IGVZNifza7LslWgMshllt1oLtgeYEIz5BupoxFWQzsjOITC2FrCiqyYAbyyMjDe_8EbhmE9kEuAtUGSgYeKpYmXhMVdmbMWr0",
+    "/goto?url=CAESigEB6zswFSz98mJuMNkCcW_Dkyf6cNrKPH4d6RV8Dm4k-O5QuOHJ25JF0VIjxuCMSh3KgTt-G3L63HpMfrbiUMaxMpQVxSus9vSxo1vcbkqg4fNvlhEKb5EcvhqjU8w2HDQ6m4FtB31nh5cUc0kOHiaqIyqxuQfY7278nXlztp29NWCbDFjJLl_X6Yg",
+    "/goto?url=CAESdwHrOzAVqPM-9IpHRgbU268wra-wOP81Py0j5xOMbGY4mGgPDS2eQcEcW-5fu55q1wV37YoRMAZWoLcnnNPOlm7CnjL7pAewa_zpeLUJWg_r-Azr0wIoA9qdstlfkjT08tENtkwCJ26MJxGsnRcY89mYy1aUBcGi",
+    "/goto?url=CAESaQHrOzAV1V2RbNR2XyMZ6aM9eTpsGo9HMntBfmFriqW1iuGTkW1DGlWCw5sC6jMQAa3WZScr3o1D-8id5BU6BzyodWLl7uA4chRBremVR-QJAIxx8LI0OKRAM0kt_4lMemDbE9L_4Mv5tQ",
+    "/goto?url=CAESZAHrOzAVap3hN3wxuSeEtizdJC7pnAJ_H__Efcap7DH93Ecy0_cPqVNpxIv7WvO9w7cPlEWPfpZw1zBF3lcKWWoINFKy1_JDx0CDCKDyDHOfGnBfMaI4zDmO_hO1ZWmTzjnL1kA",
+    "/goto?url=CAESaQHrOzAV0-XQqeE91XmXX-SP44-cmM-07hrFMIT5LJcpcPtgkLjCqYboUtyZ4rcdVEF61fqTEU5HXhAq5Hw10-K4Z9tkMZKXejh9bxzT5bCw08M5E3YgQStA8PT6B0_ZG5rV638k-_n3kw",
+    "/goto?url=CAEScAHrOzAVursVIpD722Ou7EhgfUWUJia8h0FM1MC1JkF0jeoGE-HbVkRpgz7AYcTqtgRW5zFeR3aPpnLCApMQv05ChWXuOwxK86iHNF1QVLl0IOPgIvFARabjwpHoLWL2GNebC1lcRVETmyvNK0A22mc"
+   ],
+   "snippets": [
+    "6 days ago — Dell XPS 13 (2026) The standout option is still the Lenovo Chromebook Plus 14. I recommend the Acer Chromebook Plus 516, it's the best laptop ...",
+    "3 days ago — Our Top Tested Picks · HP OmniBook 5 14 · Apple MacBook Air 13-Inch (2026, M5) · Dell XPS 13 (2026) · Apple MacBook Neo · Dell XPS 14 (2026).Read more",
+    "Asus Zenbook 14'. A Flip model with touchscreen if you can, touchscreens are really underrated. But if you want some real gaming go for an Asus ...Read more",
+    "We tested top Windows laptops, from highly portable ultrabooks to heavy-duty workstations, to help you find one that's worth buying.",
+    "Aug 5, 2026 — Best Laptops You Can Buy Today · 1. MacBook Air (M5) · 2. Dell XPS 14 (DA14260) · 3. Lenovo Yoga Slim 7i Aura Edition · 4. HP OmniBook Ultra · 5 ...Read more",
+    "8 hours ago — Laptops. Laptop reviews and best lists from our experts to help you find the best laptop for your specific needs.Read more",
+    "The best laptop we&#39;ve tested is the M4 Apple MacBook Pro 14 (2024). Lenovo ThinkPad X9 15 Aura Edition. ASUS Vivobook",
+    "3 days ago — Who this is for: The best overall laptop, the Lenovo Yoga 7i 2-in-1 (14\" Intel), is also our top pick if you want long battery life — it lasted ...Read more"
+   ],
+   "result_blocks__slimmed_rows": 8
+  },
+  "fill": {
+   "titles": 1.0,
+   "links": 1.0
+  },
+  "entries": 8,
+  "has_data": true,
+  "elapsed_s": 21.1
+ }
+]

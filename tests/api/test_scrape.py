@@ -640,3 +640,29 @@ class TestEveryGetFullCallerSurvivesAnUnreadableSpec:
         _run(scrape_service._cancel_unfilled(job_id))
 
         assert _run(store.get_meta(job_id)).cancelled is True
+
+
+def test_the_results_echo_is_masked_while_the_store_keeps_the_real_values(client, mocker):
+    """Audit 2026-09-03, H-09: anyone with the job id used to read the caller's
+    `Authorization` and cookies out of `pages`."""
+    mocker.patch("src.scrape_service.scrape_page_task.kiq", new=AsyncMock())
+    resp = client.post(
+        "/api/v1/scrape/page",
+        json={
+            "url": "https://example.com",
+            "headers": {"Authorization": "Bearer S3CRET", "Private-Token": "S3CRET-2"},
+            "cookies": [{"name": "sid", "value": "COOKIE-S3CRET"}],
+        },
+    )
+    assert resp.status_code == 200, resp.text
+    job_id = resp.json()["job_id"]
+
+    results = client.get(f"/api/v1/scrape/{job_id}/results")
+    echoed = results.json()["pages"][0]
+    assert list(echoed["headers"]) == ["Authorization", "Private-Token"]
+    assert echoed["cookies"][0]["name"] == "sid"
+    assert "S3CRET" not in results.text
+
+    stored = _run(get_job_store().get_full(job_id)).pages[0]
+    assert stored.headers["Authorization"] == "Bearer S3CRET", "the worker still gets the real header"
+    assert stored.cookies[0].value == "COOKIE-S3CRET"

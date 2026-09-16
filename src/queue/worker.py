@@ -12,6 +12,7 @@ import logging
 from taskiq import TaskiqEvents, TaskiqState
 
 from src.browser.runner import PlaywrightRunner
+from src.presets.store import FilePresetStore
 # Side-effect import: registers the @broker.task definitions on the broker.
 from src.queue import tasks  # noqa: F401  # pylint: disable=unused-import
 from src.queue.broker import broker
@@ -82,6 +83,7 @@ async def on_worker_startup(state: TaskiqState) -> None:
     setup_logging(settings.log_level, tag="W")
     init_job_store()
     init_session_store(get_job_store().client)
+    FilePresetStore().warn_if_not_writable()
     state.runners = {"chromium": _new_runner("chromium")}  # registry seam for the anti-detect epic
     state.browser_lock = asyncio.Lock()
     state.pages_since_launch = {"chromium": 0}

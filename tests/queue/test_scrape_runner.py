@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -8,6 +9,7 @@ import pytest
 from src.proxy.base import ProxyConfigError
 from src.queue.envelope import ScrapeErr, ScrapeOk
 from src.queue.scrape_runner import (
+    ignored_field_warnings,
     apply_default_proxy_country,
     looks_like_proxy_failure,
     run_scrape,
@@ -106,7 +108,17 @@ def test_proxy_failure_matches_firefox_error_codes():
     assert looks_like_proxy_failure(None, "Page.goto: NS_ERROR_CONNECTION_REFUSED") is True
     assert looks_like_proxy_failure(None, "Page.goto: NS_ERROR_UNKNOWN_HOST") is True
     assert looks_like_proxy_failure(None, "Page.goto: NS_ERROR_NET_RESET") is True
-    # boundary: aborts carry no NS_ERROR_ prefix and are not proxy failures
+    # boundary: aborts carry no NS_ERROR_ prefix and are not proxy failures.
+    #
+    # OBSERVED ONCE AGAINST THIS, 2026-09-11, and deliberately not changed:
+    # `mobile_de_search_camoufox` lost 1 run of 4 to
+    # `page.goto: NS_BINDING_ABORTED; maybe frame was detached?` and did not
+    # rotate. One observation is not evidence that rotating would have helped —
+    # an abort is as often the PAGE cancelling its own load (a JS redirect, an
+    # anti-bot `location.reload`) as it is the exit, and rotating on the site's
+    # own behaviour spends the budget three times over for nothing. What would
+    # settle it: replay the same URL on the same exit after an abort and see
+    # whether the retry succeeds without a new lease. Until then this stays.
     assert looks_like_proxy_failure(None, "Page.goto: NS_BINDING_ABORTED") is False
 
 
@@ -511,7 +523,7 @@ async def test_run_scrape_echoes_prem_targeting_and_warmup(monkeypatch):
     # ScrapeMeta parses it into AppliedWarmup; compare on the dumped shape
     # so the assertion pins the values rather than the container type.
     assert meta.applied_warmup is not None
-    assert meta.applied_warmup.model_dump() == applied_warmup
+    assert meta.applied_warmup.model_dump() == {**applied_warmup, "blocked": False}
 
 
 async def test_proxy_config_error_yields_a_traceback_free_envelope(monkeypatch):
@@ -745,3 +757,110 @@ async def test_a_healthy_page_still_reaches_the_parser(monkeypatch, mocker):
 
     parser.assert_awaited_once()
     assert out.result.data == {"title": "Widget"}
+
+
+class TestIgnoredFieldWarnings:
+    """A dropped request field reaches the caller, and cannot trip yozh.
+
+    `warnings` is read by a substring classifier in another repository, so a
+    new string in it is a cross-repo change: yozh-law-checker matches
+    ("captcha", "block detected", "anti-bot", "antibot") and publishes the scan
+    as blocked, and ("timeout", "goto") and re-crawls the whole site. Both
+    thresholds are cheap to cross by accident and expensive to cross in
+    production, so the text is pinned here rather than only reviewed.
+    """
+
+    _YOZH_MARKERS = (
+        "captcha", "block detected", "anti-bot", "antibot", "timeout", "goto",
+        "serp_unavailable",
+    )
+
+    def test_nothing_dropped_says_nothing(self):
+        assert ignored_field_warnings(SimpleNamespace(ignored_request_fields=[])) == []
+
+    def test_a_result_without_the_field_at_all_is_silent(self):
+        """Both runners set it, but `warnings` assembly also runs against
+        results built by tests and by older recorded fixtures."""
+        assert ignored_field_warnings(SimpleNamespace()) == []
+
+    def test_the_dropped_field_is_named(self):
+        out = ignored_field_warnings(
+            SimpleNamespace(ignored_request_fields=["headers['User-Agent']"])
+        )
+        assert out == [
+            "ignored_request_field: headers['User-Agent'] (the engine states its own)"
+        ]
+
+    def test_the_text_trips_no_cross_repo_classifier(self):
+        """Guards the strings that SHIP, not a literal retyped here.
+
+        An earlier version asserted against a hand-written copy of the field
+        name, so renaming the real one to anything -- `block detected` included
+        -- left this test green. The names come from the production stripper,
+        fed through the production translator.
+        """
+        from src.browser.runner import strip_engine_owned_headers
+
+        every_owned_header = dict.fromkeys(
+            [
+                "User-Agent", "Sec-CH-UA", "Sec-CH-UA-Arch", "Sec-CH-UA-Bitness",
+                "Sec-CH-UA-Full-Version", "Sec-CH-UA-Full-Version-List",
+                "Sec-CH-UA-Mobile", "Sec-CH-UA-Model", "Sec-CH-UA-Platform",
+                "Sec-CH-UA-Platform-Version", "Sec-CH-UA-Wow64",
+            ],
+            "x",
+        )
+        _, dropped = strip_engine_owned_headers(every_owned_header)
+        assert len(dropped) == len(every_owned_header), (
+            "a header the stripper stopped removing would silently skip this "
+            "guard: " + repr(dropped)
+        )
+
+        out = ignored_field_warnings(
+            SimpleNamespace(ignored_request_fields=dropped)
+        )
+        lowered = " ".join(out).lower()
+        for marker in self._YOZH_MARKERS:
+            assert marker not in lowered, (
+                f"{marker!r} in a warning makes yozh-law-checker act on it: "
+                "either publish the scan as blocked or re-crawl the site"
+            )
+
+    def test_the_value_is_never_echoed(self):
+        """Naming the UA we did NOT send would recreate the bug: the caller
+        reads a string off the response and believes it went out."""
+        out = ignored_field_warnings(
+            SimpleNamespace(ignored_request_fields=["headers['User-Agent']"])
+        )
+        assert "Nokia" not in " ".join(out)
+
+
+def test_a_target_chosen_hostname_cannot_decide_a_rotation_on_its_own():
+    """The host in an error message is chosen by the site, and two of the
+    needles are three letters long.
+
+    The call log is already stripped for this reason, but a URL can sit inline
+    in the message itself. `club.dns-shop.ru` is a real result host from this
+    repo's own RU SERP corpus; `tlscontact.com` is an ordinary site. Neither
+    should be able to spend a fresh exit by being named. This is the same
+    lever `should_rotate_for` documents closing for `EGRESS_BLOCKED_ERROR`.
+    """
+    assert looks_like_proxy_failure(None, "page.goto: https://club.dns-shop.ru/p") is False
+    assert looks_like_proxy_failure(None, "page.goto: https://www.tlscontact.com/x") is False
+    assert looks_like_proxy_failure(
+        None, 'selector_not_found on https://club.dns-shop.ru/p'
+    ) is False
+
+
+def test_stripping_the_url_does_not_hide_a_real_transport_fault():
+    """The signal must survive the cleaning: these carry a genuine code
+    alongside the host, and that code is what decides."""
+    assert looks_like_proxy_failure(
+        None, "page.goto: net::ERR_ABORTED at https://club.dns-shop.ru/p"
+    ) is True
+    assert looks_like_proxy_failure(
+        None, "page.goto: NS_ERROR_UNKNOWN_HOST loading https://www.tlscontact.com/x"
+    ) is True
+    assert looks_like_proxy_failure(
+        None, "proxy error while fetching https://club.dns-shop.ru/p"
+    ) is True

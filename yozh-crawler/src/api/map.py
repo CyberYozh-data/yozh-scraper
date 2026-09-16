@@ -18,6 +18,7 @@ from ..sitemap import collect_sitemap_urls, discover_sitemap_urls
 from ..ssrf import safe_get
 
 
+
 log = logging.getLogger(__name__)
 router = APIRouter()
 
@@ -60,6 +61,7 @@ async def _fetch_seed_html(
     scraper_fetch: ScraperFetch | None,
     *,
     check_ssrf: bool = True,
+    on_warning: Callable[[str], None] | None = None,
 ) -> tuple[str | None, str, str | None]:
     """Return (html, base_url, warning).
 
@@ -86,14 +88,20 @@ async def _fetch_seed_html(
             return result.get("raw_html"), final_url, None
         except Exception as exc:  # pylint: disable=broad-exception-caught
             return None, seed, f"seed render failed: {exc}"
-    # safe_get raises SSRFError or httpx errors; degrade on either.
+    # safe_get raises SSRFError or httpx errors; degrade on either. Only this
+    # direct leg is capped: the render leg above gets the page back whole from
+    # the scraper, which materialised the DOM in its own container.
     try:
-        resp = await safe_get(http_client, seed, check_ssrf=check_ssrf)
+        resp = await safe_get(http_client, seed, max_bytes=settings.map_max_body_bytes, check_ssrf=check_ssrf)
     except Exception as exc:  # pylint: disable=broad-exception-caught
         return None, seed, f"seed fetch failed: {exc}"
     if resp.status_code != 200:
         return None, seed, f"seed fetch returned {resp.status_code}"
-    return resp.text, str(resp.url), None
+    if resp.truncated:
+        log.warning("seed body cut at %d bytes url=%s", settings.map_max_body_bytes, seed)
+        if on_warning is not None:
+            on_warning(f"seed body cut at {settings.map_max_body_bytes} bytes")
+    return resp.text, resp.url, None
 
 
 async def build_map(
@@ -138,6 +146,7 @@ async def build_map(
                 # Filter while collecting so the max_urls cap counts matches, not
                 # the first N of a huge sitemap (which starved e.g. /blog/).
                 match=req.search,
+                on_warning=warn,
             )
         except Exception as exc:  # pylint: disable=broad-exception-caught
             warn(f"sitemap discovery failed: {exc}")
@@ -149,7 +158,7 @@ async def build_map(
         try:
             html, base_url, warning = await asyncio.wait_for(
                 _fetch_seed_html(
-                    req, seed, http_client, scraper_fetch, check_ssrf=check_ssrf
+                    req, seed, http_client, scraper_fetch, check_ssrf=check_ssrf, on_warning=warn
                 ),
                 timeout=settings.map_render_timeout_ms / 1000,
             )
@@ -257,6 +266,7 @@ async def _open_proxied_client(
     # (below) rather than silently going direct.
     try:
         return httpx.AsyncClient(
+            headers={"Accept-Encoding": "gzip, deflate"},
             proxy=proxy_url,
             timeout=httpx.Timeout(settings.map_http_timeout_ms / 1000.0),
             follow_redirects=False,

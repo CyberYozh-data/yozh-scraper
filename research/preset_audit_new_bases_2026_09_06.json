@@ -1,0 +1,894 @@
+[
+ {
+  "preset": "mobile_de_ad_camoufox",
+  "locale": "de",
+  "run": 0,
+  "params": {
+   "ad_id": "391420794"
+  },
+  "job_id": "req_b4f2c7e94d309d5af106feac",
+  "status": "done",
+  "meta": {
+   "fetch_ok": false,
+   "status_code": 200,
+   "final_url": "https://suchen.mobile.de/fahrzeuge/details.html?id=391420794",
+   "retries": 3,
+   "proxy_type": "prem_res_rotating",
+   "applied_locale": "de-DE",
+   "applied_timezone": "Europe/Berlin",
+   "error": null
+  },
+  "took_ms": 103696,
+  "job_error": null,
+  "warnings": [
+   "selector_not_found: [data-testid='vip-ad-title']",
+   "status_code=200",
+   "warmup_failed: https://www.mobile.de/: TimeoutError: Page.goto: Timeout 4577ms exceeded.\nCall log:\n  - navigating to \"https://www.mobile.de/\", waiting until \"domcontentloaded\"\n",
+   "attempt 2/3 shortened to 15029ms of the requested 31000ms to fit the page-task ceiling",
+   "attempt 3/3 shortened to 4577ms of the requested 31000ms to fit the page-task ceiling"
+  ],
+  "data": {
+   "title": null,
+   "price": null,
+   "mileage_km": null,
+   "first_registration": null,
+   "power_kw": null,
+   "fuel": null,
+   "transmission": null,
+   "color": null,
+   "seller": null,
+   "description": null
+  },
+  "fill": {
+   "title": 0.0,
+   "price": 0.0
+  },
+  "entries": 1,
+  "has_data": false,
+  "elapsed_s": 105.1
+ },
+ {
+  "preset": "mobile_de_ad_camoufox",
+  "locale": "de",
+  "run": 1,
+  "params": {
+   "ad_id": "391420794"
+  },
+  "job_id": "req_1e9a11f7566f248af0c67f71",
+  "status": "done",
+  "meta": {
+   "fetch_ok": false,
+   "status_code": 200,
+   "final_url": "https://suchen.mobile.de/fahrzeuge/details.html?id=391420794",
+   "retries": 3,
+   "proxy_type": "prem_res_rotating",
+   "applied_locale": "de-DE",
+   "applied_timezone": "Europe/Berlin",
+   "error": null
+  },
+  "took_ms": 109119,
+  "job_error": null,
+  "warnings": [
+   "selector_not_found: [data-testid='vip-ad-title']",
+   "status_code=200",
+   "attempt 2/3 shortened to 17972ms of the requested 31000ms to fit the page-task ceiling",
+   "attempt 3/3 shortened to 6203ms of the requested 31000ms to fit the page-task ceiling",
+   "field 'title': required selector not found"
+  ],
+  "data": {
+   "title": null,
+   "price": null,
+   "mileage_km": null,
+   "first_registration": null,
+   "power_kw": null,
+   "fuel": null,
+   "transmission": null,
+   "color": null,
+   "seller": null,
+   "description": null
+  },
+  "fill": {
+   "title": 0.0,
+   "price": 0.0
+  },
+  "entries": 1,
+  "has_data": false,
+  "elapsed_s": 111.1
+ },
+ {
+  "preset": "mobile_de_ad_chromium",
+  "locale": "de",
+  "run": 0,
+  "params": {
+   "ad_id": "391420794"
+  },
+  "job_id": "req_2dc7ee87113a8aa223e753d5",
+  "status": "done",
+  "meta": {
+   "fetch_ok": false,
+   "status_code": null,
+   "final_url": "https://suchen.mobile.de/fahrzeuge/details.html?id=391420794",
+   "retries": 3,
+   "proxy_type": "prem_res_rotating",
+   "applied_locale": "de-DE",
+   "applied_timezone": "Europe/Berlin",
+   "error": null
+  },
+  "took_ms": 102288,
+  "job_error": null,
+  "warnings": [
+   "selector_not_found: [data-testid='vip-ad-title']",
+   "last attempt: Captcha/block detected by heuristic",
+   "attempt 2/3 shortened to 18814ms of the requested 31000ms to fit the page-task ceiling",
+   "attempt 3/3 shortened to 7991ms of the requested 31000ms to fit the page-task ceiling",
+   "field 'title': required selector not found"
+  ],
+  "data": {
+   "title": null,
+   "price": null,
+   "mileage_km": null,
+   "first_registration": null,
+   "power_kw": null,
+   "fuel": null,
+   "transmission": null,
+   "color": null,
+   "seller": null,
+   "description": null
+  },
+  "fill": {
+   "title": 0.0,
+   "price": 0.0
+  },
+  "entries": 1,
+  "has_data": false,
+  "elapsed_s": 105.1
+ },
+ {
+  "preset": "mobile_de_ad_chromium",
+  "locale": "de",
+  "run": 1,
+  "params": {
+   "ad_id": "391420794"
+  },
+  "job_id": "req_044cdb12a6a6ce91a86e47c7",
+  "status": "done",
+  "meta": {
+   "fetch_ok": false,
+   "status_code": null,
+   "final_url": "https://suchen.mobile.de/fahrzeuge/details.html?id=391420794",
+   "retries": 3,
+   "proxy_type": "prem_res_rotating",
+   "applied_locale": "de-DE",
+   "applied_timezone": "Europe/Berlin",
+   "error": null
+  },
+  "took_ms": 104520,
+  "job_error": null,
+  "warnings": [
+   "selector_not_found: [data-testid='vip-ad-title']",
+   "attempt 2/3 shortened to 18820ms of the requested 31000ms to fit the page-task ceiling",
+   "attempt 3/3 shortened to 7731ms of the requested 31000ms to fit the page-task ceiling",
+   "field 'title': required selector not found"
+  ],
+  "data": {
+   "title": null,
+   "price": null,
+   "mileage_km": null,
+   "first_registration": null,
+   "power_kw": null,
+   "fuel": null,
+   "transmission": null,
+   "color": null,
+   "seller": null,
+   "description": null
+  },
+  "fill": {
+   "title": 0.0,
+   "price": 0.0
+  },
+  "entries": 1,
+  "has_data": false,
+  "elapsed_s": 105.1
+ },
+ {
+  "preset": "mobile_de_search_camoufox",
+  "locale": "de",
+  "run": 0,
+  "params": {
+   "make_id": "3500",
+   "model_id": "20"
+  },
+  "job_id": "req_a27289c8b5adc228e5faa7ce",
+  "status": "done",
+  "meta": {
+   "fetch_ok": true,
+   "status_code": 200,
+   "final_url": "https://suchen.mobile.de/fahrzeuge/search.html?isSearchRequest=true&ms=3500%3B20%3B%3B%3B&s=Car&vc=Car",
+   "retries": 0,
+   "proxy_type": "prem_res_rotating",
+   "applied_locale": "de-DE",
+   "applied_timezone": "Europe/Berlin",
+   "error": null
+  },
+  "took_ms": 59447,
+  "job_error": null,
+  "warnings": [
+   "all_extracted_links_self_referential: every one of the 24 extracted URLs is on suchen.mobile.de, the page's own host, crowded onto just 1 distinct path(s). On a search preset that means the results were never unwrapped — the field is populated but carries no destination."
+  ],
+  "data": {
+   "titles": [
+    "BMW 525",
+    "BMW 525",
+    "BMW 525",
+    "BMW 525",
+    "BMW 525",
+    "BMW 525",
+    "BMW 525",
+    "BMW 525",
+    "BMW 525",
+    "BMW 525",
+    "BMW 525",
+    "BMW 525",
+    "BMW 525",
+    "BMW 525",
+    "BMW 525",
+    "BMW 525",
+    "BMW 525",
+    "BMW 525",
+    "BMW 525",
+    "BMW 525",
+    "BMW 525",
+    "BMW 525",
+    "BMW 525",
+    "BMW 525"
+   ],
+   "urls": [
+    "https://suchen.mobile.de/fahrzeuge/details.html?id=460630869&vc=Car&ms=3500%3B20%3B%3B%3B&s=Car&sb=rel&od=up&searchId=821408bc-4f5b-b705-2ca7-037df1127225&ref=srp&refId=821408bc-4f5b-b705-2ca7-037df1127225",
+    "https://suchen.mobile.de/fahrzeuge/details.html?id=461955739&vc=Car&ms=3500%3B20%3B%3B%3B&s=Car&sb=rel&od=up&searchId=821408bc-4f5b-b705-2ca7-037df1127225&ref=srp&refId=821408bc-4f5b-b705-2ca7-037df1127225",
+    "https://suchen.mobile.de/fahrzeuge/details.html?id=42675344081472&vc=Car&ms=3500%3B20%3B%3B%3B&s=Car&sb=rel&od=up&searchId=821408bc-4f5b-b705-2ca7-037df1127225&ref=srp&refId=821408bc-4f5b-b705-2ca7-037df1127225",
+    "https://suchen.mobile.de/fahrzeuge/details.html?id=40613837626144&vc=Car&ms=3500%3B20%3B%3B%3B&s=Car&sb=rel&od=up&searchId=821408bc-4f5b-b705-2ca7-037df1127225&ref=srp&refId=821408bc-4f5b-b705-2ca7-037df1127225",
+    "https://suchen.mobile.de/fahrzeuge/details.html?id=456690708&vc=Car&ms=3500%3B20%3B%3B%3B&s=Car&sb=rel&od=up&searchId=821408bc-4f5b-b705-2ca7-037df1127225&ref=srp&refId=821408bc-4f5b-b705-2ca7-037df1127225",
+    "https://suchen.mobile.de/fahrzeuge/details.html?id=461792671&vc=Car&ms=3500%3B20%3B%3B%3B&s=Car&sb=rel&od=up&searchId=821408bc-4f5b-b705-2ca7-037df1127225&ref=srp&refId=821408bc-4f5b-b705-2ca7-037df1127225",
+    "https://suchen.mobile.de/fahrzeuge/details.html?id=461845930&vc=Car&ms=3500%3B20%3B%3B%3B&s=Car&sb=rel&od=up&searchId=821408bc-4f5b-b705-2ca7-037df1127225&ref=srp&refId=821408bc-4f5b-b705-2ca7-037df1127225",
+    "https://suchen.mobile.de/fahrzeuge/details.html?id=457720205&vc=Car&ms=3500%3B20%3B%3B%3B&s=Car&sb=rel&od=up&searchId=821408bc-4f5b-b705-2ca7-037df1127225&ref=srp&refId=821408bc-4f5b-b705-2ca7-037df1127225",
+    "https://suchen.mobile.de/fahrzeuge/details.html?id=433438607&vc=Car&ms=3500%3B20%3B%3B%3B&s=Car&sb=rel&od=up&searchId=821408bc-4f5b-b705-2ca7-037df1127225&ref=srp&refId=821408bc-4f5b-b705-2ca7-037df1127225",
+    "https://suchen.mobile.de/fahrzeuge/details.html?id=38662060012576&vc=Car&ms=3500%3B20%3B%3B%3B&s=Car&sb=rel&od=up&searchId=821408bc-4f5b-b705-2ca7-037df1127225&ref=srp&refId=821408bc-4f5b-b705-2ca7-037df1127225",
+    "https://suchen.mobile.de/fahrzeuge/details.html?id=461811255&vc=Car&ms=3500%3B20%3B%3B%3B&s=Car&sb=rel&od=up&searchId=821408bc-4f5b-b705-2ca7-037df1127225&ref=srp&refId=821408bc-4f5b-b705-2ca7-037df1127225",
+    "https://suchen.mobile.de/fahrzeuge/details.html?id=454903093&vc=Car&ms=3500%3B20%3B%3B%3B&s=Car&sb=rel&od=up&searchId=821408bc-4f5b-b705-2ca7-037df1127225&ref=srp&refId=821408bc-4f5b-b705-2ca7-037df1127225",
+    "https://suchen.mobile.de/fahrzeuge/details.html?id=459662614&vc=Car&ms=3500%3B20%3B%3B%3B&s=Car&sb=rel&od=up&searchId=821408bc-4f5b-b705-2ca7-037df1127225&ref=srp&refId=821408bc-4f5b-b705-2ca7-037df1127225",
+    "https://suchen.mobile.de/fahrzeuge/details.html?id=446931990&vc=Car&ms=3500%3B20%3B%3B%3B&s=Car&sb=rel&od=up&searchId=821408bc-4f5b-b705-2ca7-037df1127225&ref=srp&refId=821408bc-4f5b-b705-2ca7-037df1127225",
+    "https://suchen.mobile.de/fahrzeuge/details.html?id=444436156&vc=Car&ms=3500%3B20%3B%3B%3B&s=Car&sb=rel&od=up&searchId=821408bc-4f5b-b705-2ca7-037df1127225&ref=srp&refId=821408bc-4f5b-b705-2ca7-037df1127225",
+    "https://suchen.mobile.de/fahrzeuge/details.html?id=460509047&vc=Car&ms=3500%3B20%3B%3B%3B&s=Car&sb=rel&od=up&searchId=821408bc-4f5b-b705-2ca7-037df1127225&ref=srp&refId=821408bc-4f5b-b705-2ca7-037df1127225",
+    "https://suchen.mobile.de/fahrzeuge/details.html?id=43052034608480&vc=Car&ms=3500%3B20%3B%3B%3B&s=Car&sb=rel&od=up&searchId=821408bc-4f5b-b705-2ca7-037df1127225&ref=srp&refId=821408bc-4f5b-b705-2ca7-037df1127225",
+    "https://suchen.mobile.de/fahrzeuge/details.html?id=456997237&vc=Car&ms=3500%3B20%3B%3B%3B&s=Car&sb=rel&od=up&searchId=821408bc-4f5b-b705-2ca7-037df1127225&ref=srp&refId=821408bc-4f5b-b705-2ca7-037df1127225",
+    "https://suchen.mobile.de/fahrzeuge/details.html?id=456926039&vc=Car&ms=3500%3B20%3B%3B%3B&s=Car&sb=rel&od=up&searchId=821408bc-4f5b-b705-2ca7-037df1127225&ref=srp&refId=821408bc-4f5b-b705-2ca7-037df1127225",
+    "https://suchen.mobile.de/fahrzeuge/details.html?id=40802057883648&vc=Car&ms=3500%3B20%3B%3B%3B&s=Car&sb=rel&od=up&searchId=821408bc-4f5b-b705-2ca7-037df1127225&ref=srp&refId=821408bc-4f5b-b705-2ca7-037df1127225",
+    "https://suchen.mobile.de/fahrzeuge/details.html?id=43254674124096&vc=Car&ms=3500%3B20%3B%3B%3B&s=Car&sb=rel&od=up&searchId=821408bc-4f5b-b705-2ca7-037df1127225&ref=srp&refId=821408bc-4f5b-b705-2ca7-037df1127225",
+    "https://suchen.mobile.de/fahrzeuge/details.html?id=442475297&vc=Car&ms=3500%3B20%3B%3B%3B&s=Car&sb=rel&od=up&searchId=821408bc-4f5b-b705-2ca7-037df1127225&ref=srp&refId=821408bc-4f5b-b705-2ca7-037df1127225",
+    "https://suchen.mobile.de/fahrzeuge/details.html?id=43639567282464&vc=Car&ms=3500%3B20%3B%3B%3B&s=Car&sb=rel&od=up&searchId=821408bc-4f5b-b705-2ca7-037df1127225&ref=srp&refId=821408bc-4f5b-b705-2ca7-037df1127225",
+    "https://suchen.mobile.de/fahrzeuge/details.html?id=38639408488224&vc=Car&ms=3500%3B20%3B%3B%3B&s=Car&sb=rel&od=up&searchId=821408bc-4f5b-b705-2ca7-037df1127225&ref=srp&refId=821408bc-4f5b-b705-2ca7-037df1127225"
+   ],
+   "prices": [
+    14499.0,
+    17900.0,
+    25990.0,
+    19900.0,
+    10900.0,
+    11500.0,
+    11890.0,
+    21990.0,
+    18999.0,
+    15888.0,
+    21800.0,
+    19600.0,
+    14290.0,
+    15700.0,
+    17999.0,
+    16490.0,
+    14990.0,
+    15950.0,
+    12950.0,
+    23950.0,
+    13999.0,
+    15990.0,
+    9999.0,
+    17299.0
+   ],
+   "details": [
+    "Unfallfrei • EZ 07/2016 • 155.480 km • 160 kW (218 PS) • Diesel",
+    "EZ 10/2016 • 113.106 km • 160 kW (218 PS) • Diesel",
+    "Unfallfrei • EZ 10/2017 • 107.956 km • 170 kW (231 PS) • Diesel",
+    "EZ 12/2016 • 69.000 km • 160 kW (218 PS) • Diesel",
+    "Unfallfrei • EZ 09/2014 • 290.000 km • 160 kW (218 PS) • Diesel",
+    "Unfallfrei • EZ 03/2016 • 184.900 km • 160 kW (218 PS) • Diesel",
+    "Unfallfrei • EZ 11/2007 • 160.000 km • 145 kW (197 PS) • Diesel",
+    "Reparierter Unfallschaden • EZ 11/2018 • 92.203 km • 170 kW (231 PS) • Diesel",
+    "Unfallfrei • EZ 12/2015 • 50.000 km • 160 kW (218 PS) • Diesel",
+    "EZ 04/2014 • 110.549 km • 160 kW (218 PS) • Diesel",
+    "Unfallfrei • EZ 07/2015 • 124.995 km • 160 kW (218 PS) • Diesel",
+    "Unfallfrei • EZ 07/2015 • 123.077 km • 160 kW (218 PS) • Diesel",
+    "Unfallfrei • EZ 10/2011 • 92.800 km • 160 kW (218 PS) • Diesel",
+    "EZ 09/2015 • 118.000 km • 160 kW (218 PS) • Diesel",
+    "EZ 11/2016 • 118.959 km • 160 kW (218 PS) • Diesel",
+    "EZ 10/2012 • 67.527 km • 160 kW (218 PS) • Diesel",
+    "EZ 07/2014 • 146.393 km • 160 kW (218 PS) • Diesel",
+    "Unfallfrei • EZ 12/2015 • 125.000 km • 160 kW (218 PS) • Diesel",
+    "EZ 12/2008 • 109.500 km • 160 kW (218 PS) • Benzin",
+    "Unfallfrei • EZ 04/2019 • 142.172 km • 170 kW (231 PS) • Diesel",
+    "Unfallfrei • EZ 08/2013 • 154.000 km • 160 kW (218 PS) • Diesel",
+    "Unfallfrei • EZ 08/2016 • 153.687 km • 160 kW (218 PS) • Diesel",
+    "Unfallfrei • EZ 02/2010 • 145.000 km • 160 kW (218 PS) • Benzin",
+    "EZ 01/2013 • 106.526 km • 160 kW (218 PS) • Diesel"
+   ],
+   "sponsored": [
+    "sponsored-badge",
+    "",
+    "",
+    "",
+    "sponsored-badge",
+    "sponsored-badge",
+    "sponsored-badge",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    ""
+   ]
+  },
+  "fill": {
+   "titles": 1.0,
+   "urls": 1.0,
+   "prices": 1.0
+  },
+  "entries": 24,
+  "has_data": true,
+  "elapsed_s": 60.1
+ },
+ {
+  "preset": "mobile_de_search_camoufox",
+  "locale": "de",
+  "run": 1,
+  "params": {
+   "make_id": "3500",
+   "model_id": "20"
+  },
+  "job_id": "req_47bf16f3db5748f92723b7a0",
+  "status": "done",
+  "meta": {
+   "fetch_ok": false,
+   "status_code": 200,
+   "final_url": "https://suchen.mobile.de/fahrzeuge/search.html?isSearchRequest=true&makeModelVariant1.makeId=3500&makeModelVariant1.modelId=20",
+   "retries": 3,
+   "proxy_type": "prem_res_rotating",
+   "applied_locale": "de-DE",
+   "applied_timezone": "Europe/Berlin",
+   "error": null
+  },
+  "took_ms": 102730,
+  "job_error": null,
+  "warnings": [
+   "selector_not_found: [data-testid='listing-title-card-view']",
+   "status_code=200",
+   "warmup_failed: https://www.mobile.de/: TimeoutError: Page.goto: Timeout 5357ms exceeded.\nCall log:\n  - navigating to \"https://www.mobile.de/\", waiting until \"domcontentloaded\"\n",
+   "attempt 2/3 shortened to 16783ms of the requested 31000ms to fit the page-task ceiling",
+   "attempt 3/3 shortened to 5357ms of the requested 31000ms to fit the page-task ceiling"
+  ],
+  "data": {
+   "titles": [],
+   "urls": [],
+   "prices": [],
+   "details": [],
+   "sponsored": []
+  },
+  "fill": {
+   "titles": 0.0,
+   "urls": 0.0,
+   "prices": 0.0
+  },
+  "entries": 0,
+  "has_data": false,
+  "elapsed_s": 105.1
+ },
+ {
+  "preset": "mobile_de_search_chromium",
+  "locale": "de",
+  "run": 0,
+  "params": {
+   "make_id": "3500",
+   "model_id": "20"
+  },
+  "job_id": "req_214e70887d0d9d93905c26a7",
+  "status": "done",
+  "meta": {
+   "fetch_ok": false,
+   "status_code": 200,
+   "final_url": "https://suchen.mobile.de/fahrzeuge/search.html?isSearchRequest=true&makeModelVariant1.makeId=3500&makeModelVariant1.modelId=20",
+   "retries": 3,
+   "proxy_type": "prem_res_rotating",
+   "applied_locale": "de-DE",
+   "applied_timezone": "Europe/Berlin",
+   "error": null
+  },
+  "took_ms": 108874,
+  "job_error": null,
+  "warnings": [
+   "selector_not_found: [data-testid='listing-title-card-view']",
+   "status_code=200",
+   "attempt 2/3 shortened to 18667ms of the requested 31000ms to fit the page-task ceiling",
+   "attempt 3/3 shortened to 6244ms of the requested 31000ms to fit the page-task ceiling",
+   "field 'titles': required selector not found"
+  ],
+  "data": {
+   "titles": [],
+   "urls": [],
+   "prices": [],
+   "details": [],
+   "sponsored": []
+  },
+  "fill": {
+   "titles": 0.0,
+   "urls": 0.0,
+   "prices": 0.0
+  },
+  "entries": 0,
+  "has_data": false,
+  "elapsed_s": 111.1
+ },
+ {
+  "preset": "mobile_de_search_chromium",
+  "locale": "de",
+  "run": 1,
+  "params": {
+   "make_id": "3500",
+   "model_id": "20"
+  },
+  "job_id": "req_a643f8b70deaa5ad5f892d16",
+  "status": "done",
+  "meta": {
+   "fetch_ok": false,
+   "status_code": 200,
+   "final_url": "https://suchen.mobile.de/fahrzeuge/search.html?isSearchRequest=true&makeModelVariant1.makeId=3500&makeModelVariant1.modelId=20&s=Car&vc=Car",
+   "retries": 3,
+   "proxy_type": "prem_res_rotating",
+   "applied_locale": "de-DE",
+   "applied_timezone": "Europe/Berlin",
+   "error": null
+  },
+  "took_ms": 103632,
+  "job_error": null,
+  "warnings": [
+   "selector_not_found: [data-testid='listing-title-card-view']",
+   "status_code=200",
+   "attempt 2/3 shortened to 18574ms of the requested 31000ms to fit the page-task ceiling",
+   "attempt 3/3 shortened to 7646ms of the requested 31000ms to fit the page-task ceiling",
+   "field 'titles': required selector not found"
+  ],
+  "data": {
+   "titles": [],
+   "urls": [],
+   "prices": [],
+   "details": [],
+   "sponsored": []
+  },
+  "fill": {
+   "titles": 0.0,
+   "urls": 0.0,
+   "prices": 0.0
+  },
+  "entries": 0,
+  "has_data": false,
+  "elapsed_s": 105.1
+ },
+ {
+  "preset": "ozon_product_camoufox",
+  "locale": "ru",
+  "run": 0,
+  "params": {
+   "product_id": "3972904544"
+  },
+  "job_id": "req_21c097991d3c2ce88afc4c62",
+  "status": "done",
+  "meta": {
+   "fetch_ok": false,
+   "status_code": 200,
+   "final_url": "https://www.ozon.ru/search/?deny_category_prediction=true&from_global=true&text=MSI+A17+AI+B2HWFKG-048XRU+%D0%98%D0%B3%D1%80%D0%BE%D0%B2%D0%BE%D0%B9+%D0%BD%D0%BE%D1%83%D1%82%D0%B1%D1%83%D0%BA+17.30%22",
+   "retries": 3,
+   "proxy_type": "prem_res_rotating",
+   "applied_locale": "ru-RU",
+   "applied_timezone": "Europe/Moscow",
+   "error": null
+  },
+  "took_ms": 130846,
+  "job_error": null,
+  "warnings": [
+   "selector_not_found: [data-widget='webProductHeading']",
+   "status_code=200",
+   "last attempt: HTTP 403 (proxy ban / rate limit)",
+   "attempt 2/3 shortened to 16523ms of the requested 31000ms to fit the page-task ceiling",
+   "attempt 3/3 shortened to 4812ms of the requested 31000ms to fit the page-task ceiling"
+  ],
+  "data": {
+   "title": null,
+   "price": null,
+   "price_ozon_card": null,
+   "rating": null,
+   "review_count": null,
+   "sku": null,
+   "out_of_stock": "webOutOfStock"
+  },
+  "fill": {
+   "title": 0.0,
+   "price": 0.0
+  },
+  "entries": 1,
+  "has_data": false,
+  "elapsed_s": 132.1
+ },
+ {
+  "preset": "ozon_product_camoufox",
+  "locale": "ru",
+  "run": 1,
+  "params": {
+   "product_id": "3972904544"
+  },
+  "job_id": "req_faa5361eedc7e41a304eb9b4",
+  "status": "done",
+  "meta": {
+   "fetch_ok": true,
+   "status_code": 200,
+   "final_url": "https://www.ozon.ru/product/3972904544/?sh=NxU5v6ny1w",
+   "retries": 0,
+   "proxy_type": "prem_res_rotating",
+   "applied_locale": "ru-RU",
+   "applied_timezone": "Asia/Novokuznetsk",
+   "error": null
+  },
+  "took_ms": 24339,
+  "job_error": null,
+  "warnings": [],
+  "data": {
+   "title": "MSI A17 AI B2HWFKG-048XRU Игровой ноутбук 17.30\", AMD Ryzen 7 260, RAM 16 ГБ, SSD 512 ГБ, NVIDIA GeForce RTX 5060 для ноутбуков (8 Гб), Без системы, (9S7-17UL32-048), черный, Русская раскладка",
+   "price": 208646.0,
+   "price_ozon_card": 193812.0,
+   "rating": 5.0,
+   "review_count": 3,
+   "sku": "3972904544",
+   "out_of_stock": ""
+  },
+  "fill": {
+   "title": 1.0,
+   "price": 1.0
+  },
+  "entries": 1,
+  "has_data": true,
+  "elapsed_s": 27.0
+ },
+ {
+  "preset": "ozon_product_chromium",
+  "locale": "ru",
+  "run": 0,
+  "params": {
+   "product_id": "3972904544"
+  },
+  "job_id": "req_1eaead0bd0c2c5c149cc73c6",
+  "status": "done",
+  "meta": {
+   "fetch_ok": false,
+   "status_code": 403,
+   "final_url": "https://www.ozon.ru/product/3972904544/",
+   "retries": 3,
+   "proxy_type": "prem_res_rotating",
+   "applied_locale": "ru-RU",
+   "applied_timezone": "Europe/Moscow",
+   "error": null
+  },
+  "took_ms": 106863,
+  "job_error": null,
+  "warnings": [
+   "HTTP 403 (proxy ban / rate limit)",
+   "status_code=403",
+   "attempt 2/3 shortened to 17607ms of the requested 31000ms to fit the page-task ceiling",
+   "attempt 3/3 shortened to 7247ms of the requested 31000ms to fit the page-task ceiling",
+   "parsing skipped: the page is not genuine content (blocked=True, status=403)"
+  ],
+  "data": null,
+  "fill": {
+   "title": 0.0,
+   "price": 0.0
+  },
+  "entries": 0,
+  "has_data": false,
+  "elapsed_s": 108.1
+ },
+ {
+  "preset": "ozon_product_chromium",
+  "locale": "ru",
+  "run": 1,
+  "params": {
+   "product_id": "3972904544"
+  },
+  "job_id": "req_dc22270dd4f48cde72bc2aa6",
+  "status": "done",
+  "meta": {
+   "fetch_ok": false,
+   "status_code": 403,
+   "final_url": "https://www.ozon.ru/product/3972904544/",
+   "retries": 3,
+   "proxy_type": "prem_res_rotating",
+   "applied_locale": "ru-RU",
+   "applied_timezone": "Europe/Moscow",
+   "error": null
+  },
+  "took_ms": 104697,
+  "job_error": null,
+  "warnings": [
+   "HTTP 403 (proxy ban / rate limit)",
+   "status_code=403",
+   "attempt 2/3 shortened to 18544ms of the requested 31000ms to fit the page-task ceiling",
+   "attempt 3/3 shortened to 6733ms of the requested 31000ms to fit the page-task ceiling",
+   "parsing skipped: the page is not genuine content (blocked=True, status=403)"
+  ],
+  "data": null,
+  "fill": {
+   "title": 0.0,
+   "price": 0.0
+  },
+  "entries": 0,
+  "has_data": false,
+  "elapsed_s": 105.1
+ },
+ {
+  "preset": "ozon_search_camoufox",
+  "locale": "ru",
+  "run": 0,
+  "params": {
+   "query": "ноутбук"
+  },
+  "job_id": "req_51eb70bc76725ba654c65822",
+  "status": "done",
+  "meta": {
+   "fetch_ok": true,
+   "status_code": 200,
+   "final_url": "https://www.ozon.ru/category/noutbuki-planshety-i-elektronnye-knigi-8730/?category_was_predicted=true&deny_category_prediction=true&text=%D0%BD%D0%BE%D1%83%D1%82%D0%B1%D1%83%D0%BA",
+   "retries": 0,
+   "proxy_type": "prem_res_rotating",
+   "applied_locale": "ru-RU",
+   "applied_timezone": "Europe/Moscow",
+   "error": null
+  },
+  "took_ms": 24157,
+  "job_error": null,
+  "warnings": [],
+  "data": {
+   "titles": [
+    "Ноутбук 15.6\", Intel Pentium Gold 6500Y, RAM 16 ГБ, SSD 256 ГБ, Intel UHD Graphics, Windows Home, серый металлик, Русская раскладка",
+    "Ноутбук 15.6\", Intel Pentium Gold 6500Y, RAM 16 ГБ, SSD 512 ГБ, Windows Home, серый металлик, Русская раскладка",
+    "Ноутбук 15.6\", Intel N95, RAM 32 ГБ, SSD 2048 ГБ, Intel UHD Graphics, Windows Pro, (MAX-N95), серебристый, Русская раскладка",
+    "HUAWEI MateBook D14 Ноутбук 14\", Intel Core i5-13420H, RAM 16 ГБ, SSD 1000 ГБ, Intel UHD Graphics, Без системы, (53014MUB), серый металлик, Русская раскладка",
+    "Ноутбук 15.6\", AMD Ryzen 5 2500U, RAM 32 ГБ, SSD 1024 ГБ, AMD Radeon Vega 8, Windows Pro, серебристый, Русская раскладка",
+    "Ноутбук 14.1\", Intel Pentium J3710, RAM 8 ГБ, SSD 512 ГБ, Intel HD Graphics 405, Windows Pro, розовый, Русская раскладка",
+    "CBR Ноутбук 15.6\", Intel Celeron N5095, RAM 8 ГБ, SSD 256 ГБ, Intel UHD Graphics, Windows Pro, (LP-SMCR-1503), черный, Русская раскладка",
+    "Ноутбук 15.6\", Intel N95, RAM 32 ГБ, SSD 2048 ГБ, Intel UHD Graphics, Windows Pro, (R5), серебристый, Русская раскладка"
+   ],
+   "urls": [
+    "https://www.ozon.ru/product/noutbuk-15-6-intel-pentium-gold-6500y-ram-16-gb-ssd-256-gb-intel-uhd-graphics-windows-home-4598573932/",
+    "https://www.ozon.ru/product/noutbuk-15-6-intel-pentium-gold-6500y-ram-16-gb-ssd-512-gb-windows-home-seryy-metallik-3890785230/",
+    "https://www.ozon.ru/product/noutbuk-15-6-intel-n95-ram-32-gb-ssd-2048-gb-intel-uhd-graphics-windows-pro-max-n95-serebristyy-4853167002/",
+    "https://www.ozon.ru/product/huawei-matebook-d14-noutbuk-14-intel-core-i5-13420h-ram-16-gb-ssd-1000-gb-intel-uhd-graphics-bez-5013249796/",
+    "https://www.ozon.ru/product/noutbuk-15-6-amd-ryzen-5-2500u-ram-32-gb-ssd-1024-gb-amd-radeon-vega-8-windows-pro-serebristyy-3603805656/",
+    "https://www.ozon.ru/product/noutbuk-14-1-intel-pentium-j3710-ram-8-gb-ssd-512-gb-intel-hd-graphics-405-windows-pro-rozovyy-2389873475/",
+    "https://www.ozon.ru/product/cbr-noutbuk-15-6-intel-celeron-n5095-ram-8-gb-ssd-256-gb-intel-uhd-graphics-windows-pro-lp-smcr-2395809065/",
+    "https://www.ozon.ru/product/noutbuk-15-6-intel-n95-ram-32-gb-ssd-2048-gb-intel-uhd-graphics-windows-pro-r5-serebristyy-5687953830/"
+   ],
+   "prices": [
+    32431.0,
+    35110.0,
+    32597.0,
+    55119.0,
+    37190.0,
+    30329.0,
+    30264.0,
+    27739.0
+   ],
+   "ratings": [
+    4.8,
+    4.8,
+    4.8,
+    5.0,
+    4.8,
+    4.8,
+    4.8,
+    4.8
+   ],
+   "review_counts": [
+    4465,
+    4465,
+    585,
+    7,
+    332,
+    1058,
+    305,
+    251
+   ]
+  },
+  "fill": {
+   "titles": 1.0,
+   "urls": 1.0,
+   "prices": 1.0
+  },
+  "entries": 8,
+  "has_data": true,
+  "elapsed_s": 27.1
+ },
+ {
+  "preset": "ozon_search_camoufox",
+  "locale": "ru",
+  "run": 1,
+  "params": {
+   "query": "ноутбук"
+  },
+  "job_id": "req_0ccfd680b4ec395dd5663686",
+  "status": "done",
+  "meta": {
+   "fetch_ok": true,
+   "status_code": 200,
+   "final_url": "https://www.ozon.ru/category/noutbuki-planshety-i-elektronnye-knigi-8730/?category_was_predicted=true&deny_category_prediction=true&text=%D0%BD%D0%BE%D1%83%D1%82%D0%B1%D1%83%D0%BA",
+   "retries": 0,
+   "proxy_type": "prem_res_rotating",
+   "applied_locale": "ru-RU",
+   "applied_timezone": "Asia/Yekaterinburg",
+   "error": null
+  },
+  "took_ms": 28388,
+  "job_error": null,
+  "warnings": [],
+  "data": {
+   "titles": [
+    "Ноутбук 15.6\", Intel Pentium Gold 6500Y, RAM 16 ГБ, SSD 256 ГБ, Intel UHD Graphics, Windows Home, серый металлик, Русская раскладка",
+    "Ноутбук 15.6\", Intel N95, RAM 32 ГБ, SSD 2048 ГБ, Intel UHD Graphics, Windows Pro, (MAX-N95), серебристый, Русская раскладка",
+    "HUAWEI MateBook D14 Ноутбук 14\", Intel Core i5-13420H, RAM 16 ГБ, SSD 1000 ГБ, Intel UHD Graphics, Без системы, (53014MUB), серый металлик, Русская раскладка",
+    "CBR Ноутбук 15.6\", Intel Celeron N5095, RAM 8 ГБ, SSD 256 ГБ, Intel UHD Graphics, Windows Pro, (LP-SMCR-1503), черный, Русская раскладка",
+    "Ноутбук 15.6\", AMD Ryzen 5 2500U, RAM 32 ГБ, SSD 1024 ГБ, AMD Radeon Vega 8, Windows Pro, серебристый, Русская раскладка",
+    "Azerty RB-1559, SSD 128, HDD 1Tb Ноутбук 15.6\", Intel Celeron N5095, RAM 16 ГБ, SSD 128 ГБ, Intel UHD Graphics, Windows Pro, (120-1256), светло-серый, Русская раскладка",
+    "Игровые Ноутбук 15.6\", AMD Ryzen 5 3500U, RAM 16 ГБ, SSD 1024 ГБ, AMD Radeon Vega 8, Windows Pro, (B3500 PRO), серый, Русская раскладка",
+    "Ноутбук 15.6\", Intel Pentium Gold 6500Y, RAM 16 ГБ, SSD 512 ГБ, Windows Home, серый металлик, Русская раскладка"
+   ],
+   "urls": [
+    "https://www.ozon.ru/product/noutbuk-15-6-intel-pentium-gold-6500y-ram-16-gb-ssd-256-gb-intel-uhd-graphics-windows-home-4598573932/",
+    "https://www.ozon.ru/product/noutbuk-15-6-intel-n95-ram-32-gb-ssd-2048-gb-intel-uhd-graphics-windows-pro-max-n95-serebristyy-4853167002/",
+    "https://www.ozon.ru/product/huawei-matebook-d14-noutbuk-14-intel-core-i5-13420h-ram-16-gb-ssd-1000-gb-intel-uhd-graphics-bez-5013249796/",
+    "https://www.ozon.ru/product/cbr-noutbuk-15-6-intel-celeron-n5095-ram-8-gb-ssd-256-gb-intel-uhd-graphics-windows-pro-lp-smcr-2395809065/",
+    "https://www.ozon.ru/product/noutbuk-15-6-amd-ryzen-5-2500u-ram-32-gb-ssd-1024-gb-amd-radeon-vega-8-windows-pro-serebristyy-3603805656/",
+    "https://www.ozon.ru/product/azerty-rb-1559-ssd-128-hdd-1tb-noutbuk-15-6-intel-celeron-n5095-ram-16-gb-ssd-128-gb-intel-4654841150/",
+    "https://www.ozon.ru/product/igrovye-noutbuk-15-6-amd-ryzen-5-3500u-ram-16-gb-ssd-1024-gb-amd-radeon-vega-8-windows-pro-b3500-3375874832/",
+    "https://www.ozon.ru/product/noutbuk-15-6-intel-pentium-gold-6500y-ram-16-gb-ssd-512-gb-windows-home-seryy-metallik-3890785230/"
+   ],
+   "prices": [
+    32419.0,
+    32572.0,
+    55119.0,
+    30285.0,
+    37187.0,
+    32224.0,
+    53226.0,
+    35098.0
+   ],
+   "ratings": [
+    4.8,
+    4.8,
+    5.0,
+    4.8,
+    4.8,
+    4.7,
+    4.9,
+    4.8
+   ],
+   "review_counts": [
+    4465,
+    585,
+    7,
+    305,
+    332,
+    1901,
+    823,
+    4465
+   ]
+  },
+  "fill": {
+   "titles": 1.0,
+   "urls": 1.0,
+   "prices": 1.0
+  },
+  "entries": 8,
+  "has_data": true,
+  "elapsed_s": 30.1
+ },
+ {
+  "preset": "ozon_search_chromium",
+  "locale": "ru",
+  "run": 0,
+  "params": {
+   "query": "ноутбук"
+  },
+  "job_id": "req_320a40e178a75094d068efe6",
+  "status": "done",
+  "meta": {
+   "fetch_ok": false,
+   "status_code": 403,
+   "final_url": "https://www.ozon.ru/search/?text=%D0%BD%D0%BE%D1%83%D1%82%D0%B1%D1%83%D0%BA",
+   "retries": 1,
+   "proxy_type": "prem_res_rotating",
+   "applied_locale": "ru-RU",
+   "applied_timezone": "Europe/Moscow",
+   "error": null
+  },
+  "took_ms": 84775,
+  "job_error": null,
+  "warnings": [
+   "HTTP 403 (proxy ban / rate limit)",
+   "status_code=403",
+   "last attempt: the page did not finish loading in time",
+   "attempt 2/3 shortened to 18874ms of the requested 31000ms to fit the page-task ceiling",
+   "parsing skipped: the page is not genuine content (blocked=True, status=403)"
+  ],
+  "data": null,
+  "fill": {
+   "titles": 0.0,
+   "urls": 0.0,
+   "prices": 0.0
+  },
+  "entries": 0,
+  "has_data": false,
+  "elapsed_s": 87.1
+ },
+ {
+  "preset": "ozon_search_chromium",
+  "locale": "ru",
+  "run": 1,
+  "params": {
+   "query": "ноутбук"
+  },
+  "job_id": "req_5172cac4382ac1a0bed6b250",
+  "status": "done",
+  "meta": {
+   "fetch_ok": false,
+   "status_code": 403,
+   "final_url": "https://www.ozon.ru/search/?text=%D0%BD%D0%BE%D1%83%D1%82%D0%B1%D1%83%D0%BA",
+   "retries": 3,
+   "proxy_type": "prem_res_rotating",
+   "applied_locale": "ru-RU",
+   "applied_timezone": "Europe/Moscow",
+   "error": null
+  },
+  "took_ms": 107467,
+  "job_error": null,
+  "warnings": [
+   "HTTP 403 (proxy ban / rate limit)",
+   "status_code=403",
+   "attempt 2/3 shortened to 18350ms of the requested 31000ms to fit the page-task ceiling",
+   "attempt 3/3 shortened to 7840ms of the requested 31000ms to fit the page-task ceiling",
+   "parsing skipped: the page is not genuine content (blocked=True, status=403)"
+  ],
+  "data": null,
+  "fill": {
+   "titles": 0.0,
+   "urls": 0.0,
+   "prices": 0.0
+  },
+  "entries": 0,
+  "has_data": false,
+  "elapsed_s": 108.1
+ }
+]

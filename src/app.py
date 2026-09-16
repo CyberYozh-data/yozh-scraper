@@ -8,6 +8,7 @@ from fastapi_mcp import FastApiMCP
 
 from src.api import prem_proxies
 from src.api.router import router
+from src.presets.store import FilePresetStore
 from src.queue.broker import broker
 from src.queue.store import get_job_store, init_job_store
 from src.sessions.store import get_session_store, init_session_store
@@ -26,6 +27,7 @@ async def lifespan(app: FastAPI):
 
     init_job_store()
     init_session_store(get_job_store().client)  # configured from settings inside
+    FilePresetStore().warn_if_not_writable()
     if not broker.is_worker_process:
         await broker.startup()
 

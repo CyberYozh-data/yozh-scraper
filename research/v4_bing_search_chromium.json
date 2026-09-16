@@ -1,0 +1,348 @@
+[
+ {
+  "preset": "bing_search_chromium",
+  "locale": "de",
+  "run": 0,
+  "params": {
+   "query": "best laptop 2026"
+  },
+  "job_id": "req_3c97f6a296338dcdc7cb433f",
+  "status": "done",
+  "meta": {
+   "fetch_ok": true,
+   "status_code": 200,
+   "final_url": "https://www.bing.com/search?q=best+laptop+2026&cc=de&setlang=de",
+   "retries": 0,
+   "proxy_type": "prem_res_rotating",
+   "applied_locale": "de-DE",
+   "applied_timezone": "Europe/Berlin",
+   "error": null
+  },
+  "took_ms": 6077,
+  "job_error": null,
+  "warnings": [],
+  "data": {
+   "titles": [
+    "The Best Laptops We've Tested (September 2026) | PCMag",
+    "Notebook-Test.2026: Allround-Laptops auf dem Prüfstand - CHIP",
+    "Laptop-Test 2026: Die besten Notebooks aller Klassen …",
+    "Laptop Testsieger 2026 | Stiftung Warentest - Produkte im Test",
+    "Laptops Tests 2026 - Alle Bestenlisten im Überblick!",
+    "Best Laptops of 2026: Top Picks Tested by CNET",
+    "Das beste Laptop | Vergleich 09/2026 | F.A.Z."
+   ],
+   "links": [
+    "https://www.pcmag.com/picks/the-best-laptops",
+    "https://www.chip.de/artikel/Laptop-Vergleich-Das-sind-die-Notebook-Testsieger_119941475.html",
+    "https://www.pcwelt.de/article/2215385/die-besten-laptops-test.html",
+    "https://produkte-im-test.de/laptops-im-test-stiftung-warentest/",
+    "https://www.computerbild.de/bestenlisten/notebooks/",
+    "https://www.cnet.com/tech/computing/best-laptop/",
+    "https://www.faz.net/kaufkompass/vergleich/das-beste-laptop-fuer-die-meisten/"
+   ],
+   "snippets": [
+    "Vor 3 Tagen · Whether you want a simple budget PC, a productivity workhorse, or a screamer of a gaming notebook, our experts …",
+    "19. Juli 2026 · Der Markt ist groß und unübersichtlich – mit unserem Notebook Test behalten Sie jederzeit den Überblick. Wir stellen …",
+    "Unser Notebook-Testvergleich 2026 bietet Ihnen einen kompakten Überblick und hilft, den besten Laptop …",
+    "Vor 14 Stunden · Die folgende Tabelle zeigt die besten Laptops im Test 2026 von Stiftung Warentest auf einen Blick. Der Apple …",
+    "Egal ob performanter Gaming-Laptop, günstiges Chrome-Book, oder stylischer MacBook Pro: Um da als …",
+    "11. Aug. 2026 · These are the best laptops that my colleagues and I have gotten our hands on in the past year, spanning all types, …",
+    "8. Juli 2026 · Wir haben uns 77 Laptops angesehen. Unser Favorit: das Lenovo Thinkpad X9 15 Aura …"
+   ],
+   "result_blocks__slimmed_rows": 7
+  },
+  "fill": {
+   "titles": 1.0,
+   "links": 1.0
+  },
+  "entries": 7,
+  "has_data": true,
+  "elapsed_s": 9.0
+ },
+ {
+  "preset": "bing_search_chromium",
+  "locale": "de",
+  "run": 1,
+  "params": {
+   "query": "best laptop 2026"
+  },
+  "job_id": "req_465a7e4aa981e254982a21f8",
+  "status": "done",
+  "meta": {
+   "fetch_ok": true,
+   "status_code": 200,
+   "final_url": "https://www.bing.com/search?q=best+laptop+2026&cc=de&setlang=de",
+   "retries": 0,
+   "proxy_type": "prem_res_rotating",
+   "applied_locale": "de-DE",
+   "applied_timezone": "Europe/Berlin",
+   "error": null
+  },
+  "took_ms": 6495,
+  "job_error": null,
+  "warnings": [
+   "row_alignment_mismatch: all=true fields have different lengths ('titles'=6, 'links'=6, 'snippets'=5, 'result_blocks'=6) — consumers that zip these lists by index may pair values with the wrong row. If these fields are genuinely independent and not meant to align row-by-row, this warning can be ignored."
+  ],
+  "data": {
+   "titles": [
+    "The Best Laptops We've Tested (September 2026) | PCMag",
+    "Notebook-Test.2026: Allround-Laptops auf dem Prüfstand - CHIP",
+    "Laptop-Test 2026: Die besten Notebooks aller Klassen …",
+    "Laptops Tests 2026 - Alle Bestenlisten im Überblick!",
+    "Laptop Testsieger 2026 | Stiftung Warentest - Produkte im Test",
+    "Best Laptops 2026: Our benchmarked picks for …"
+   ],
+   "links": [
+    "https://www.pcmag.com/picks/the-best-laptops",
+    "https://www.chip.de/artikel/Laptop-Vergleich-Das-sind-die-Notebook-Testsieger_119941475.html",
+    "https://www.pcwelt.de/article/2215385/die-besten-laptops-test.html",
+    "https://www.computerbild.de/bestenlisten/notebooks/",
+    "https://produkte-im-test.de/laptops-im-test-stiftung-warentest/",
+    "https://www.tomshardware.com/laptops/best-laptops"
+   ],
+   "snippets": [
+    "Vor 3 Tagen · Whether you want a simple budget PC, a productivity workhorse, or a screamer of a gaming notebook, our experts …",
+    "Unser Notebook-Testvergleich 2026 bietet Ihnen einen kompakten Überblick und hilft, den besten Laptop …",
+    "Egal ob performanter Gaming-Laptop, günstiges Chrome-Book, oder stylischer MacBook Pro: Um da als …",
+    "Vor 14 Stunden · Die folgende Tabelle zeigt die besten Laptops im Test 2026 von Stiftung Warentest auf einen Blick. Der Apple …",
+    "Go beyond the headlines with Tom’s Hardware Premium. Access Bench, Roadmaps, deep analysis and …"
+   ],
+   "result_blocks__slimmed_rows": 6
+  },
+  "fill": {
+   "titles": 1.0,
+   "links": 1.0
+  },
+  "entries": 6,
+  "has_data": true,
+  "elapsed_s": 9.0
+ },
+ {
+  "preset": "bing_search_chromium",
+  "locale": "ru",
+  "run": 0,
+  "params": {
+   "query": "best laptop 2026"
+  },
+  "job_id": "req_0ba2d1787c78bae2f6028198",
+  "status": "done",
+  "meta": {
+   "fetch_ok": true,
+   "status_code": 200,
+   "final_url": "https://www.bing.com/search?q=best+laptop+2026&cc=ru&setlang=ru",
+   "retries": 0,
+   "proxy_type": "prem_res_rotating",
+   "applied_locale": "ru-RU",
+   "applied_timezone": "Europe/Moscow",
+   "error": null
+  },
+  "took_ms": 8271,
+  "job_error": null,
+  "warnings": [],
+  "data": {
+   "titles": [
+    "Перевод BEST с английского на русский: Cambridge Dictionary",
+    "BEST | English meaning - Cambridge Dictionary",
+    "Best - перевод, транскрипция, произношение, примеры",
+    "BEST Definition & Meaning - Merriam-Webster",
+    "Best - definition of best by The Free Dictionary",
+    "Домашняя страница - ЛУЧШИЕ В РОССИИ – КОМПАНИИ И …",
+    "best - WordReference.com Dictionary of English",
+    "BEST: Board of European Students of Technology",
+    "best - Longman Dictionary of Contemporary English Online",
+    "Best Buy | Official Online Store | Shop Now & Save"
+   ],
+   "links": [
+    "https://dictionary.cambridge.org/ru/%D1%81%D0%BB%D0%BE%D0%B2%D0%B0%D1%80%D1%8C/%D0%B0%D0%BD%D0%B3%D0%BB%D0%BE-%D1%80%D1%83%D1%81%D1%81%D0%BA%D0%B8%D0%B9/best",
+    "https://dictionary.cambridge.org/dictionary/english/best",
+    "https://wooordhunt.ru/word/best",
+    "https://www.merriam-webster.com/dictionary/best",
+    "https://www.thefreedictionary.com/best",
+    "https://best.ru/",
+    "https://www.wordreference.com/definition/best",
+    "https://best.eu.org/index.jsp",
+    "https://www.ldoceonline.com/dictionary/best",
+    "https://www.bestbuy.com/"
+   ],
+   "snippets": [
+    "She's one of our best students. Give her my best wishes. Susie's my best friend (= the friend I like more than any other). What's the …",
+    "best adjective, adverb (HIGHEST QUALITY) of the highest quality, to the greatest degree, in the most effective way, or being the …",
+    "Перевод Best - лучший, больший, лучше всего, больше всего, провести, перехитрить. Транскрипция - |best|. Примеры - at …",
+    "27 авг. 2026 г. · In the best of all possible worlds, no one would be without food and clean water. I have a wonderful family and a …",
+    "1. In a most excellent way; most creditably or advantageously. 2. To the greatest degree or extent; most: \"He was certainly the best …",
+    "Платформа, посвящённая признанию лучших компаний и персон года в России.",
+    "Idioms (all) for the best, producing good as the final result: It turned out to be all for the best when I didn't get that job. Idioms as best …",
+    "BEST, Board of European Students of Technology is a voluntary and politically unaffiliated non-profit organisation. Since 1989 we …",
+    "best From Longman Dictionary of Contemporary English best1 /best/ S1 W1 adjective [superlative of good] 1 better than anything …",
+    "Shop Best Buy for electronics, computers, appliances, cell phones, video games & more new tech. Store pickup & free 2-day …"
+   ],
+   "result_blocks__slimmed_rows": 10
+  },
+  "fill": {
+   "titles": 1.0,
+   "links": 1.0
+  },
+  "entries": 10,
+  "has_data": true,
+  "elapsed_s": 9.0
+ },
+ {
+  "preset": "bing_search_chromium",
+  "locale": "ru",
+  "run": 1,
+  "params": {
+   "query": "best laptop 2026"
+  },
+  "job_id": "req_681842e6895532724e0e4aa9",
+  "status": "done",
+  "meta": {
+   "fetch_ok": true,
+   "status_code": 200,
+   "final_url": "https://www.bing.com/search?q=best+laptop+2026&cc=ru&setlang=ru",
+   "retries": 0,
+   "proxy_type": "prem_res_rotating",
+   "applied_locale": "ru-RU",
+   "applied_timezone": "Europe/Moscow",
+   "error": null
+  },
+  "took_ms": 8189,
+  "job_error": null,
+  "warnings": [],
+  "data": {
+   "titles": [
+    "Перевод BEST с английского на русский: Cambridge Dictionary",
+    "BEST | English meaning - Cambridge Dictionary",
+    "Best - перевод, транскрипция, произношение, примеры",
+    "BEST Definition & Meaning - Merriam-Webster",
+    "Best - definition of best by The Free Dictionary",
+    "Домашняя страница - ЛУЧШИЕ В РОССИИ – КОМПАНИИ И …",
+    "best - WordReference.com Dictionary of English",
+    "BEST: Board of European Students of Technology",
+    "best - Longman Dictionary of Contemporary English Online",
+    "Best Buy | Official Online Store | Shop Now & Save"
+   ],
+   "links": [
+    "https://dictionary.cambridge.org/ru/%D1%81%D0%BB%D0%BE%D0%B2%D0%B0%D1%80%D1%8C/%D0%B0%D0%BD%D0%B3%D0%BB%D0%BE-%D1%80%D1%83%D1%81%D1%81%D0%BA%D0%B8%D0%B9/best",
+    "https://dictionary.cambridge.org/dictionary/english/best",
+    "https://wooordhunt.ru/word/best",
+    "https://www.merriam-webster.com/dictionary/best",
+    "https://www.thefreedictionary.com/best",
+    "https://best.ru/",
+    "https://www.wordreference.com/definition/best",
+    "https://best.eu.org/index.jsp",
+    "https://www.ldoceonline.com/dictionary/best",
+    "https://www.bestbuy.com/"
+   ],
+   "snippets": [
+    "She's one of our best students. Give her my best wishes. Susie's my best friend (= the friend I like more than any other). What's the …",
+    "best adjective, adverb (HIGHEST QUALITY) of the highest quality, to the greatest degree, in the most effective way, or being the …",
+    "Перевод Best - лучший, больший, лучше всего, больше всего, провести, перехитрить. Транскрипция - |best|. Примеры - at …",
+    "27 авг. 2026 г. · In the best of all possible worlds, no one would be without food and clean water. I have a wonderful family and a …",
+    "1. In a most excellent way; most creditably or advantageously. 2. To the greatest degree or extent; most: \"He was certainly the best …",
+    "Платформа, посвящённая признанию лучших компаний и персон года в России.",
+    "Idioms (all) for the best, producing good as the final result: It turned out to be all for the best when I didn't get that job. Idioms as best …",
+    "BEST, Board of European Students of Technology is a voluntary and politically unaffiliated non-profit organisation. Since 1989 we …",
+    "best From Longman Dictionary of Contemporary English best1 /best/ S1 W1 adjective [superlative of good] 1 better than anything …",
+    "Shop Best Buy for electronics, computers, appliances, cell phones, video games & more new tech. Store pickup & free 2-day …"
+   ],
+   "result_blocks__slimmed_rows": 10
+  },
+  "fill": {
+   "titles": 1.0,
+   "links": 1.0
+  },
+  "entries": 10,
+  "has_data": true,
+  "elapsed_s": 9.0
+ },
+ {
+  "preset": "bing_search_chromium",
+  "locale": "us",
+  "run": 0,
+  "params": {
+   "query": "best laptop 2026"
+  },
+  "job_id": "req_1bb81ec92a44599c5996e55e",
+  "status": "done",
+  "meta": {
+   "fetch_ok": true,
+   "status_code": 200,
+   "final_url": "https://www.bing.com/search?q=best+laptop+2026&cc=us&setlang=en",
+   "retries": 0,
+   "proxy_type": "prem_res_rotating",
+   "applied_locale": "en-US",
+   "applied_timezone": "America/New_York",
+   "error": null
+  },
+  "took_ms": 10158,
+  "job_error": null,
+  "warnings": [],
+  "data": {
+   "titles": [
+    "The Best Laptops We've Tested (September 2026) | PCMag",
+    "Best Laptops of 2026: Top Picks Tested by CNET"
+   ],
+   "links": [
+    "https://www.pcmag.com/picks/the-best-laptops",
+    "https://www.cnet.com/tech/computing/best-laptop/"
+   ],
+   "snippets": [
+    "3 days ago · Whether you want a simple budget PC, a productivity workhorse, or a screamer of a gaming notebook, our experts have …",
+    "Aug 11, 2026 · Tech> Computing> Laptops Best Laptops of 2026: Top Picks Tested by CNET I have a new favorite Windows laptop, …"
+   ],
+   "result_blocks__slimmed_rows": 2
+  },
+  "fill": {
+   "titles": 1.0,
+   "links": 1.0
+  },
+  "entries": 2,
+  "has_data": true,
+  "elapsed_s": 12.0
+ },
+ {
+  "preset": "bing_search_chromium",
+  "locale": "us",
+  "run": 1,
+  "params": {
+   "query": "best laptop 2026"
+  },
+  "job_id": "req_a78fbfc0deb08ea4b82c7d08",
+  "status": "done",
+  "meta": {
+   "fetch_ok": true,
+   "status_code": 200,
+   "final_url": "https://www.bing.com/search?q=best+laptop+2026&cc=us&setlang=en",
+   "retries": 0,
+   "proxy_type": "prem_res_rotating",
+   "applied_locale": "en-US",
+   "applied_timezone": "America/New_York",
+   "error": null
+  },
+  "took_ms": 15916,
+  "job_error": null,
+  "warnings": [],
+  "data": {
+   "titles": [
+    "The Best Laptops We've Tested (September 2026) | PCMag",
+    "Best Laptops of 2026: Top Picks Tested by CNET"
+   ],
+   "links": [
+    "https://www.pcmag.com/picks/the-best-laptops",
+    "https://www.cnet.com/tech/computing/best-laptop/"
+   ],
+   "snippets": [
+    "3 days ago · Whether you want a simple budget PC, a productivity workhorse, or a screamer of a gaming notebook, our experts have …",
+    "Aug 11, 2026 · Tech> Computing> Laptops Best Laptops of 2026: Top Picks Tested by CNET I have a new favorite Windows laptop, …"
+   ],
+   "result_blocks__slimmed_rows": 2
+  },
+  "fill": {
+   "titles": 1.0,
+   "links": 1.0
+  },
+  "entries": 2,
+  "has_data": true,
+  "elapsed_s": 18.0
+ }
+]

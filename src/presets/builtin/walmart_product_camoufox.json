@@ -56,13 +56,6 @@
             ]
           },
           {
-            "op": "replace",
-            "args": [
-              ",",
-              "."
-            ]
-          },
-          {
             "op": "parse_float"
           }
         ]
@@ -105,6 +98,6 @@
     "availability": "in-stock / add-to-cart state"
   },
   "llm_extract_prompt": null,
-  "version": 2,
-  "updated_at": 1785024000.0
+  "version": 3,
+  "updated_at": 1788566400
 }

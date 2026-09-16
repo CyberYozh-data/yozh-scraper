@@ -421,3 +421,76 @@ class TestScrapePresetPagesSession:
         assert resp.status_code == 200
         submitted = client._submit.await_args.args[0]
         assert [p.session_id for p in submitted] == ["sess_b", "sess_b"]
+
+
+class TestTheJobCarriesThePresetItRead:
+    """The window a self-heal can overwrite opens HERE, when the job reads the
+    preset, and closes minutes later when the worker persists. A fingerprint
+    taken at persist time covers microseconds of it; one taken here covers all
+    of it, which is why it has to travel with the job."""
+
+    def test_a_user_preset_ships_the_fingerprint_it_was_read_with(
+        self, store: PresetStore
+    ):
+        from src.api.scrape_preset import _resolve
+        from src.presets.materializer import PresetScrapeRequest
+
+        user = _user_preset()
+        store.create(user)
+        _, stamp = store.get_stamped(user.name)
+
+        scrape_req = _resolve(
+            store,
+            PresetScrapeRequest(source=user.name, preset_params={"asin": "B0"}),
+        )
+
+        assert scrape_req.parser_plan is not None
+        assert scrape_req.parser_plan.preset_stamp == stamp
+
+    def test_the_fingerprint_tracks_the_file_not_the_request(
+        self, store: PresetStore
+    ):
+        """Two jobs enqueued around an edit must not carry the same stamp --
+        that is the whole signal the worker compares against."""
+        from src.api.scrape_preset import _resolve
+        from src.presets.materializer import PresetScrapeRequest
+
+        user = _user_preset()
+        store.create(user)
+        req = PresetScrapeRequest(source=user.name, preset_params={"asin": "B0"})
+        before = _resolve(store, req).parser_plan.preset_stamp
+
+        store.update(user.name, _user_preset(selector="#edited-by-a-person"))
+        after = _resolve(store, req).parser_plan.preset_stamp
+
+        assert before != after
+
+    def test_a_builtin_ships_no_fingerprint(self, store: PresetStore):
+        """Built-ins are never written back, so there is nothing to lose and
+        nothing to compare -- and resolving one must not raise."""
+        from src.api.scrape_preset import _resolve
+        from src.presets.materializer import PresetScrapeRequest
+
+        scrape_req = _resolve(
+            store,
+            PresetScrapeRequest(source="amazon_product", preset_params={"asin": "B0"}),
+        )
+
+        assert scrape_req.parser_plan.preset_stamp is None
+
+
+def _user_preset(*, selector: str = "#productTitle") -> Preset:
+    return Preset(
+        name="user_amazon",
+        source="amazon",
+        kind="user",
+        url_template="https://www.amazon.{domain}/dp/{asin}",
+        request_defaults={"device": "desktop", "proxy_type": "res_rotating"},
+        locales={"us": LocaleProfile(domain="com", country="US")},
+        default_locale="us",
+        parsing_instructions=ParsingInstructions(
+            type="css",
+            fields={"title": FieldRule(selector=selector, required=True)},
+        ),
+        updated_at=1_700_000_000.0,
+    )

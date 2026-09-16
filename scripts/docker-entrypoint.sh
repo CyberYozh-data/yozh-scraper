@@ -62,4 +62,28 @@ if [ -z "${DISPLAY}" ]; then
     fi
 fi
 
+# Camoufox re-downloads the MaxMind GeoIP database, ~45 MB, from inside the
+# launch path when the file on disk is older than 30 days:
+# `get_geolocation()` -> `if not mmdb_path.exists() or needs_update(): download_mmdb()`
+# (camoufox/geolocation.py). That is not a startup task there — it happens
+# during a scrape, on the request that happens to be first past the 30-day
+# mark, and it goes straight to the internet: not through the request's proxy,
+# and not past this service's egress guard, which only covers the browser.
+# A month after any image build, one unlucky scrape pays a 45 MB download or
+# fails on a network that does not allow it.
+#
+# The database is baked into the image, so it is exactly as fresh as the image
+# and re-downloading buys nothing between rebuilds. Stamping it at start keeps
+# `needs_update()` false for the container's life; a rebuild ships a new copy.
+# Deliberately quiet about failure: an unwritable cache must not stop a
+# container that serves Chromium requests perfectly well.
+CAMOUFOX_GEOIP_DIR="${CAMOUFOX_GEOIP_DIR:-/root/.cache/camoufox/geoip/mmdb}"
+if [ -d "${CAMOUFOX_GEOIP_DIR}" ]; then
+    if find "${CAMOUFOX_GEOIP_DIR}" -name '*.mmdb' -exec touch {} + 2>/dev/null; then
+        echo "camoufox geoip database stamped fresh (no mid-scrape re-download)"
+    else
+        echo "WARNING: could not stamp ${CAMOUFOX_GEOIP_DIR}; camoufox may re-download the GeoIP database mid-scrape once it is 30 days old" >&2
+    fi
+fi
+
 exec "$@"

@@ -20,6 +20,24 @@ def _instr(sel="#t"):
     ).model_dump(mode="json")
 
 
+def _preset(*, selector: str = "#old", version: int = 1) -> Preset:
+    return Preset(
+        name="user_p",
+        source="custom",
+        kind="user",
+        url_template="https://e.com/{x}",
+        request_defaults={},
+        locales={"us": LocaleProfile(domain="com", country="US")},
+        default_locale="us",
+        parsing_instructions=ParsingInstructions(
+            type="css",
+            fields={"title": FieldRule(selector=selector, required=True)},
+        ),
+        version=version,
+        updated_at=1.0,
+    )
+
+
 def _plan(**over):
     base = dict(
         self_heal=False,
@@ -114,6 +132,159 @@ class TestApply:
         assert saved.parsing_instructions.fields["title"].selector == "#t"
         assert saved.version == 2
         assert saved.updated_at > 1.0
+
+    @pytest.mark.asyncio
+    async def test_a_preset_saved_while_the_job_ran_is_not_overwritten(
+        self, tmp_path, mocker
+    ):
+        """The ordering that actually happens: the job read the preset when it
+        was enqueued, the owner saved their own selectors while it rendered,
+        and only then does the worker try to persist a language model's guess
+        over them. Theirs is the edit that must survive -- if the page is
+        still drifted the next scrape heals again from what they wrote.
+
+        The save lands BEFORE `apply()` is called, because that is where the
+        minutes are. An earlier version of this test injected it between the
+        persist path's own read and its write, which is a window of
+        microseconds that production does not have: it passed against a fix
+        that left the real one wide open.
+        """
+        user_dir = tmp_path / "user"
+        user_dir.mkdir()
+        store = PresetStore(user=FilePresetStore(base_path=user_dir))
+        store.create(_preset(selector="#old"))
+        # What the job carries: the preset as it stood when it was enqueued.
+        _, stamp_at_enqueue = store.get_stamped("user_p")
+
+        # ... and now the owner saves their own fix, while the page renders.
+        store.update("user_p", _preset(selector="#mine-i-fixed-it", version=4))
+
+        healed = ParsingInstructions(
+            type="css", fields={"title": FieldRule(selector="#llm-guess", required=True)}
+        )
+        mocker.patch.object(
+            wp,
+            "run_pipeline",
+            new=mocker.AsyncMock(
+                return_value=ParserResult(
+                    data={"title": "Widget"},
+                    warnings=["self_healed"],
+                    mode="self_healed",
+                    healed_instructions=healed,
+                )
+            ),
+        )
+        mocker.patch.object(wp, "_get_store", return_value=store)
+
+        data, warnings = await wp.apply(
+            HTML,
+            _instr("#old"),
+            _plan(self_heal=True, llm_model="m", preset_name="user_p",
+                  preset_kind="user", preset_stamp=stamp_at_enqueue),
+        )
+
+        # The request itself still gets the healed data -- only the write is
+        # dropped.
+        assert data == {"title": "Widget"}
+        assert any("self_heal_persist_skipped" in w for w in warnings)
+        saved = store.get("user_p")
+        assert saved.parsing_instructions.fields["title"].selector == "#mine-i-fixed-it"
+        assert saved.version == 4
+
+    @pytest.mark.asyncio
+    async def test_a_preset_somebody_else_is_writing_costs_only_a_warning(
+        self, tmp_path, mocker
+    ):
+        """This runs inside the page task the scrape deadline is enforced on.
+        Waiting out another writer's lock spends the page's budget, and the
+        ceiling cancels the parse whole -- so a best-effort write would take
+        an extracted page and two LLM calls down with it. It must not wait,
+        and the caller must still get the data.
+        """
+        import fcntl
+        import time as _time
+
+        import src.presets.store as store_mod
+
+        user_dir = tmp_path / "user"
+        user_dir.mkdir()
+        store = PresetStore(user=FilePresetStore(base_path=user_dir))
+        store.create(_preset(selector="#old"))
+        _, stamp = store.get_stamped("user_p")
+        healed = ParsingInstructions(
+            type="css", fields={"title": FieldRule(selector="#llm-guess", required=True)}
+        )
+        mocker.patch.object(
+            wp,
+            "run_pipeline",
+            new=mocker.AsyncMock(
+                return_value=ParserResult(
+                    data={"title": "Widget"},
+                    warnings=["self_healed"],
+                    mode="self_healed",
+                    healed_instructions=healed,
+                )
+            ),
+        )
+        mocker.patch.object(wp, "_get_store", return_value=store)
+
+        lock = store_mod._lock_path(user_dir / "user_p.json")
+        with open(lock, "w", encoding="utf-8") as held:
+            fcntl.flock(held.fileno(), fcntl.LOCK_EX)
+            started = _time.monotonic()
+            data, warnings = await wp.apply(
+                HTML,
+                _instr("#old"),
+                _plan(self_heal=True, llm_model="m", preset_name="user_p",
+                      preset_kind="user", preset_stamp=stamp),
+            )
+            waited = _time.monotonic() - started
+
+        assert data == {"title": "Widget"}, "the page was lost to a best-effort write"
+        assert waited < 0.5, f"waited {waited:.2f}s on somebody else's lock"
+        assert any("self_heal_persist_skipped" in w for w in warnings)
+        assert store.get("user_p").parsing_instructions.fields["title"].selector == "#old"
+
+    @pytest.mark.asyncio
+    async def test_an_untouched_preset_still_takes_the_healed_selectors(
+        self, tmp_path, mocker
+    ):
+        """The other half: nothing changed under the job, so the heal lands.
+        Without this, refusing every write would pass the test above."""
+        user_dir = tmp_path / "user"
+        user_dir.mkdir()
+        store = PresetStore(user=FilePresetStore(base_path=user_dir))
+        store.create(_preset(selector="#old"))
+        _, stamp_at_enqueue = store.get_stamped("user_p")
+
+        healed = ParsingInstructions(
+            type="css", fields={"title": FieldRule(selector="#llm-guess", required=True)}
+        )
+        mocker.patch.object(
+            wp,
+            "run_pipeline",
+            new=mocker.AsyncMock(
+                return_value=ParserResult(
+                    data={"title": "Widget"},
+                    warnings=["self_healed"],
+                    mode="self_healed",
+                    healed_instructions=healed,
+                )
+            ),
+        )
+        mocker.patch.object(wp, "_get_store", return_value=store)
+
+        _, warnings = await wp.apply(
+            HTML,
+            _instr("#old"),
+            _plan(self_heal=True, llm_model="m", preset_name="user_p",
+                  preset_kind="user", preset_stamp=stamp_at_enqueue),
+        )
+
+        assert not any("self_heal_persist_skipped" in w for w in warnings)
+        saved = store.get("user_p")
+        assert saved.parsing_instructions.fields["title"].selector == "#llm-guess"
+        assert saved.version == 2
 
     @pytest.mark.asyncio
     async def test_self_heal_does_not_persist_a_materializer_injected_base(
@@ -344,3 +515,66 @@ class TestApply:
         # scrape still returns data; persistence failure is a warning only
         assert data == {"title": "Widget"}
         assert any("self_heal_persist_failed" in w for w in warnings)
+
+
+def _user_store(tmp_path, fields: dict[str, FieldRule]) -> PresetStore:
+    user_dir = tmp_path / "user"
+    user_dir.mkdir()
+    store = PresetStore(user=FilePresetStore(base_path=user_dir))
+    store.create(
+        Preset(
+            name="user_p",
+            source="custom",
+            kind="user",
+            url_template="https://e.com/{x}",
+            request_defaults={},
+            locales={"us": LocaleProfile(domain="com", country="US")},
+            default_locale="us",
+            parsing_instructions=ParsingInstructions(type="css", fields=fields),
+            version=1,
+            updated_at=1.0,
+        )
+    )
+    return store
+
+
+@pytest.mark.asyncio
+async def test_a_heal_on_a_per_request_override_is_never_persisted(tmp_path, mocker):
+    """Audit H-14: `parsing_override` is a public request field; a heal of ITS
+    contract replaced the shared preset's fields for every other caller."""
+    store = _user_store(tmp_path, {
+        "title": FieldRule(selector="#t", required=True),
+        "price": FieldRule(selector="#p"),
+        "sku": FieldRule(selector="#s"),
+    })
+    override = ParsingInstructions(
+        type="css", fields={"anything": FieldRule(selector="h1.zzz", required=True)}
+    )
+    healed = ParsingInstructions(
+        type="css", fields={"anything": FieldRule(selector="body", required=True)}
+    )
+    mocker.patch.object(
+        wp,
+        "run_pipeline",
+        new=mocker.AsyncMock(
+            return_value=ParserResult(
+                data={"anything": "Widget"},
+                warnings=["self_healed"],
+                mode="self_healed",
+                healed_instructions=healed,
+            )
+        ),
+    )
+    mocker.patch.object(wp, "_get_store", return_value=store)
+
+    data, warnings = await wp.apply(
+        HTML,
+        override.model_dump(mode="json"),
+        _plan(self_heal=True, llm_model="m", preset_name="user_p", preset_kind="user",
+              instructions_from_override=True),
+    )
+    assert data == {"anything": "Widget"}, "the heal still serves this request"
+    saved = store.get("user_p")
+    assert list(saved.parsing_instructions.fields) == ["title", "price", "sku"]
+    assert saved.version == 1
+    assert any(w.startswith("self_heal_not_persisted") for w in warnings), warnings

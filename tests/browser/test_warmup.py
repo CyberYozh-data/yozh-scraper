@@ -35,7 +35,8 @@ async def test_run_warmup_visits_origin_then_dwells():
     assert page.goto.call_args.args[0] == "https://yandex.ru/"
     page.wait_for_timeout.assert_awaited_once_with(2500)
     # Reports what actually ran: the resolved origin, not the requested config.
-    assert applied.applied == {"type": "homepage", "url": "https://yandex.ru/", "dwell_ms": 2500}
+    assert applied.applied == {"type": "homepage", "url": "https://yandex.ru/",
+                               "dwell_ms": 2500, "blocked": False}
     assert applied.error is None
 
 
@@ -125,5 +126,6 @@ async def test_run_warmup_custom_visits_given_url():
     page.goto.assert_awaited_once()
     assert page.goto.call_args.args[0] == "https://warm.example/seed"
     page.wait_for_timeout.assert_awaited_once_with(2500)
-    assert applied.applied == {"type": "custom", "url": "https://warm.example/seed", "dwell_ms": 2500}
+    assert applied.applied == {"type": "custom", "url": "https://warm.example/seed",
+                               "dwell_ms": 2500, "blocked": False}
     assert applied.error is None

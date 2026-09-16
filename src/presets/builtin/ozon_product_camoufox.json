@@ -1,0 +1,185 @@
+{
+  "name": "ozon_product_camoufox",
+  "source": "ozon",
+  "description": "Ozon.ru product page (Russia), by numeric product id: /product/{product_id}/ redirects to the canonical slug URL (measured 2026-09-06, HTTP 200 on both the id and the slug form). A product that has just SOLD OUT is served differently: Ozon redirects the id URL to a search for the product's name (`/search/?deny_category_prediction=true&from_global=true&text=…`, \"Товар закончился\") whose `webOutOfStock` widget carries the name and the last price -- the recipe reads `title` from that widget when the heading is absent, `price_last` from it, `price` stays null and `out_of_stock` is set; `wait_for_selector` accepts either widget so the sold-out page returns on the first attempt. Selectors anchor on Ozon's `data-widget` names (webProductHeading, webPrice, webSingleProductScore, webDetailSKU), the one thing that survives its hashed-class releases; self_heal is on. Ozon renders TWO prices: `price` is the ordinary one (\"С другими банками\", tsHeadline500Medium) and `price_ozon_card` the Ozon-card price (\"С банками\", tsHeadline600Large); both carry Ozon's U+2009 thin-space thousands grouping, which parse_price reads. A product without an Ozon-card discount was NOT captured: on such a page the only price may sit in tsHeadline600Large, which this recipe would report as `price_ozon_card` with `price` null -- read the pair together. `rating` and `review_count` come from the score widget's \"5 • 3 отзыва\" text; `out_of_stock` is \"webOutOfStock\" when Ozon renders that widget and null otherwise (the widget's own data-widget attribute, measured on the sold-out capture of 2026-09-06). The antibot challenge is passed by the homepage warmup, as on ozon_search. ENGINE: Camoufox, fingerprint_profile=windows_on_host. MEASURED 2026-09-06 through the preset as shipped: 3 of 4 runs returned the product (every field filled, 21-73 s); the fourth hit the sold-out redirect above -- a low-stock item (\"Осталось 7 шт\" on the tile the same morning) that was out of stock for that run -- before this recipe read that page, and spent three attempts on the heading selector. timeout_ms 31000 (per-phase, with the 10 s warmup dwell; see test_builtin_timeout_fits_the_first_attempt).",
+  "kind": "builtin",
+  "url_template": "https://www.ozon.ru/product/{product_id}/",
+  "request_defaults": {
+    "device": "desktop",
+    "proxy_type": "prem_res_rotating",
+    "warmup": {
+      "type": "homepage",
+      "dwell_ms": 10000
+    },
+    "wait_until": "load",
+    "wait_for_selector": "[data-widget='webProductHeading'], [data-widget='webOutOfStock']",
+    "timeout_ms": 31000,
+    "block_assets": false,
+    "browser_engine": "camoufox",
+    "fingerprint_profile": "windows_on_host"
+  },
+  "locales": {
+    "ru": {
+      "domain": "ru",
+      "country": "RU"
+    }
+  },
+  "default_locale": "ru",
+  "parsing_instructions": {
+    "type": "css",
+    "fields": {
+      "title": {
+        "selector": "[data-widget='webProductHeading'] h1, [data-widget='webOutOfStock'] span.tsBody400Small",
+        "required": true,
+        "post_process": [
+          {
+            "op": "strip"
+          }
+        ]
+      },
+      "price": {
+        "selector": "[data-widget='webPrice']",
+        "attr": "html",
+        "post_process": [
+          {
+            "op": "regex",
+            "args": [
+              "tsHeadline500Medium[^>]*>([^<]*?)\\s*₽"
+            ]
+          },
+          {
+            "op": "parse_price"
+          }
+        ]
+      },
+      "price_ozon_card": {
+        "selector": "[data-widget='webPrice']",
+        "attr": "html",
+        "post_process": [
+          {
+            "op": "regex",
+            "args": [
+              "tsHeadline600Large[^>]*>([^<]*?)\\s*₽"
+            ]
+          },
+          {
+            "op": "parse_price"
+          }
+        ]
+      },
+      "price_last": {
+        "selector": "[data-widget='webOutOfStock']",
+        "attr": "html",
+        "post_process": [
+          {
+            "op": "regex",
+            "args": [
+              "tsHeadline400Small[^>]*>([^<]*?)\\s*₽"
+            ]
+          },
+          {
+            "op": "parse_price"
+          }
+        ]
+      },
+      "rating": {
+        "selector": "[data-widget='webSingleProductScore']",
+        "post_process": [
+          {
+            "op": "regex",
+            "args": [
+              "^(\\d(?:[.,]\\d)?)\\s*•"
+            ]
+          },
+          {
+            "op": "parse_float"
+          }
+        ]
+      },
+      "review_count": {
+        "selector": "[data-widget='webSingleProductScore']",
+        "post_process": [
+          {
+            "op": "regex",
+            "args": [
+              "(\\d[\\d\\s]*?)\\s*отзыв"
+            ]
+          },
+          {
+            "op": "parse_int"
+          }
+        ]
+      },
+      "sku": {
+        "selector": "[data-widget='webDetailSKU']",
+        "post_process": [
+          {
+            "op": "regex",
+            "args": [
+              "Артикул:\\s*(\\d+)"
+            ]
+          }
+        ]
+      },
+      "out_of_stock": {
+        "selector": "[data-widget='webOutOfStock']",
+        "attr": "data-widget"
+      }
+    }
+  },
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "title": {
+        "type": "string"
+      },
+      "price": {
+        "type": [
+          "number",
+          "null"
+        ]
+      },
+      "price_ozon_card": {
+        "type": [
+          "number",
+          "null"
+        ]
+      },
+      "price_last": {
+        "type": [
+          "number",
+          "null"
+        ]
+      },
+      "rating": {
+        "type": [
+          "number",
+          "null"
+        ]
+      },
+      "review_count": {
+        "type": [
+          "integer",
+          "null"
+        ]
+      },
+      "sku": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "out_of_stock": {
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    }
+  },
+  "self_heal": true,
+  "prompt_schema": null,
+  "llm_extract_prompt": null,
+  "version": 1,
+  "updated_at": 1788652800
+}

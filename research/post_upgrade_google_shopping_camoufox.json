@@ -1,0 +1,224 @@
+[
+ {
+  "preset": "google_shopping_camoufox",
+  "locale": "de",
+  "run": 0,
+  "params": {
+   "query": "laptop"
+  },
+  "job_id": "req_5817aeb631f87f19c527c067",
+  "status": "done",
+  "meta": {
+   "fetch_ok": false,
+   "status_code": 429,
+   "final_url": "https://www.google.com/sorry/index?continue=https://www.google.de/search%3Fq%3Dlaptop%26udm%3D28%26gl%3Dde%26hl%3Dde&hl=de&q=EgTZ7kIaGIud59QGIjC_btwLFxlYLi2sSQJjDwpLaBv6bE7h4mmT9aH1_da7LPKDlaNWrOYg-VT",
+   "retries": 3,
+   "proxy_type": "prem_res_rotating",
+   "applied_locale": "de-DE",
+   "applied_timezone": "Europe/Berlin",
+   "error": null
+  },
+  "took_ms": 45551,
+  "job_error": null,
+  "warnings": [
+   "Captcha/block detected by heuristic",
+   "status_code=429",
+   "attempt 1/3 shortened to 35863ms of the requested 45000ms to fit the page-task ceiling",
+   "attempt 2/3 shortened to 31789ms of the requested 45000ms to fit the page-task ceiling",
+   "attempt 3/3 shortened to 25108ms of the requested 45000ms to fit the page-task ceiling"
+  ],
+  "data": null,
+  "fill": {
+   "titles": 0.0,
+   "prices": 0.0
+  },
+  "entries": 0,
+  "has_data": false,
+  "elapsed_s": 48.0
+ },
+ {
+  "preset": "google_shopping_camoufox",
+  "locale": "de",
+  "run": 1,
+  "params": {
+   "query": "laptop"
+  },
+  "job_id": "req_621e0ff2490206bf8c62d82e",
+  "status": "done",
+  "meta": {
+   "fetch_ok": false,
+   "status_code": 200,
+   "final_url": "https://www.google.com/sorry/index?continue=https://www.google.de/search%3Fq%3Dlaptop%26udm%3D28%26gl%3Dde%26hl%3Dde%26sei%3Df86ZaumZGo2B9u8P99Lz4Q8&hl=de&q=EgSyymDcGP-c59QGIjBdE4iO8fLs8CjCZgRzVNOWgq_",
+   "retries": 3,
+   "proxy_type": "prem_res_rotating",
+   "applied_locale": "de-DE",
+   "applied_timezone": "Europe/Berlin",
+   "error": null
+  },
+  "took_ms": 31015,
+  "job_error": null,
+  "warnings": [
+   "Captcha/block detected by heuristic",
+   "status_code=200",
+   "attempt 1/3 shortened to 35944ms of the requested 45000ms to fit the page-task ceiling",
+   "attempt 2/3 shortened to 33128ms of the requested 45000ms to fit the page-task ceiling",
+   "attempt 3/3 shortened to 30150ms of the requested 45000ms to fit the page-task ceiling"
+  ],
+  "data": null,
+  "fill": {
+   "titles": 0.0,
+   "prices": 0.0
+  },
+  "entries": 0,
+  "has_data": false,
+  "elapsed_s": 33.0
+ },
+ {
+  "preset": "google_shopping_camoufox",
+  "locale": "uk",
+  "run": 0,
+  "params": {
+   "query": "laptop"
+  },
+  "job_id": "req_5a4ce7261fc439f6c3a66fff",
+  "status": "done",
+  "meta": {
+   "fetch_ok": false,
+   "status_code": 200,
+   "final_url": "https://www.google.com/sorry/index?continue=https://www.google.co.uk/search%3Fq%3Dlaptop%26udm%3D28%26gl%3Dgb%26hl%3Den%26sei%3DWs6Zarr5I9-B9u8Pw9PosQY&hl=en&q=EgROlrYxGNuc59QGIjAu4xEqodlUbUzhKSJ2D1O4",
+   "retries": 3,
+   "proxy_type": "prem_res_rotating",
+   "applied_locale": "en-GB",
+   "applied_timezone": "Europe/London",
+   "error": null
+  },
+  "took_ms": 33476,
+  "job_error": null,
+  "warnings": [
+   "Captcha/block detected by heuristic",
+   "status_code=200",
+   "attempt 1/3 shortened to 36069ms of the requested 45000ms to fit the page-task ceiling",
+   "attempt 2/3 shortened to 33009ms of the requested 45000ms to fit the page-task ceiling",
+   "attempt 3/3 shortened to 29775ms of the requested 45000ms to fit the page-task ceiling"
+  ],
+  "data": null,
+  "fill": {
+   "titles": 0.0,
+   "prices": 0.0
+  },
+  "entries": 0,
+  "has_data": false,
+  "elapsed_s": 36.1
+ },
+ {
+  "preset": "google_shopping_camoufox",
+  "locale": "uk",
+  "run": 1,
+  "params": {
+   "query": "laptop"
+  },
+  "job_id": "req_99bf5b0e462902efa4663d6b",
+  "status": "done",
+  "meta": {
+   "fetch_ok": false,
+   "status_code": 200,
+   "final_url": "https://www.google.com/sorry/index?continue=https://www.google.co.uk/search%3Fq%3Dlaptop%26udm%3D28%26gl%3Dgb%26hl%3Den%26sei%3Des6ZarOxLPiA9u8P_NXH2Qg&hl=en&q=EgS5vOvQGPuc59QGIjBajwC9wQY10xoT4P8PpG4X",
+   "retries": 3,
+   "proxy_type": "prem_res_rotating",
+   "applied_locale": "en-GB",
+   "applied_timezone": "Europe/London",
+   "error": null
+  },
+  "took_ms": 65527,
+  "job_error": null,
+  "warnings": [
+   "Captcha/block detected by heuristic",
+   "status_code=200",
+   "attempt 1/3 shortened to 35844ms of the requested 45000ms to fit the page-task ceiling",
+   "attempt 2/3 shortened to 21982ms of the requested 45000ms to fit the page-task ceiling",
+   "attempt 3/3 shortened to 18781ms of the requested 45000ms to fit the page-task ceiling"
+  ],
+  "data": null,
+  "fill": {
+   "titles": 0.0,
+   "prices": 0.0
+  },
+  "entries": 0,
+  "has_data": false,
+  "elapsed_s": 66.1
+ },
+ {
+  "preset": "google_shopping_camoufox",
+  "locale": "us",
+  "run": 0,
+  "params": {
+   "query": "laptop"
+  },
+  "job_id": "req_17e6a54625f8d979e7f55203",
+  "status": "done",
+  "meta": {
+   "fetch_ok": false,
+   "status_code": 200,
+   "final_url": "https://www.google.com/sorry/index?continue=https://www.google.com/search%3Fq%3Dlaptop%26udm%3D28%26gl%3Dus%26hl%3Den%26sei%3DXc6ZaraYGv3_7_UPxe3-eA&hl=en&q=EgROk5v-GN2c59QGIjCDyB2walMyde0r0FNFnGLeZj7",
+   "retries": 3,
+   "proxy_type": "prem_res_rotating",
+   "applied_locale": "en-GB",
+   "applied_timezone": "Europe/London",
+   "error": null
+  },
+  "took_ms": 39666,
+  "job_error": null,
+  "warnings": [
+   "Captcha/block detected by heuristic",
+   "status_code=200",
+   "attempt 1/3 shortened to 35961ms of the requested 45000ms to fit the page-task ceiling",
+   "attempt 2/3 shortened to 31272ms of the requested 45000ms to fit the page-task ceiling",
+   "attempt 3/3 shortened to 27998ms of the requested 45000ms to fit the page-task ceiling"
+  ],
+  "data": null,
+  "fill": {
+   "titles": 0.0,
+   "prices": 0.0
+  },
+  "entries": 0,
+  "has_data": false,
+  "elapsed_s": 42.1
+ },
+ {
+  "preset": "google_shopping_camoufox",
+  "locale": "us",
+  "run": 1,
+  "params": {
+   "query": "laptop"
+  },
+  "job_id": "req_ca14a400074ab8f615807985",
+  "status": "done",
+  "meta": {
+   "fetch_ok": false,
+   "status_code": 429,
+   "final_url": "https://www.google.com/sorry/index?continue=https://www.google.com/search%3Fq%3Dlaptop%26udm%3D28%26gl%3Dus%26hl%3Den&hl=en&q=EgRYYbJlGNuc59QGIjAiUp0EhKNTs8XPpkP15s1wcLmbkmPdhT_EOs6_GhYbtd-XSfrvSONVfg",
+   "retries": 3,
+   "proxy_type": "prem_res_rotating",
+   "applied_locale": "en-GB",
+   "applied_timezone": "Europe/London",
+   "error": null
+  },
+  "took_ms": 37356,
+  "job_error": null,
+  "warnings": [
+   "Captcha/block detected by heuristic",
+   "status_code=429",
+   "attempt 1/3 shortened to 35934ms of the requested 45000ms to fit the page-task ceiling",
+   "attempt 2/3 shortened to 32576ms of the requested 45000ms to fit the page-task ceiling",
+   "attempt 3/3 shortened to 28764ms of the requested 45000ms to fit the page-task ceiling"
+  ],
+  "data": null,
+  "fill": {
+   "titles": 0.0,
+   "prices": 0.0
+  },
+  "entries": 0,
+  "has_data": false,
+  "elapsed_s": 39.1
+ }
+]

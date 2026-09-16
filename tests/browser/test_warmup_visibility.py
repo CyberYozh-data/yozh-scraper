@@ -55,6 +55,7 @@ async def test_a_successful_warmup_reports_what_it_did_and_no_error():
 
     assert outcome.applied == {
         "type": "homepage", "url": "https://example.com/", "dwell_ms": 250,
+        "blocked": False,
     }
     assert outcome.error is None
 
@@ -187,3 +188,82 @@ async def test_the_queue_turns_the_reason_into_a_caller_visible_warning():
 
 async def _outcome(value):
     return value
+
+
+# --- The block state travels the same chain --------------------------------
+# The lesson recorded above was re-learned on this very feature: a parallel
+# `FetchResult.warmup_blocked` field was carried on the success return and
+# dropped on both Camoufox error arms — and the most likely sequel to a blocked
+# warmup is a FAILED fetch, so the one path that mattered was the broken one.
+# The flag now rides inside `applied_warmup`, which every return already
+# carries, and these tests pin that on both engines including the failure arm.
+
+_BLOCKED = {"type": "homepage", "url": "https://ya.ru/", "dwell_ms": 0,
+            "blocked": True}
+
+
+@pytest.mark.asyncio
+async def test_camoufox_carries_the_block_on_a_SUCCESSFUL_fetch(monkeypatch):
+    from tests.browser.test_camoufox_runner import _mock_page
+    from src.browser.camoufox_runner import CamoufoxRunner
+    from src.browser.runner import WarmupOutcome
+
+    _mock_page(monkeypatch)
+    monkeypatch.setattr(
+        "src.browser.camoufox_runner.run_warmup",
+        lambda *a, **kw: _outcome(WarmupOutcome(applied=dict(_BLOCKED), blocked=True)),
+    )
+    res = await CamoufoxRunner(timeout_ms=1000).fetch(
+        url="https://ya.ru/s", device="desktop", proxy=None, headers=None,
+        wait_until="domcontentloaded", wait_for_selector=None, timeout_ms=1000,
+        screenshot=False, warmup={"type": "homepage"},
+    )
+    assert res.ok is True
+    assert (res.applied_warmup or {}).get("blocked") is True
+
+
+@pytest.mark.asyncio
+async def test_camoufox_carries_the_block_when_the_fetch_then_FAILS(monkeypatch):
+    """The composite case, and the one that was broken.
+
+    A turned-away exit usually goes on to fail the real navigation too, so the
+    error arm is where the caller most needs to be told that the refusal came
+    first — otherwise a plain timeout is all they see.
+    """
+    from unittest.mock import AsyncMock
+    from playwright.async_api import TimeoutError as PWTimeoutError
+    from tests.browser.test_camoufox_runner import _mock_page
+    from src.browser.camoufox_runner import CamoufoxRunner
+    from src.browser.runner import WarmupOutcome
+
+    page = _mock_page(monkeypatch)
+    page.goto = AsyncMock(side_effect=PWTimeoutError("Timeout 1000ms exceeded"))
+    monkeypatch.setattr(
+        "src.browser.camoufox_runner.run_warmup",
+        lambda *a, **kw: _outcome(WarmupOutcome(applied=dict(_BLOCKED), blocked=True)),
+    )
+    res = await CamoufoxRunner(timeout_ms=1000).fetch(
+        url="https://ya.ru/s", device="desktop", proxy=None, headers=None,
+        wait_until="domcontentloaded", wait_for_selector=None, timeout_ms=1000,
+        screenshot=False, warmup={"type": "homepage"},
+    )
+    assert res.ok is False
+    assert (res.applied_warmup or {}).get("blocked") is True, (
+        "a failed fetch is exactly when the earlier refusal explains the failure"
+    )
+
+
+@pytest.mark.asyncio
+async def test_playwright_carries_the_block_onto_the_result(monkeypatch):
+    from tests.browser.test_selector_timeout_classification import (
+        SERP_URL, _page, _playwright_fetch,
+    )
+    from src.browser.runner import WarmupOutcome
+
+    page = _page(content="<html>ok</html>", url=SERP_URL, selector_times_out=False)
+    monkeypatch.setattr(
+        "src.browser.runner.run_warmup",
+        lambda *a, **kw: _outcome(WarmupOutcome(applied=dict(_BLOCKED), blocked=True)),
+    )
+    res = await _playwright_fetch(page, warmup={"type": "homepage"})
+    assert (res.applied_warmup or {}).get("blocked") is True

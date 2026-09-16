@@ -9,9 +9,14 @@ broken in the file next to it.
 """
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
 from urllib.parse import urlsplit
 
-_UNPARSEABLE = "<redacted>"
+if TYPE_CHECKING:
+    from src.schemas import ScrapeRequest
+
+REDACTED = "<redacted>"
+_UNPARSEABLE = REDACTED
 
 
 def redact_url(url: str) -> str:
@@ -53,6 +58,35 @@ def redact_mapping(payload: dict, *, secret_keys: frozenset[str]) -> dict:
     and `warnings`, so the body cannot travel with them intact.
     """
     return {
-        key: ("<redacted>" if key in secret_keys else value)
+        key: (REDACTED if key in secret_keys else value)
         for key, value in payload.items()
     }
+
+
+def redact_request_secrets(page: "ScrapeRequest") -> "ScrapeRequest":
+    """A copy of `page` for the job's request echo, without the caller's secrets.
+
+    `GET /scrape/{job_id}/results` echoes every page's ScrapeRequest to anyone
+    holding the job id, for the result TTL plus the 24 h safety TTL (audit
+    2026-09-03, H-09). Header NAMES stay -- the echo shows which headers were
+    sent -- and every header value is masked: a name-based list of secret
+    headers failed open on `apikey`, `Private-Token`, `X-Amz-Security-Token`,
+    and no consumer reads the values. Cookie values and the session id (a
+    bare id is what `/scrape*` accepts as the session's bearer) are masked
+    too; a sticky proxy label (lets its holder ride the same exit) is dropped
+    rather than masked, because its validator admits only an alphanumeric
+    id and a client re-validating the echo with our own models must not
+    choke on the marker (codex, 2026-09-05). The store keeps the real values
+    the worker needs.
+    """
+    updates: dict = {}
+    if page.headers:
+        updates["headers"] = dict.fromkeys(page.headers, REDACTED)
+    if page.cookies:
+        updates["cookies"] = [cookie.model_copy(update={"value": REDACTED}) for cookie in page.cookies]
+    if page.session_id:
+        updates["session_id"] = REDACTED
+    prem = page.prem_proxy_options
+    if prem is not None and prem.sticky_id:
+        updates["prem_proxy_options"] = prem.model_copy(update={"sticky_id": None})
+    return page.model_copy(update=updates) if updates else page

@@ -589,6 +589,13 @@ class TestRecover:
         assert len(exclude_ids) == 3
 
 
+def _rotating_proxy() -> OrderedProxy:
+    return OrderedProxy(
+        id="1", url="http://proxy.com:8080", login="login", password="password", status="active",
+        expired=False, change_ip_links=[], connection_host="proxy.com", connection_port=8080,
+    )
+
+
 class TestToLease:
     @pytest.mark.asyncio
     async def test_to_lease_rotating_basic(self, mocker):
@@ -657,44 +664,35 @@ class TestToLease:
         assert payload["city"] == "Los Angeles"
 
     @pytest.mark.asyncio
-    async def test_to_lease_rotating_geo_fallback(self, mocker):
-        """Rotating: geo request fails, fallback to no-geo credentials"""
+    @pytest.mark.asyncio
+    async def test_to_lease_rotating_geo_refusal_fails_the_lease(self):
+        """Audit 2026-09-03, H-12: a second call without geo used to hand back
+        an untargeted exit as if it were the requested one -- `retries=0`,
+        `warnings=[]`, fingerprint still GB. A country-scoped caller gets the
+        market or an error, nothing in between."""
         client = AsyncMock()
-        # First call (with geo) raises, second call (without geo) succeeds
-        client.rotating_credentials = AsyncMock(
-            side_effect=[
-                Exception("geo not available"),
-                ["user:pass@proxy.com:8080"],
-            ]
-        )
+        client.rotating_credentials = AsyncMock(side_effect=[Exception("geo not available"), Exception("still not")])
+        provider = CyberYozhProxyProvider(client=client)
+        proxy = _rotating_proxy()
 
+        with pytest.raises(RuntimeError, match="proxy exit for geo country_code=US, city=New York unavailable"):
+            await provider._to_lease("res_rotating", proxy, geo={"country_code": "US", "city": "New York"})
+        # Both calls carried the geo; none dropped it.
+        assert [c.kwargs or c.args for c in client.rotating_credentials.call_args_list]
+        for call in client.rotating_credentials.call_args_list:
+            assert call.args[0]["country_code"] == "US"
+
+    @pytest.mark.asyncio
+    async def test_to_lease_rotating_geo_transient_error_is_retried_once(self):
+        client = AsyncMock()
+        client.rotating_credentials = AsyncMock(side_effect=[Exception("429"), ["user:pass@proxy.com:8080"]])
         provider = CyberYozhProxyProvider(client=client)
 
-        proxy = OrderedProxy(
-            id="1",
-            url="http://proxy.com:8080",
-            login="login",
-            password="password",
-            status="active",
-            expired=False,
-            change_ip_links=[],
-            connection_host="proxy.com",
-            connection_port=8080,
-        )
+        lease = await provider._to_lease("res_rotating", _rotating_proxy(), geo={"country_code": "US"})
 
-        geo = {"country_code": "US", "city": "New York"}
-
-        lease = await provider._to_lease("res_rotating", proxy, geo=geo)
-
-        # Should still return a valid lease from fallback
         assert lease.config.username == "user"
-        assert lease.config.password == "pass"
-        # rotating_credentials was called twice: first with geo, then without
         assert client.rotating_credentials.call_count == 2
-        # Second call (fallback) must NOT contain geo fields
-        fallback_payload = client.rotating_credentials.call_args_list[1][0][0]
-        assert "country_code" not in fallback_payload
-        assert "city" not in fallback_payload
+        assert all(c.args[0]["country_code"] == "US" for c in client.rotating_credentials.call_args_list)
 
     @pytest.mark.asyncio
     async def test_to_lease_rotating_parse_credentials(self, mocker):

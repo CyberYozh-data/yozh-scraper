@@ -8,7 +8,7 @@ on whatever node it picked, so user presets reach it with arbitrary text.
 """
 from __future__ import annotations
 
-from src.extract.extractor import extract_fields
+from src.extract.extractor import _parse_int, extract_fields
 from src.extract.models import ExtractRule, FieldRule, PostProcess
 
 
@@ -36,6 +36,29 @@ def test_thousands_separators_still_group():
     assert _n("<span>1\u00a0234 отзыва</span>") == 1234
     assert _n("<span>1 234 отзыва</span>") == 1234
     assert _n("<span>12345 reviews</span>") == 12345
+
+
+def test_thin_and_narrow_spaces_group_on_the_html_path():
+    """On attr="html" nothing collapses the spaces before the regex runs: Ozon's
+    "1 724 отзывов" (U+2009) read as 1 and a French "1 234" (U+202F) as 1
+    until both joined `_GROUPING_SPACES`."""
+    rule = ExtractRule(
+        type="css",
+        fields={"n": FieldRule(selector="span", attr="html", post_process=[
+            PostProcess(op="regex", args=[r"(\d[\d\s]*)\s*отзыв"]), PostProcess(op="parse_int")])},
+    )
+    data, _ = extract_fields("<span>1\u2009724 отзывов</span>", rule)
+    assert data["n"] == 1724
+    assert _n("<span>1\u202f234 avis</span>") == 1234
+
+
+def test_a_line_break_between_digit_runs_is_not_grouping():
+    """Only the four grouping spaces group; a newline or a tab between two digit
+    runs separates two numbers. Tested on the parser itself: on the attr="text"
+    path `_text` has already collapsed the newline to an ASCII space, and
+    "199 500" IS a grouped number there."""
+    assert _parse_int("199\n500") == 199
+    assert _parse_int("199\t500") == 199
 
 
 def test_a_lone_number_beside_another_is_not_grouped_with_it():

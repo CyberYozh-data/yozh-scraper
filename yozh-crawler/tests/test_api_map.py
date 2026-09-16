@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 from datetime import date
 
+import httpx
 import pytest
 
 from types import SimpleNamespace
@@ -20,24 +21,22 @@ def _allow_all_hosts(mocker):
     mocker.patch("src.ssrf.host_is_public", mocker.AsyncMock(return_value=True))
 
 
-class _Resp:
-    def __init__(self, status_code, text="", url="", is_redirect=False, headers=None):
-        self.status_code = status_code
-        self.text = text
-        self.url = url
-        self.is_redirect = is_redirect
-        self.headers = headers or {}
+def _resp(status_code: int, text: str = "", headers: dict | None = None) -> httpx.Response:
+    return httpx.Response(status_code, text=text, headers=headers)
 
 
-class _StubClient:
-    def __init__(self, routes):
-        self.routes = routes
+def _client(routes: dict[str, httpx.Response]) -> httpx.AsyncClient:
+    """A real client over `httpx.MockTransport`: what `safe_get` streams,
+    redirects and closes is exactly what a network response would be."""
+    calls: list[str] = []
 
-    async def get(self, url, follow_redirects=False):
-        resp = self.routes.get(url, _Resp(404))
-        if not resp.url:
-            resp.url = url
-        return resp
+    def handler(request: httpx.Request) -> httpx.Response:
+        calls.append(str(request.url))
+        return routes.get(str(request.url), httpx.Response(404))
+
+    client = httpx.AsyncClient(transport=httpx.MockTransport(handler), follow_redirects=False)
+    client.calls = calls  # type: ignore[attr-defined]
+    return client
 
 
 _SITEMAP = (
@@ -72,7 +71,7 @@ def _req(**kw):
 class TestBuildMap:
     @pytest.mark.asyncio
     async def test_sitemap_discovery_scope_and_dedup(self):
-        client = _StubClient({"https://x.com/sitemap.xml": _Resp(200, _SITEMAP)})
+        client = _client({"https://x.com/sitemap.xml": _resp(200, _SITEMAP)})
         res = await build_map(
             _req(include_page_links=False), http_client=client, scraper_fetch=None
         )
@@ -85,7 +84,7 @@ class TestBuildMap:
     async def test_sitemap_www_alias_urls_stay_in_scope(self):
         # www-canonical site, bare-domain seed: the sitemap lists www URLs;
         # same-domain scope must keep them (they are the same site).
-        client = _StubClient({"https://x.com/sitemap.xml": _Resp(200, _SITEMAP_WWW)})
+        client = _client({"https://x.com/sitemap.xml": _resp(200, _SITEMAP_WWW)})
         res = await build_map(
             _req(include_page_links=False), http_client=client, scraper_fetch=None
         )
@@ -93,7 +92,7 @@ class TestBuildMap:
 
     @pytest.mark.asyncio
     async def test_published_after_filters_by_lastmod(self):
-        client = _StubClient({"https://x.com/sitemap.xml": _Resp(200, _SITEMAP_DATED)})
+        client = _client({"https://x.com/sitemap.xml": _resp(200, _SITEMAP_DATED)})
         res = await build_map(
             _req(include_page_links=False, published_after=date(2024, 1, 1)),
             http_client=client, scraper_fetch=None,
@@ -106,7 +105,7 @@ class TestBuildMap:
 
     @pytest.mark.asyncio
     async def test_sort_newest_orders_by_lastmod_undated_last(self):
-        client = _StubClient({"https://x.com/sitemap.xml": _Resp(200, _SITEMAP_DATED)})
+        client = _client({"https://x.com/sitemap.xml": _resp(200, _SITEMAP_DATED)})
         res = await build_map(
             _req(include_page_links=False, sort="newest"),
             http_client=client, scraper_fetch=None,
@@ -119,7 +118,7 @@ class TestBuildMap:
 
     @pytest.mark.asyncio
     async def test_recent_days_keeps_dated_drops_undated(self):
-        client = _StubClient({"https://x.com/sitemap.xml": _Resp(200, _SITEMAP_DATED)})
+        client = _client({"https://x.com/sitemap.xml": _resp(200, _SITEMAP_DATED)})
         # Near-max window (~98y): every dated URL qualifies, undated (+seed) drop.
         res = await build_map(
             _req(include_page_links=False, recent_days=36_000),
@@ -137,7 +136,7 @@ class TestBuildMap:
 
     @pytest.mark.asyncio
     async def test_published_after_then_sort_newest(self):
-        client = _StubClient({"https://x.com/sitemap.xml": _Resp(200, _SITEMAP_DATED)})
+        client = _client({"https://x.com/sitemap.xml": _resp(200, _SITEMAP_DATED)})
         res = await build_map(
             _req(include_page_links=False, published_after=date(2021, 1, 1), sort="newest"),
             http_client=client, scraper_fetch=None,
@@ -147,7 +146,7 @@ class TestBuildMap:
 
     @pytest.mark.asyncio
     async def test_date_filter_empty_result_warns(self):
-        client = _StubClient({"https://x.com/sitemap.xml": _Resp(200, _SITEMAP_DATED)})
+        client = _client({"https://x.com/sitemap.xml": _resp(200, _SITEMAP_DATED)})
         res = await build_map(
             _req(include_page_links=False, published_after=date(2099, 1, 1)),
             http_client=client, scraper_fetch=None,
@@ -164,7 +163,7 @@ class TestBuildMap:
 
     @pytest.mark.asyncio
     async def test_page_links_via_httpx(self):
-        client = _StubClient({"https://x.com/": _Resp(200, _SEED_HTML)})
+        client = _client({"https://x.com/": _resp(200, _SEED_HTML)})
         res = await build_map(
             _req(include_sitemap=False), http_client=client, scraper_fetch=None
         )
@@ -180,7 +179,7 @@ class TestBuildMap:
             calls.append((url, opts))
             return {"raw_html": _SEED_HTML}
 
-        client = _StubClient({})
+        client = _client({})
         res = await build_map(
             _req(include_sitemap=False, render=True),
             http_client=client,
@@ -201,7 +200,7 @@ class TestBuildMap:
                 "error": "HTTP 503",
             }
 
-        client = _StubClient({})
+        client = _client({})
         res = await build_map(
             _req(include_sitemap=False, render=True),
             http_client=client,
@@ -212,7 +211,7 @@ class TestBuildMap:
 
     @pytest.mark.asyncio
     async def test_search_filter(self):
-        client = _StubClient({"https://x.com/": _Resp(200, _SEED_HTML)})
+        client = _client({"https://x.com/": _resp(200, _SEED_HTML)})
         res = await build_map(
             _req(include_sitemap=False, search="p2"),
             http_client=client,
@@ -222,7 +221,7 @@ class TestBuildMap:
 
     @pytest.mark.asyncio
     async def test_limit_caps_results(self):
-        client = _StubClient({"https://x.com/": _Resp(200, _SEED_HTML)})
+        client = _client({"https://x.com/": _resp(200, _SEED_HTML)})
         res = await build_map(
             _req(include_sitemap=False, limit=1),
             http_client=client,
@@ -233,7 +232,7 @@ class TestBuildMap:
 
     @pytest.mark.asyncio
     async def test_seed_fetch_failure_is_warning_not_error(self):
-        client = _StubClient({"https://x.com/": _Resp(500)})
+        client = _client({"https://x.com/": _resp(500)})
         res = await build_map(
             _req(include_sitemap=False), http_client=client, scraper_fetch=None
         )
@@ -250,7 +249,7 @@ class TestBuildMap:
             "<url><loc>https://x.com/a</loc></url>"
             "</urlset>"
         )
-        client = _StubClient({"https://x.com/sitemap.xml": _Resp(200, sitemap)})
+        client = _client({"https://x.com/sitemap.xml": _resp(200, sitemap)})
         res = await build_map(
             _req(include_page_links=False), http_client=client, scraper_fetch=None
         )
@@ -260,7 +259,7 @@ class TestBuildMap:
     async def test_ssrf_private_seed_is_blocked_with_warning(self, mocker):
         # Override the autouse allow-all: a private/internal host must be refused.
         mocker.patch("src.ssrf.host_is_public", mocker.AsyncMock(return_value=False))
-        client = _StubClient({})
+        client = _client({})
         res = await build_map(
             MapRequest(seed_url="http://169.254.169.254/", include_sitemap=False),
             http_client=client,
@@ -272,10 +271,9 @@ class TestBuildMap:
     @pytest.mark.asyncio
     async def test_page_links_resolve_against_post_redirect_base(self):
         # Seed redirects to /new/; relative links must resolve against the final URL.
-        client = _StubClient({
-            "https://x.com/": _Resp(
-                200, '<a href="rel">r</a>', url="https://x.com/new/"
-            ),
+        client = _client({
+            "https://x.com/": _resp(302, headers={"location": "https://x.com/new/"}),
+            "https://x.com/new/": _resp(200, '<a href="rel">r</a>'),
         })
         res = await build_map(
             _req(include_sitemap=False), http_client=client, scraper_fetch=None
@@ -284,7 +282,7 @@ class TestBuildMap:
 
     @pytest.mark.asyncio
     async def test_regex_scope_filters(self):
-        client = _StubClient({"https://x.com/": _Resp(200, _SEED_HTML)})
+        client = _client({"https://x.com/": _resp(200, _SEED_HTML)})
         scope = CrawlScope(mode="regex", include_patterns=[r"/p2$"])
         res = await build_map(
             _req(include_sitemap=False, scope=scope),
@@ -297,7 +295,7 @@ class TestBuildMap:
 class TestMapTiming:
     @pytest.mark.asyncio
     async def test_response_includes_took_ms(self):
-        client = _StubClient({"https://x.com/sitemap.xml": _Resp(200, _SITEMAP)})
+        client = _client({"https://x.com/sitemap.xml": _resp(200, _SITEMAP)})
         res = await build_map(
             _req(include_page_links=False), http_client=client, scraper_fetch=None
         )
@@ -335,7 +333,7 @@ class TestMapProxy:
             proxy_type="res_rotating", proxy_pool_id="pool1",
             proxy_geo={"country_code": "US"},
         )
-        await build_map(req, http_client=_StubClient({}), scraper_fetch=fake_fetch)
+        await build_map(req, http_client=_client({}), scraper_fetch=fake_fetch)
         assert calls and calls[0]["proxy_type"] == "res_rotating"
         assert calls[0]["proxy_pool_id"] == "pool1"
         assert calls[0]["proxy_geo"] == {"country_code": "US", "region": None, "city": None}
@@ -345,7 +343,7 @@ class TestMapProxy:
         # When proxied (check_ssrf=False) a private host must NOT be blocked —
         # egress goes through the proxy, the crawler isn't the SSRF vector.
         mocker.patch("src.ssrf.host_is_public", mocker.AsyncMock(return_value=False))
-        client = _StubClient({"https://x.com/": _Resp(200, _SEED_HTML)})
+        client = _client({"https://x.com/": _resp(200, _SEED_HTML)})
         res = await build_map(
             _req(include_sitemap=False), http_client=client,
             scraper_fetch=None, check_ssrf=False,
@@ -356,7 +354,7 @@ class TestMapProxy:
     async def test_extra_warnings_surfaced(self):
         res = await build_map(
             _req(include_sitemap=False, include_page_links=False),
-            http_client=_StubClient({}), scraper_fetch=None,
+            http_client=_client({}), scraper_fetch=None,
             extra_warnings=["proxy resolve failed; used direct"],
         )
         assert any("proxy resolve failed" in w for w in res.warnings)
@@ -373,7 +371,7 @@ async def test_seed_render_timeout_falls_back_to_sitemap(monkeypatch):
     async def hanging_render(url, opts):
         await asyncio.sleep(5)  # never returns within the 50ms render cap
 
-    client = _StubClient({"https://x.com/sitemap.xml": _Resp(200, _SITEMAP)})
+    client = _client({"https://x.com/sitemap.xml": _resp(200, _SITEMAP)})
     res = await build_map(
         _req(include_page_links=True, render=True),
         http_client=client,
@@ -424,7 +422,7 @@ async def test_map_explicit_proxy_unavailable_fails_closed():
     req = _req(include_sitemap=False, proxy_type="res_rotating")
 
     with pytest.raises(HTTPException) as exc:
-        await create_map(req, _app_req(scraper, _StubClient({})))
+        await create_map(req, _app_req(scraper, _client({})))
     assert exc.value.status_code == 502
     assert "proxy required" in str(exc.value.detail)
 
@@ -441,7 +439,7 @@ async def test_map_proxy_none_still_goes_direct():
         return None
 
     scraper = SimpleNamespace(resolve_proxy=resolve_proxy, fetch=None)
-    client = _StubClient({"https://x.com/": _Resp(200, _SEED_HTML)})
+    client = _client({"https://x.com/": _resp(200, _SEED_HTML)})
     req = _req(include_sitemap=False)  # proxy_type defaults to "none"
 
     res = await create_map(req, _app_req(scraper, client))

@@ -1,0 +1,6 @@
+[
+ {"label":"co.uk+gl=gb (baseline)", "runs":2, "req":{"url":"https://www.google.co.uk/search?q=best+laptop+2026&gl=gb&hl=en","proxy_geo":{"country_code":"GB"}}},
+ {"label":"com+gl=gb",             "runs":2, "req":{"url":"https://www.google.com/search?q=best+laptop+2026&gl=gb&hl=en","proxy_geo":{"country_code":"GB"}}},
+ {"label":"co.uk+gl=us",           "runs":2, "req":{"url":"https://www.google.co.uk/search?q=best+laptop+2026&gl=us&hl=en","proxy_geo":{"country_code":"GB"}}},
+ {"label":"com+gl=us (baseline)",  "runs":2, "req":{"url":"https://www.google.com/search?q=best+laptop+2026&gl=us&hl=en","proxy_geo":{"country_code":"GB"}}}
+]

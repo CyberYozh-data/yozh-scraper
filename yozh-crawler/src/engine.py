@@ -280,12 +280,19 @@ class CrawlEngine:
         self._on_page(page)
 
         for raw_link in links:
+            # One malformed href costs one link, never the worker (audit H-16).
             try:
                 canon = canonicalize_url(raw_link)
-            except Exception:
+                is_new = self._dedup.add(canon)
+            except Exception as exc:  # pylint: disable=broad-exception-caught
+                # Counted and logged by exception class (the href is the
+                # target's input, not ours to log): a systematic failure here
+                # must not read as "the page had no links".
+                self._stats.links_dropped += 1
+                log.debug("link skipped job=%s: %s", self.job_id, type(exc).__name__)
                 continue
 
-            if not self._dedup.add(canon):
+            if not is_new:
                 self._stats.dedup_skipped += 1
                 continue
 

@@ -5,6 +5,7 @@ import logging
 from fastapi import APIRouter, HTTPException
 
 from src.queue.store import JobPagesUnreadable
+from src.utils.redaction import redact_request_secrets
 from src.scrape_service import (
     BatchSessionConflict,
     InternalFieldsNotAllowed,
@@ -128,7 +129,8 @@ async def scrape_results(job_id: str) -> JobResultsResponse:
     return JobResultsResponse(
         job_id=snap.job_id,
         status=snap.status,
-        pages=snap.pages,
+        # Anyone with the id reads this echo (audit 2026-09-03, H-09).
+        pages=[redact_request_secrets(page) for page in snap.pages],
         total=snap.total,
         done=snap.done,
         error=snap.error,

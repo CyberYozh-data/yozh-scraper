@@ -23,7 +23,7 @@ ProxyType = Literal["mobile_shared", "mobile", "res_static", "res_rotating", "dc
 ScrapeProxyType = Literal["none", "mobile_shared", "mobile", "res_static", "res_rotating", "dc_static", "prem_res_rotating"]
 SearchEngine = Literal["google", "bing", "yandex"]
 WaitUntil = Literal["domcontentloaded", "load", "networkidle"]
-Device = Literal["desktop", "mobile"]
+Device = Literal["desktop", "mobile", "legacy_wap"]
 OutputFormat = Literal["markdown", "fit_markdown", "raw_html", "html", "links", "screenshot"]
 ContentFilter = Literal["none", "pruning", "llm"]
 JobStatus = Literal["queued", "running", "done", "failed", "cancelled"]
@@ -204,6 +204,13 @@ class AppliedWarmup(BaseModel):
     type: str
     url: str
     dwell_ms: int
+    blocked: bool = False
+    """The warmup navigated and landed on a challenge page.
+
+    Reality, like the rest of this model: nothing failed, `url` still says what
+    was visited. It means the exit was turned away BEFORE the request the
+    caller asked for, so an empty result afterwards is the site refusing this
+    exit rather than a selector that stopped matching."""
 
 
 class MarkdownOptions(BaseModel):
@@ -244,6 +251,13 @@ class MarkdownOptions(BaseModel):
     )
 
 
+# `resolve_redirects` bounds, stated once. The schema enforces them on the way
+# in; src/extract/resolve.py enforces them again on the stored page dict it is
+# handed (those cross deploy boundaries — see src/queue/field_guards.py).
+RESOLVE_REDIRECTS_MAX_FIELDS = 8
+RESOLVE_REDIRECTS_MAX_LINKS = 20
+
+
 class ScrapeRequest(BaseModel):
     url: HttpUrl
     render: bool = True
@@ -261,16 +275,40 @@ class ScrapeRequest(BaseModel):
         ),
     )
 
-    device: Device = "desktop"
+    device: Device = Field(
+        default="desktop",
+        description=(
+            "Which identity the browser presents. `desktop` and `mobile` are "
+            "the ordinary ones. `legacy_wap` claims a 2004 feature phone and "
+            "suppresses Client Hints, because some sites serve a "
+            "JavaScript-free layout to legacy User-Agents -- Google's "
+            "`/wml/search` returns real `/url?q=` links to it instead of the "
+            "opaque `/goto?url=` stubs its JS results page ships. REQUIRES "
+            "`render: false` (422 otherwise: rendering runs the JavaScript this "
+            "identity claims not to have). Not supported on camoufox, which "
+            "owns its own fingerprint, and cannot be pinned to a session, whose "
+            "login runs JS. Read `meta.applied_user_agent` for what was sent."
+        ),
+    )
     viewport: Viewport | None = Field(
         default=None,
         description=(
             "Browser viewport size in CSS pixels; window.screen is set to match. "
-            "Defaults to 1920x1080 for desktop and the mobile preset's size for "
-            "device='mobile'. Applies to chromium and camoufox."
+            "Defaults to 1920x1080 for desktop, the mobile preset's size for "
+            "device='mobile', and 176x208 for device='legacy_wap'. Applies to "
+            "chromium and camoufox."
         ),
     )
-    headers: Dict[str, str] | None = None
+    headers: Dict[str, str] | None = Field(
+        default=None,
+        description=(
+            "Extra HTTP headers for the request. `User-Agent` is ignored on "
+            "every engine: the engine states the only UA its transport can "
+            "back, so a header that contradicts it is a bot tell rather than a "
+            "disguise. Read `meta.applied_user_agent` for what was actually "
+            "sent."
+        ),
+    )
     cookies: list[Cookie] | None = None
 
     proxy_type: ScrapeProxyType = "none"
@@ -421,6 +459,25 @@ class ScrapeRequest(BaseModel):
         default=None,
         description="Optional pre-navigation warmup (visit origin + dwell). Off when unset.",
     )
+    resolve_redirects: list[str] | None = Field(
+        default=None,
+        max_length=RESOLVE_REDIRECTS_MAX_FIELDS,
+        description=(
+            "Names of extracted fields whose values are the page's OWN redirect "
+            "stubs and should be resolved to the destinations they hide, e.g. "
+            "['links'] on a Google SERP, where every result href is an opaque "
+            "`/goto?url=` token that only a GET on the stub (redirects not "
+            "followed, destination in `Location`) can recover. Off when unset. "
+            "Only values on the page's own host are ever requested — a value on "
+            "another host is already a destination — and every request dials "
+            "through the same egress guard the browser does, from this host "
+            "directly, not through the scrape's proxy. A Location that is a block "
+            "page, or is still on the page's own host, or is the same stub on "
+            "another host, is refused; a stub that cannot be resolved stays as it "
+            "was. `warnings` carries counts and HTTP statuses, never a URL. At "
+            f"most {RESOLVE_REDIRECTS_MAX_LINKS} stubs per request are resolved."
+        ),
+    )
     preset_meta: PresetMeta | None = Field(
         default=None,
         description=(
@@ -439,6 +496,27 @@ class ScrapeRequest(BaseModel):
 
     @model_validator(mode="after")
     def _validate_engine_device(self) -> "ScrapeRequest":
+        if self.device == "legacy_wap" and self.render is not False:
+            # `render` IS `java_script_enabled` on the context, so the default
+            # ships a 2004 feature phone that executes modern JavaScript --
+            # the contradiction #123 and #125 removed from the User-Agent, one
+            # layer down, and this one the site can test for directly. The
+            # layout this device exists for is the JS-free one, so there is
+            # nothing to render either.
+            raise ValueError(
+                "device='legacy_wap' requires render=false: the identity "
+                "claims a phone that predates JavaScript, and rendering would "
+                "run it anyway -- a contradiction the page can measure. The "
+                "no-JS layout it exists for needs no rendering."
+            )
+        if self.device == "legacy_wap" and self.browser_engine == "camoufox":
+            raise ValueError(
+                "device='legacy_wap' is not supported with "
+                "browser_engine='camoufox': Camoufox owns its own fingerprint "
+                "and would keep its Firefox identity while the request claimed "
+                "a feature phone -- the contradiction this device exists to "
+                "avoid. Use chromium, firefox or webkit."
+            )
         if self.device == "mobile" and self.browser_engine in ("firefox", "camoufox"):
             raise ValueError(
                 f"device='mobile' is not supported with browser_engine='{self.browser_engine}' "

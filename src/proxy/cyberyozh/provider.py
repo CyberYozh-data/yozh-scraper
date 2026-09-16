@@ -13,6 +13,10 @@ from src.utils.redaction import redact_url
 log = logging.getLogger(__name__)
 
 
+def _geo_label(geo: dict[str, str]) -> str:
+    return ", ".join(f"{key}={value}" for key, value in geo.items())
+
+
 def _split_rotating_credentials(line: str) -> tuple[str, str, str]:
     """`user:pass@host:port` -> (server, username, password), logged safely.
 
@@ -257,34 +261,27 @@ class CyberYozhProxyProvider:
                 geo if geo else "any"
             )
 
-            # Try with geo first
-            creds = None
-            geo_failed = False
-
             if geo:
-                try:
-                    creds = await self.client.rotating_credentials(payload_with_extra)
-                    log.info("received credentials with geo=%s", geo)
-                except Exception as e:
-                    log.warning(
-                        "failed to get credentials with geo=%s: %s, retrying without geo",
-                        geo,
-                        str(e)[:200]
-                    )
-                    geo_failed = True
-
-            # Retry without geo if failed
-            if geo_failed or (creds is None and geo):
-                # Remove geo params and retry
-                try:
-                    log.info("requesting credentials without geo restrictions")
-                    creds = await self.client.rotating_credentials(src_payload)
-                    log.info("received credentials without geo")
-                except Exception as e:
-                    raise RuntimeError(f"failed to get credentials even without geo: {e}") from e
-
-            # If no geo was requested, just make single request
-            if creds is None and not geo:
+                # No silent fallback: a lease without the requested geo ships
+                # a page from an unknown country under a fingerprint derived
+                # from the requested one, and a country-scoped caller files it
+                # under its own market (audit 2026-09-03, H-12). One retry
+                # absorbs a transient provider error; a second failure fails
+                # the lease, which the runner and /proxies/resolve already
+                # report as an error.
+                creds = None
+                for attempt in (1, 2):
+                    try:
+                        creds = await self.client.rotating_credentials(payload_with_extra)
+                        break
+                    except Exception as e:
+                        if attempt == 2:
+                            raise RuntimeError(f"proxy exit for geo {_geo_label(geo)} unavailable: {e}") from e
+                        log.warning(
+                            "credentials with geo=%s failed (%s); retrying once", geo, str(e)[:200]
+                        )
+                log.info("received credentials with geo=%s", geo)
+            else:
                 creds = await self.client.rotating_credentials(src_payload)
 
             if not creds:

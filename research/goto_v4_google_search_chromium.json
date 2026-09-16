@@ -1,0 +1,416 @@
+[
+ {
+  "preset": "google_search_chromium",
+  "locale": "de",
+  "run": 0,
+  "params": {
+   "query": "best laptop 2026"
+  },
+  "job_id": "req_4ba2631de324a12189c8b873",
+  "status": "done",
+  "meta": {
+   "fetch_ok": true,
+   "status_code": 200,
+   "final_url": "https://www.google.de/search?q=best+laptop+2026&gl=de&hl=de&sei=5kCbaqDcFK6Fxc8PltmjiAw",
+   "retries": 0,
+   "proxy_type": "prem_res_rotating",
+   "applied_locale": "de-DE",
+   "applied_timezone": "Europe/Berlin",
+   "error": null
+  },
+  "took_ms": 17318,
+  "job_error": null,
+  "warnings": [
+   "attempt 1/3 shortened to 36185ms of the requested 45000ms to fit the page-task ceiling",
+   "field 'links': resolved 8 of 8 redirect stubs"
+  ],
+  "data": {
+   "titles": [
+    "Best Laptops (2026): My Top Recommendations ... - WIRED",
+    "Laptop-Test 2026: Die besten Notebooks aller Klassen im ...",
+    "The 15 Best Laptops of 2026 | Reviews by Wirecutter",
+    "The Best Laptops We've Tested (September 2026)",
+    "Best Laptop and Portable Lightweight Ultrabook in 2026",
+    "Top Laptops 2026",
+    "Best laptops 2026: Premium, budget, gaming, 2-in-1, and ...",
+    "What laptop to but in 2026 : r/BuyItForLife"
+   ],
+   "links": [
+    "https://www.wired.com/story/best-laptops/",
+    "https://www.pcwelt.de/article/2215385/die-besten-laptops-test.html",
+    "https://www.nytimes.com/wirecutter/reviews/best-laptops/",
+    "https://www.pcmag.com/picks/the-best-laptops",
+    "https://www.ultrabookreview.com/251-best-ultrabooks/",
+    "https://www.amazon.com/top-laptops-2026/s?k=top+laptops+2026",
+    "https://www.pcworld.com/article/436674/best-pc-laptops.html",
+    "https://www.reddit.com/r/BuyItForLife/comments/1qj0ub4/what_laptop_to_but_in_2026/"
+   ],
+   "display_urls": [
+    "https://www.wired.com › story",
+    "https://www.pcwelt.de › Laptops",
+    "https://www.nytimes.com › best-...",
+    "https://www.pcmag.com › picks",
+    "https://www.ultrabookreview.com › ...",
+    "https://www.amazon.com › top-la...",
+    "https://www.pcworld.com › article",
+    "Ca. 30 Kommentare · vor 7 Monaten"
+   ],
+   "snippets": [
+    "vor 8 Tagen — The Laptops I Recommend Most · MacBook Air (M5, 2026) · XPS 13 (2026) · OmniBook Ultra 14. $1,800 $1,200 (33% off). HP (Core ...",
+    "24.08.2026 — Unsere Empfehlungen auf einen Blick · Acer Swift 16 AI · Apple MacBook Neo · Alienware 16X Aurora · MSI Prestige Flip 14 AI+ · Apple 15-inch MacBook ...",
+    "vor 4 Tagen — Why we like this one: The Lenovo Yoga 7i 2-in-1 (14″ Intel) has the best combination of what makes a laptop great: fast performance, terrific ...",
+    "vor 4 Tagen — Our Top Tested Picks · HP OmniBook 5 14 · Apple MacBook Air 13-Inch (2026, M5) · Dell XPS 13 (2026) · Apple MacBook Neo · Dell XPS 14 (2026).",
+    "21.08.2026 — The best options include premium 16-inch ultraportables such as the Razer Blade 16, Asus ROG Zephyrus G16 and ProArt P16, Lenovo Yoga Pro 9i, or ...",
+    "Apple 2026 MacBook Air 13-inch Laptop with M5 chip: Built for AI, 13.6-inch Liquid Retina Display, 16GB Unified Memory, 512GB SSD, 12MP Center Stage Camera, ...",
+    "vor 3 Tagen — PCWorld calls the Acer Swift 16 AI the best overall laptop. It delivers fast, responsive performance thanks to Intel's Panther Lake platform, ...",
+    "Asus Zenbook 14'. A Flip model with touchscreen if you can, touchscreens are really underrated. But if you want some real gaming go for an Asus ..."
+   ],
+   "result_blocks__slimmed_rows": 8
+  },
+  "fill": {
+   "titles": 1.0,
+   "links": 1.0
+  },
+  "entries": 8,
+  "has_data": true,
+  "elapsed_s": 18.0
+ },
+ {
+  "preset": "google_search_chromium",
+  "locale": "de",
+  "run": 1,
+  "params": {
+   "query": "best laptop 2026"
+  },
+  "job_id": "req_a071c13f2c4b87b349481b2f",
+  "status": "done",
+  "meta": {
+   "fetch_ok": true,
+   "status_code": 200,
+   "final_url": "https://www.google.de/search?q=best+laptop+2026&gl=de&hl=de&sei=60CbauPIDYiH9u8Pru7M6Q8",
+   "retries": 0,
+   "proxy_type": "prem_res_rotating",
+   "applied_locale": "de-DE",
+   "applied_timezone": "Europe/Berlin",
+   "error": null
+  },
+  "took_ms": 12220,
+  "job_error": null,
+  "warnings": [
+   "attempt 1/3 shortened to 36097ms of the requested 45000ms to fit the page-task ceiling",
+   "field 'links': resolved 8 of 8 redirect stubs"
+  ],
+  "data": {
+   "titles": [
+    "Best Laptops (2026): My Top Recommendations ... - WIRED",
+    "Laptop-Test 2026: Die besten Notebooks aller Klassen im ...",
+    "The 15 Best Laptops of 2026 | Reviews by Wirecutter",
+    "The Best Laptops We've Tested (September 2026)",
+    "Best Laptop and Portable Lightweight Ultrabook in 2026",
+    "Top Laptops 2026",
+    "Best laptops 2026: Premium, budget, gaming, 2-in-1, and ...",
+    "What laptop to but in 2026 : r/BuyItForLife"
+   ],
+   "links": [
+    "https://www.wired.com/story/best-laptops/",
+    "https://www.pcwelt.de/article/2215385/die-besten-laptops-test.html",
+    "https://www.nytimes.com/wirecutter/reviews/best-laptops/",
+    "https://www.pcmag.com/picks/the-best-laptops",
+    "https://www.ultrabookreview.com/251-best-ultrabooks/",
+    "https://www.amazon.com/top-laptops-2026/s?k=top+laptops+2026",
+    "https://www.pcworld.com/article/436674/best-pc-laptops.html",
+    "https://www.reddit.com/r/BuyItForLife/comments/1qj0ub4/what_laptop_to_but_in_2026/"
+   ],
+   "display_urls": [
+    "https://www.wired.com › story",
+    "https://www.pcwelt.de › Laptops",
+    "https://www.nytimes.com › best-...",
+    "https://www.pcmag.com › picks",
+    "https://www.ultrabookreview.com › ...",
+    "https://www.amazon.com › top-la...",
+    "https://www.pcworld.com › article",
+    "Ca. 30 Kommentare · vor 7 Monaten"
+   ],
+   "snippets": [
+    "vor 8 Tagen — The Laptops I Recommend Most · MacBook Air (M5, 2026) · XPS 13 (2026) · OmniBook Ultra 14. $1,800 $1,200 (33% off). HP (Core ...",
+    "24.08.2026 — Unsere Empfehlungen auf einen Blick · Acer Swift 16 AI · Apple MacBook Neo · Alienware 16X Aurora · MSI Prestige Flip 14 AI+ · Apple 15-inch MacBook ...",
+    "vor 4 Tagen — Why we like this one: The Lenovo Yoga 7i 2-in-1 (14″ Intel) has the best combination of what makes a laptop great: fast performance, terrific ...",
+    "vor 4 Tagen — Our Top Tested Picks · HP OmniBook 5 14 · Apple MacBook Air 13-Inch (2026, M5) · Dell XPS 13 (2026) · Apple MacBook Neo · Dell XPS 14 (2026).",
+    "21.08.2026 — The best options include premium 16-inch ultraportables such as the Razer Blade 16, Asus ROG Zephyrus G16 and ProArt P16, Lenovo Yoga Pro 9i, or ...",
+    "Apple 2026 MacBook Air 13-inch Laptop with M5 chip: Built for AI, 13.6-inch Liquid Retina Display, 16GB Unified Memory, 512GB SSD, 12MP Center Stage Camera, ...",
+    "vor 3 Tagen — PCWorld calls the Acer Swift 16 AI the best overall laptop. It delivers fast, responsive performance thanks to Intel's Panther Lake platform, ...",
+    "Asus Zenbook 14'. A Flip model with touchscreen if you can, touchscreens are really underrated. But if you want some real gaming go for an Asus ..."
+   ],
+   "result_blocks__slimmed_rows": 8
+  },
+  "fill": {
+   "titles": 1.0,
+   "links": 1.0
+  },
+  "entries": 8,
+  "has_data": true,
+  "elapsed_s": 15.0
+ },
+ {
+  "preset": "google_search_chromium",
+  "locale": "uk",
+  "run": 0,
+  "params": {
+   "query": "best laptop 2026"
+  },
+  "job_id": "req_3c99ffb3d07d43d1a51f1dec",
+  "status": "done",
+  "meta": {
+   "fetch_ok": false,
+   "status_code": 429,
+   "final_url": "https://www.google.com/sorry/index?continue=https://www.google.co.uk/search%3Fq%3Dbest%2Blaptop%2B2026%26gl%3Dgb%26hl%3Den&hl=en&q=EgRZ8zcWGNuB7dQGIjD1IiKbZ-faZYI_MAy1rMhYCNapiLa43NkOC2FLo9MsjJHRoLNap",
+   "retries": 3,
+   "proxy_type": "prem_res_rotating",
+   "applied_locale": "en-GB",
+   "applied_timezone": "Europe/London",
+   "error": null
+  },
+  "took_ms": 23422,
+  "job_error": null,
+  "warnings": [
+   "Captcha/block detected by heuristic",
+   "status_code=429",
+   "attempt 1/3 shortened to 35794ms of the requested 45000ms to fit the page-task ceiling",
+   "attempt 2/3 shortened to 34139ms of the requested 45000ms to fit the page-task ceiling",
+   "attempt 3/3 shortened to 31544ms of the requested 45000ms to fit the page-task ceiling"
+  ],
+  "data": null,
+  "fill": {
+   "titles": 0.0,
+   "links": 0.0
+  },
+  "entries": 0,
+  "has_data": false,
+  "elapsed_s": 24.1
+ },
+ {
+  "preset": "google_search_chromium",
+  "locale": "uk",
+  "run": 1,
+  "params": {
+   "query": "best laptop 2026"
+  },
+  "job_id": "req_78bfee95ebfe3e107909fac4",
+  "status": "done",
+  "meta": {
+   "fetch_ok": true,
+   "status_code": 200,
+   "final_url": "https://www.google.co.uk/search?q=best+laptop+2026&gl=gb&hl=en&sei=8UCbapfXD5OC7M8ProW3KQ",
+   "retries": 2,
+   "proxy_type": "prem_res_rotating",
+   "applied_locale": "en-GB",
+   "applied_timezone": "Europe/London",
+   "error": null
+  },
+  "took_ms": 27018,
+  "job_error": null,
+  "warnings": [
+   "attempt 1/3 shortened to 35834ms of the requested 45000ms to fit the page-task ceiling",
+   "attempt 2/3 shortened to 33758ms of the requested 45000ms to fit the page-task ceiling",
+   "attempt 3/3 shortened to 31219ms of the requested 45000ms to fit the page-task ceiling",
+   "field 'links': resolved 7 of 7 redirect stubs"
+  ],
+  "data": {
+   "titles": [
+    "The Best Laptops for 2026",
+    "Best Laptops (2026): My Top Recommendations After ...",
+    "The 15 Best Laptops of 2026 | Reviews by Wirecutter",
+    "Best Laptops UK 2026 | 6 Tested & Ranked by Experts",
+    "The best laptops to buy in 2026: Tried and tested options ...",
+    "Best Laptops 2026: Our benchmarked picks for ...",
+    "Best Long-Lasting Laptops UK 2026"
+   ],
+   "links": [
+    "https://uk.pcmag.com/laptops/158/the-best-laptops",
+    "https://www.wired.com/story/best-laptops/",
+    "https://www.nytimes.com/wirecutter/reviews/best-laptops/",
+    "https://www.vividrepairs.co.uk/best-laptops-uk-2026",
+    "https://www.expertreviews.co.uk/technology/laptops/best-laptop-uk",
+    "https://www.tomshardware.com/laptops/best-laptops",
+    "https://www.buymeonce.co.uk/blogs/research/the-most-reliable-laptop-uk-2025?srsltid=AfmBOoqk3yM1So2FTaIb8SrYuwxMPPvY0NxM-bF1cB8YKQN7SRBDBlSj"
+   ],
+   "display_urls": [
+    "https://uk.pcmag.com › Roundup › Laptops",
+    "https://www.wired.com › Gear › laptops",
+    "https://www.nytimes.com › Electronics › Laptops",
+    "https://www.vividrepairs.co.uk › Laptops",
+    "https://www.expertreviews.co.uk › Technology › Laptops",
+    "https://www.tomshardware.com › laptops › best-laptops",
+    "https://www.buymeonce.co.uk › blogs › research › the-..."
+   ],
+   "snippets": [
+    "4 days ago — Our current is the LG Gram Pro 2-in-1 16 (2025), which not only earned our Editors' Choice award but was also named one of PCMag's Best Products ...Read more",
+    "8 days ago — Dell XPS 13 (2026) The standout option is still the Lenovo Chromebook Plus 14. I recommend the Acer Chromebook Plus 516, it's the best laptop ...",
+    "4 days ago — The best overall Top. The best overall laptop, the Lenovo Yoga 7i 2-in-1 (14\" Intel), is also our top pick if you want long battery life",
+    "5 days ago — The ASUS Chromebook Plus 15 CX1505 offers the best overall value in 2026, combining a large 15.6-inch display, solid performance, and excellent ...Read more",
+    "Best laptop overall: Honor MagicBook Pro 14 (2025) 2. Best MacBook: Apple MacBook Air 13in (M5, 2026) 3. Best budget laptop: Apple MacBook Neo 4. Best ...",
+    "5 Aug 2026 — Best Laptops You Can Buy Today · 1. MacBook Air (M5) · 2. Dell XPS 14 (DA14260) · 3. Lenovo Yoga Slim 7i Aura Edition · 4. HP OmniBook Ultra · 5 ...Read more",
+    "8 Dec 2025 — Our Top Recommendation: For its robust build, 12-generation track record, and premium materials, the Lenovo ThinkPad X1 Carbon Gen 12 is our ...Read more"
+   ],
+   "result_blocks__slimmed_rows": 7
+  },
+  "fill": {
+   "titles": 1.0,
+   "links": 1.0
+  },
+  "entries": 7,
+  "has_data": true,
+  "elapsed_s": 30.0
+ },
+ {
+  "preset": "google_search_chromium",
+  "locale": "us",
+  "run": 0,
+  "params": {
+   "query": "best laptop 2026"
+  },
+  "job_id": "req_4444de53fcdd5452b0d71674",
+  "status": "done",
+  "meta": {
+   "fetch_ok": true,
+   "status_code": 200,
+   "final_url": "https://www.google.com/search?q=best+laptop+2026&gl=us&hl=en&sei=1kCbauL_JoaokdUPt-qFqAo",
+   "retries": 1,
+   "proxy_type": "prem_res_rotating",
+   "applied_locale": "en-GB",
+   "applied_timezone": "Europe/London",
+   "error": null
+  },
+  "took_ms": 20114,
+  "job_error": null,
+  "warnings": [
+   "attempt 1/3 shortened to 36099ms of the requested 45000ms to fit the page-task ceiling",
+   "attempt 2/3 shortened to 32681ms of the requested 45000ms to fit the page-task ceiling",
+   "field 'links': resolved 8 of 8 redirect stubs"
+  ],
+  "data": {
+   "titles": [
+    "Best Laptops (2026): My Top Recommendations After ...",
+    "The Best Laptops We've Tested (September 2026)",
+    "What laptop to but in 2026 : r/BuyItForLife",
+    "Best Windows laptop of 2026, tested by editors",
+    "The 15 Best Laptops of 2026 | Reviews by Wirecutter",
+    "Laptops",
+    "These are the laptops I recommend for pretty much anyone",
+    "The 8 Best Laptops of 2026"
+   ],
+   "links": [
+    "https://www.wired.com/story/best-laptops/",
+    "https://www.pcmag.com/picks/the-best-laptops",
+    "https://www.reddit.com/r/BuyItForLife/comments/1qj0ub4/what_laptop_to_but_in_2026/",
+    "https://www.cnn.com/cnn-underscored/reviews/best-windows-laptop",
+    "https://www.nytimes.com/wirecutter/reviews/best-laptops/",
+    "https://www.cnet.com/tech/computing/laptops/",
+    "https://www.theverge.com/gadgets/931638/best-laptops-macbooks-windows-gaming-2026",
+    "https://www.rtings.com/laptop/reviews/best/laptop"
+   ],
+   "display_urls": [
+    "https://www.wired.com › Gear › laptops",
+    "https://www.pcmag.com › Best Products › Laptops",
+    "30+ comments · 7 months ago",
+    "https://www.cnn.com › cnn-underscored › reviews › be...",
+    "https://www.nytimes.com › Electronics › Laptops",
+    "https://www.cnet.com › Tech › Computing",
+    "https://www.theverge.com › Gadgets › Gaming › Tech",
+    "https://www.rtings.com › Laptop › Best"
+   ],
+   "snippets": [
+    "8 days ago — Dell XPS 13 (2026) The standout option is still the Lenovo Chromebook Plus 14. I recommend the Acer Chromebook Plus 516, it's the best laptop ...",
+    "4 days ago — Our Top Tested Picks · HP OmniBook 5 14 · Apple MacBook Air 13-Inch (2026, M5) · Dell XPS 13 (2026) · Apple MacBook Neo · Dell XPS 14 (2026).Read more",
+    "Asus Zenbook S16. the Macbook Pro. Asus Zenbook 14'. A Flip model with touchscreen … if you want some real gaming go for an Asus ROG model.",
+    "We tested top Windows laptops, from highly portable ultrabooks to heavy-duty workstations, to help you find one that's worth buying.",
+    "4 days ago — The best overall Top. The best overall laptop, the Lenovo Yoga 7i 2-in-1 (14\" Intel), is also our top pick if you want long battery life",
+    "14 hours ago — Laptop reviews and best lists from our experts to help you find the best laptop for your specific needs. We test a variety of laptops. Top ...",
+    "May 16, 2026 — Asus Zenbook Duo (2026). $2500. $2500. The Good. Lovely dual OLEDs that now sit closer together; Versatile dual-screen form factor; Still a ...Read more",
+    "The best laptop we've tested is the M4 Apple MacBook Pro 14 (2024). This premium workstation has plenty of processing power to tackle nearly anything you ..."
+   ],
+   "result_blocks__slimmed_rows": 8
+  },
+  "fill": {
+   "titles": 1.0,
+   "links": 1.0
+  },
+  "entries": 8,
+  "has_data": true,
+  "elapsed_s": 21.0
+ },
+ {
+  "preset": "google_search_chromium",
+  "locale": "us",
+  "run": 1,
+  "params": {
+   "query": "best laptop 2026"
+  },
+  "job_id": "req_fc4a6e1b9bb58ae16fda1d32",
+  "status": "done",
+  "meta": {
+   "fetch_ok": true,
+   "status_code": 200,
+   "final_url": "https://www.google.com/search?q=best+laptop+2026&gl=us&hl=en&sei=4ECbauv7DYOG9u8PvJOJmQM",
+   "retries": 2,
+   "proxy_type": "prem_res_rotating",
+   "applied_locale": "en-GB",
+   "applied_timezone": "Europe/London",
+   "error": null
+  },
+  "took_ms": 29424,
+  "job_error": null,
+  "warnings": [
+   "attempt 1/3 shortened to 35924ms of the requested 45000ms to fit the page-task ceiling",
+   "attempt 2/3 shortened to 31914ms of the requested 45000ms to fit the page-task ceiling",
+   "attempt 3/3 shortened to 29453ms of the requested 45000ms to fit the page-task ceiling",
+   "field 'links': resolved 7 of 7 redirect stubs"
+  ],
+  "data": {
+   "titles": [
+    "Best Laptops (2026): My Top Recommendations ... - WIRED",
+    "The Best Laptops We've Tested (September 2026)",
+    "What laptop to but in 2026 : r/BuyItForLife",
+    "Best Windows laptop of 2026, tested by editors",
+    "The 15 Best Laptops of 2026 | Reviews by Wirecutter",
+    "Laptops",
+    "These are the laptops I recommend for pretty much anyone"
+   ],
+   "links": [
+    "https://www.wired.com/story/best-laptops/",
+    "https://www.pcmag.com/picks/the-best-laptops",
+    "https://www.reddit.com/r/BuyItForLife/comments/1qj0ub4/what_laptop_to_but_in_2026/",
+    "https://www.cnn.com/cnn-underscored/reviews/best-windows-laptop",
+    "https://www.nytimes.com/wirecutter/reviews/best-laptops/",
+    "https://www.cnet.com/tech/computing/laptops/",
+    "https://www.theverge.com/gadgets/931638/best-laptops-macbooks-windows-gaming-2026"
+   ],
+   "display_urls": [
+    "https://www.wired.com › Gear › laptops",
+    "https://www.pcmag.com › Best Products › Laptops",
+    "30+ comments · 7 months ago",
+    "https://www.cnn.com › cnn-underscored › reviews › be...",
+    "https://www.nytimes.com › Electronics › Laptops",
+    "https://www.cnet.com › Tech › Computing",
+    "https://www.theverge.com › Gadgets › Gaming › Tech"
+   ],
+   "snippets": [
+    "8 days ago — The standout option is still the Lenovo Chromebook Plus 14. It's the most premium Chromebook available, with an OLED screen, 16 GB of RAM, and ...Read more",
+    "4 days ago — Our Top Tested Picks · HP OmniBook 5 14 · Apple MacBook Air 13-Inch (2026, M5) · Dell XPS 13 (2026) · Apple MacBook Neo · Dell XPS 14 (2026).Read more",
+    "Asus Zenbook 14'. A Flip model with touchscreen if you can, touchscreens are really underrated. But if you want some real gaming go for an Asus ...Read more",
+    "We tested top Windows laptops, from highly portable ultrabooks to heavy-duty workstations, to help you find one that's worth buying.",
+    "4 days ago — Why we like this one: The Lenovo Yoga 7i 2-in-1 (14″ Intel) has the best combination of what makes a laptop great: fast performance, terrific ...Read more",
+    "10 hours ago — Laptops. Laptop reviews and best lists from our experts to help you find the best laptop for your specific needs.Read more",
+    "May 16, 2026 — Asus Zenbook Duo (2026). $2500. $2500. The Good. Lovely dual OLEDs that now sit closer together; Versatile dual-screen form factor; Still a ...Read more"
+   ],
+   "result_blocks__slimmed_rows": 7
+  },
+  "fill": {
+   "titles": 1.0,
+   "links": 1.0
+  },
+  "entries": 7,
+  "has_data": true,
+  "elapsed_s": 30.1
+ }
+]

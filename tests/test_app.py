@@ -69,6 +69,21 @@ class TestLifespan:
         mock_shutdown.assert_awaited_once()
 
     @pytest.mark.asyncio
+    async def test_lifespan_probes_the_preset_store(self, mocker):
+        """Startup runs the preset-store writability probe exactly once.
+
+        The broker is stubbed: the test-mode InMemoryBroker runs the worker
+        startup hook in-process, which probes again and is not this seam.
+        """
+        probe = mocker.patch("src.app.FilePresetStore.warn_if_not_writable")
+        mocker.patch("src.app.broker.startup", AsyncMock())
+        mocker.patch("src.app.broker.shutdown", AsyncMock())
+
+        app = create_app()
+        async with app.router.lifespan_context(app):
+            probe.assert_called_once_with()
+
+    @pytest.mark.asyncio
     async def test_lifespan_health_endpoint_works(self):
         """After lifespan startup the /health endpoint responds."""
         app = create_app()

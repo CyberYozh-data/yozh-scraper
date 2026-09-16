@@ -43,7 +43,14 @@ def _ops(rule) -> list[tuple[str, list]]:
     return [(step.op, step.args) for step in rule.post_process]
 
 
-def _title_block(title: str) -> str:
+_CLIPPED_SPAN = '<span class="clipped">Opens in a new window or tab</span>'
+# Live shape, ebay.co.uk 2026-09-05, one card in sixty (`s-card--overflow`): a
+# second, EMPTY styled span follows the title span. A titles selector on
+# `span.su-styled-text` reads it as a 61st title and shifts every column after it.
+_OVERFLOW_SPAN = '<span class="su-styled-text default"></span>'
+
+
+def _title_block(title: str, trailing: str = _CLIPPED_SPAN) -> str:
     """Verbatim live shape: the visible title span is followed by a
     screen-reader-only `.clipped` span carrying "Opens in a new window or tab",
     which is why titles read the inner `span.su-styled-text` and not the
@@ -51,8 +58,7 @@ def _title_block(title: str) -> str:
     return (
         '<div role="heading" aria-level="3" class="s-card__title">'
         f'<span class="su-styled-text primary default">{title}</span>'
-        '<span class="clipped">Opens in a new window or tab</span>'
-        "</div>"
+        f"{trailing}</div>"
     )
 
 
@@ -62,6 +68,7 @@ def _ebay_card(
     title: str,
     price_rows: str = "",
     with_media_link: bool = True,
+    overflow: bool = False,
 ) -> str:
     media = (
         '<div class="su-card-container__media"><div class="su-image">'
@@ -79,7 +86,7 @@ def _ebay_card(
           <div class="su-card-container__header">
             <a class="s-card__link" target="_blank"
                href="https://www.ebay.com/itm/{item_id}?_skw=iphone+13">
-              {_title_block(title)}
+              {_title_block(title, trailing=_OVERFLOW_SPAN if overflow else _CLIPPED_SPAN)}
             </a>
             <div class="s-card__subtitle-row">
               <div class="s-card__subtitle">
@@ -121,10 +128,11 @@ class TestEbaySearchSelectors:
 
     def test_titles_read_the_inner_styled_text_span(self):
         # Reading `.s-card__title` itself concatenates the clipped
-        # "Opens in a new window or tab" onto every title.
+        # "Opens in a new window or tab" onto every title; `.primary` because an
+        # overflow card carries a second, empty styled span (2026-09-05).
         rule = self.fields["titles"]
         assert rule.selector == (
-            f"{RIVER} .su-card-container__header .s-card__title > span.su-styled-text"
+            f"{RIVER} .su-card-container__header .s-card__title > span.su-styled-text.primary"
         )
         assert rule.all is True
         assert rule.required is True
@@ -218,6 +226,21 @@ class TestEbaySearchExtraction:
         assert len(data["titles"]) == 3
         assert len(data["urls"]) == 3
         assert data["prices"] == ["$479.99", None, "$12.00"]
+        assert not warnings
+
+    def test_an_overflow_cards_empty_second_span_is_not_a_title(self):
+        """ebay.co.uk `laptop`, 2026-09-05: 61 titles against 60 prices and
+        urls, one card carrying an empty second `span.su-styled-text`. The
+        title is the `primary` span; the empty one is not a row."""
+        data, warnings = self._extract(
+            [
+                _ebay_card(item_id="111", title="First", price_rows=_price_row("$1.00")),
+                _ebay_card(item_id="222", title="Overflow", price_rows=_price_row("$2.00"), overflow=True),
+                _ebay_card(item_id="333", title="Third", price_rows=_price_row("$3.00")),
+            ]
+        )
+        assert data["titles"] == ["First", "Overflow", "Third"]
+        assert len(data["prices"]) == len(data["urls"]) == 3
         assert not warnings
 
     def test_media_anchor_does_not_double_the_urls(self):

@@ -39,6 +39,10 @@ async def lifespan(app: FastAPI):
     http_client = httpx.AsyncClient(
         timeout=httpx.Timeout(settings.map_http_timeout_ms / 1000.0),
         follow_redirects=False,
+        # The body cap in ssrf.safe_get is soft by one decoded chunk; gzip and
+        # deflate inflate a 64 KiB read to ~64 MiB at worst, brotli/zstd far
+        # more -- pinned so a future `pip install brotli` cannot reopen H-17.
+        headers={"Accept-Encoding": "gzip, deflate"},
     )
 
     app.state.scraper_client = scraper

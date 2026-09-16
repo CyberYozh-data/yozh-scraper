@@ -111,7 +111,7 @@ def test_camoufox_never_pins_a_locale_camoufox_itself_would_reject():
     accepts it, absent precisely when Camoufox would not.
     """
     from camoufox.exceptions import InvalidLocale
-    from camoufox.locale import handle_locales
+    from camoufox.locales import handle_locales
 
     from src.browser.geo_profile import _COUNTRY_MAP
 
@@ -286,6 +286,54 @@ async def test_fetch_drops_user_agent_header(monkeypatch, caplog):
         )
     page.set_extra_http_headers.assert_awaited_once_with({"X-Keep": "yes"})
     assert any("User-Agent" in r.message for r in caplog.records)
+
+
+@pytest.mark.asyncio
+async def test_fetch_drops_the_client_hints_that_came_with_the_ua(monkeypatch):
+    """Four of the header presets in scraper-tester send `sec-ch-ua*` next to
+    the UA as one set. Dropping only the UA leaves Camoufox's own Firefox
+    identity beside a Chrome Client-Hints claim -- a contradiction the
+    fingerprint cannot back, and one it did not have before."""
+    page = _mock_page(monkeypatch)
+    res = await CamoufoxRunner(timeout_ms=30000).fetch(
+        url="https://ya.ru/", device="desktop", proxy=None,
+        headers={
+            "User-Agent": "Chrome/124", "sec-ch-ua": '"Google Chrome";v="124"',
+            "sec-ch-ua-platform": '"Windows"', "X-Keep": "yes",
+        },
+        wait_until="domcontentloaded", wait_for_selector=None, timeout_ms=None,
+        screenshot=False,
+    )
+    page.set_extra_http_headers.assert_awaited_once_with({"X-Keep": "yes"})
+    assert res.ignored_request_fields == [
+        "headers['Sec-CH-UA']", "headers['Sec-CH-UA-Platform']",
+        "headers['User-Agent']",
+    ]
+
+
+@pytest.mark.asyncio
+async def test_the_drop_is_reported_on_a_failed_fetch_too(monkeypatch):
+    """The path where a caller most needs the answer.
+
+    A UA override is reached for on exactly the hard targets, which are also
+    the ones that time out. Reporting the drop only on success meant the
+    operator saw nothing on the runs they were trying to explain -- the same
+    reasoning `applied_fingerprint` already carries on this error return.
+    """
+    from unittest.mock import AsyncMock
+
+    from playwright.async_api import TimeoutError as PWTimeoutError
+
+    page = _mock_page(monkeypatch)
+    page.goto = AsyncMock(side_effect=PWTimeoutError("Timeout 30000ms exceeded"))
+
+    res = await CamoufoxRunner(timeout_ms=30000).fetch(
+        url="https://ya.ru/", device="desktop", proxy=None,
+        headers={"User-Agent": "curl/8"}, wait_until="domcontentloaded",
+        wait_for_selector=None, timeout_ms=None, screenshot=False,
+    )
+    assert res.ok is False
+    assert res.ignored_request_fields == ["headers['User-Agent']"]
 
 
 @pytest.mark.asyncio
@@ -554,7 +602,8 @@ def test_the_serveable_range_is_inclusive_at_both_ends():
 
 @pytest.mark.e2e
 @pytest.mark.asyncio
-async def test_the_geometry_invariant_still_holds_in_a_real_browser():
+@pytest.mark.parametrize("requested", [(1920, 1080), (1601, 1001)])
+async def test_the_geometry_invariant_still_holds_in_a_real_browser(requested):
     """`inner <= outer <= screen` with equal widths is a property of the
     camoufox+playwright pair, not of our code.
 
@@ -563,17 +612,45 @@ async def test_the_geometry_invariant_still_holds_in_a_real_browser():
     restore the 1280x720 override and leave the whole suite green, which is the
     same gap `test_the_screen_floor_cap_is_still_what_camoufox_can_serve`
     exists to close for the cap constant.
+
+    Sizes. 1920x1080 is the shipped desktop default, so it has to be here.
+    1601x1001 is here because 1920x1080 cannot prove the kwargs did anything:
+    Camoufox's own monitor corpus contains 1920x1080, and a launch that
+    ignored every kwarg we passed still opens a window filling that monitor,
+    satisfying both the floor and the size. Measured with the `window`/`screen`
+    kwargs dropped: at 1920x1080 the assertions below survived that mutation
+    1 launch in 30; at 1601x1001, which is nobody's monitor, 0 of 15 (they
+    came back on 1680x1050 and 960x540 screens). The odd size is the
+    discriminator; the default is the thing that ships.
+
+    The size is compared against the spoofed monitor's WORK AREA in both
+    dimensions, not against the request. `screen` floors at the request, so
+    Camoufox may pick a monitor of exactly 1920x1080, whose availHeight is
+    1040 or 1053 -- a taskbar. No browser opens a 1080-tall window there, and
+    neither does ours: of 45 forced launches at the default size, the 4 that
+    drew a 1920x1080 monitor are exactly the 4 whose window came back short,
+    each equal to that draw's availHeight to the pixel.
+
+    KNOWN, RARE, NOT OURS: 1 of those 45 launches came back on a 1280x720
+    screen with a 1280x708 window -- Camoufox honoured neither the window nor
+    the floor. It fails the floor assertion, which is the right outcome; a
+    single red run whose reported screen is far BELOW the floor is that draw,
+    not a regression. Re-run before believing it.
     """
     import os as _os
 
+    # In the service image the entrypoint always starts Xvfb, so this skip is
+    # for a bare-host run only. A green `-m e2e` outside a container with no
+    # X server means the body never ran.
     if not _os.environ.get("DISPLAY"):
         pytest.skip("headful launch needs an X display (Xvfb); DISPLAY is unset")
 
     from camoufox.async_api import AsyncCamoufox
 
+    width, height = requested
     opts = build_camoufox_options(
         proxy=None, block_assets=False, webrtc_block=True, headless=False,
-        viewport={"width": 1920, "height": 1080},
+        viewport={"width": width, "height": height},
     )
     async with AsyncCamoufox(**opts) as browser:
         page = await browser.new_page(no_viewport=True)
@@ -581,16 +658,26 @@ async def test_the_geometry_invariant_still_holds_in_a_real_browser():
         seen = await page.evaluate(
             "() => ({inner: [innerWidth, innerHeight],"
             " outer: [outerWidth, outerHeight],"
-            " screen: [screen.width, screen.height]})"
+            " screen: [screen.width, screen.height],"
+            " avail: [screen.availWidth, screen.availHeight]})"
         )
 
-    inner, outer, screen = seen["inner"], seen["outer"], seen["screen"]
+    inner, outer, screen, avail = seen["inner"], seen["outer"], seen["screen"], seen["avail"]
     # No browser has horizontal chrome; the vertical difference is the toolbar.
     assert inner[0] == outer[0], f"{inner[0] - outer[0]}px of horizontal chrome"
     assert inner[1] <= outer[1]
+    assert avail[0] <= screen[0] and avail[1] <= screen[1], (
+        f"work area {avail} larger than the monitor {screen}"
+    )
     assert outer[0] <= screen[0] and outer[1] <= screen[1], "window larger than its monitor"
-    assert outer == [1920, 1080], "the forced window did not survive"
-
+    assert screen[0] >= width and screen[1] >= height, (
+        f"the screen floor did not survive: asked at least {width}x{height}, got {screen}"
+    )
+    served = [min(width, avail[0]), min(height, avail[1])]
+    assert outer == served, (
+        f"the forced window did not survive: asked {width}x{height}, "
+        f"work area {avail}, got {outer}"
+    )
 
 def test_a_profile_pins_the_os_and_the_gpu():
     """The two knobs a profile states; Camoufox keeps the rest.
@@ -783,3 +870,54 @@ async def test_a_launch_failure_still_reports_the_profile_it_tried(monkeypatch):
 
     assert res.ok is False
     assert res.applied_fingerprint["profile"] == "linux"
+
+
+def test_the_launch_hands_firefox_a_narrowed_environment(monkeypatch):
+    """Camoufox defaults this to the whole of os.environ, so without it the
+    Firefox process holds the service token, the LLM keys and the proxy
+    passwords. Its own CAMOU_CONFIG chunks are merged UNDER what we pass and
+    survive: measured live, 6 processes, chunk present, no canary, forced
+    window and spoofed UA unchanged.
+    """
+    monkeypatch.setenv("SERVICE_TOKEN", "s3cret")
+    monkeypatch.setenv("DISPLAY", ":99")
+
+    opts = build_camoufox_options(proxy=None, block_assets=False, webrtc_block=True)
+
+    assert "SERVICE_TOKEN" not in opts["env"]
+    assert opts["env"]["DISPLAY"] == ":99"
+
+def test_ublock_is_shipped_by_default_and_excludable_by_setting(monkeypatch):
+    """Pins the CAMOUFOX_DISABLE_UBO branch, which review found untested.
+
+    Replacing the branch with `if False:` left tests/browser and
+    tests/queue green, so the switch proved nothing -- and it is the only lever
+    against a class of failure that recurs without a commit, since uBO is
+    downloaded at first browser LAUNCH (not at image build) and its filter
+    lists rewrite the pages we scrape. Camoufox calls `add_default_addons()`
+    unconditionally inside its own `launch_options()`, so `exclude_addons` is
+    the only way out; asserted on the option dict that reaches
+    `AsyncCamoufox(**opts)`.
+    """
+    from src.settings import settings
+
+    base = dict(proxy=None, block_assets=False, webrtc_block=True)
+
+    monkeypatch.setattr(settings, "camoufox_disable_ubo", False)
+    assert "exclude_addons" not in build_camoufox_options(**base)
+
+    monkeypatch.setattr(settings, "camoufox_disable_ubo", True)
+    excluded = build_camoufox_options(**base)["exclude_addons"]
+    assert [getattr(a, "name", a) for a in excluded] == ["UBO"]
+
+
+def test_excluding_ublock_does_not_drop_a_caller_supplied_addon(monkeypatch):
+    """The two lists are independent: one names what to ADD, one what to DROP."""
+    from src.settings import settings
+
+    monkeypatch.setattr(settings, "camoufox_disable_ubo", True)
+    opts = build_camoufox_options(
+        proxy=None, block_assets=False, webrtc_block=True, addons=["/tmp/some-addon"]
+    )
+    assert opts["addons"] == ["/tmp/some-addon"]
+    assert "exclude_addons" in opts

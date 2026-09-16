@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+import json
+
 import pytest
 
 from src.presets.models import LocaleProfile, ParsingInstructions, Preset
 from src.extract.models import FieldRule
+from src.presets.store import BuiltInRegistry
 from src.presets.materializer import (
     MaterializeError,
     SessionConflictError,
@@ -38,6 +41,10 @@ def _amazon_preset(**overrides) -> Preset:
     }
     base.update(overrides)
     return Preset(**base)
+
+
+def _builtin(name: str) -> Preset:
+    return BuiltInRegistry().get(name)
 
 
 class TestUrlTemplate:
@@ -425,6 +432,20 @@ class TestAiOnlyPreset:
         assert scrape.extract is None
         # raw_html is forced on so PR-3 LLM step has something to work with
         assert scrape.raw_html is True
+
+
+class TestParsingOverrideIsMarkedOnThePlan:
+    """The worker refuses to persist a self-heal whose contract was the
+    request's own `parsing_override` (audit 2026-09-03, H-14); the flag it
+    reads is set here, and only here."""
+
+    def test_the_plan_says_where_the_instructions_came_from(self):
+        preset = _amazon_preset()
+        override = ParsingInstructions(type="css", fields={"anything": FieldRule(selector="h1", required=True)})
+        req = materialize(preset, PresetScrapeRequest(source="amazon_product", preset_params={"asin": "B0"}, parsing_override=override))
+        assert req.parser_plan.instructions_from_override is True
+        plain = materialize(preset, PresetScrapeRequest(source="amazon_product", preset_params={"asin": "B0"}))
+        assert plain.parser_plan.instructions_from_override is False
 
 
 class TestParsePriceLocaleInjection:
@@ -954,14 +975,101 @@ class TestBingSearchUnwrapsItsLinks:
         raw = json.loads(pathlib.Path("src/presets/builtin/bing_search_chromium.json").read_text())
         return Preset(**raw).parsing_instructions.fields["links"]
 
-    def test_the_wrapper_is_unwrapped(self):
-        ops = [(o.op, tuple(o.args)) for o in (self._links_field().post_process or [])]
+    def test_every_shape_a_link_arrives_in_ends_as_a_destination_or_null(self):
+        """Pinned on BEHAVIOUR, not on the op list.
 
-        assert ("base64_decode", ()) in ops, "the destination is base64; nothing else decodes it"
-        assert any(op == "regex" and "u=a1" in args[0] for op, args in ops), ops
+        This used to assert `regex` ran before `base64_decode`. That pinned one
+        implementation of the property rather than the property, and the
+        implementation had to change: uBlock Origin — which Camoufox loads on
+        every launch — rewrites Bing's organic hrefs to their destination before
+        we see them, so the field now meets two shapes and the regex nulled the
+        sanitized one. What must stay true is only this table.
+        """
+        from src.extract.extractor import _apply_post_process
 
-    def test_the_regex_runs_before_the_decode(self):
-        """Order is the whole trick: decode the capture, not the whole href."""
-        ops = [o.op for o in (self._links_field().post_process or [])]
+        steps = self._links_field().post_process
+        wrapped = (
+            "https://www.bing.com/ck/a?!&&p=x&u=a1aHR0cHM6Ly93d3cucGNtYWcuY29t&ntb=1"
+        )
+        cases = {
+            # wrapped by Bing -> decoded
+            wrapped: "https://www.pcmag.com",
+            # already sanitized by uBO -> passed through untouched
+            "https://www.pcmag.com/picks/the-best-laptops":
+                "https://www.pcmag.com/picks/the-best-laptops",
+            # an ad wrapper (`u=` with no `a1`) -> nulled, never shipped as a link
+            "https://www.bing.com/aclk?ld=e8&u=aHR0cHM6Ly9hZHMuZXhhbXBsZQ&ntb=1": None,
+            # a wrapper whose payload does not decode -> nulled
+            "https://www.bing.com/ck/a?!&&p=x&u=a1!!!not-base64!!!&ntb=1": None,
+        }
+        for href, expected in cases.items():
+            assert _apply_post_process(href, steps, "links", [], set()) == expected, href
 
-        assert ops.index("regex") < ops.index("base64_decode")
+
+class TestResolveRedirectsReachesTheRequest:
+    """`resolve_redirects` is a ScrapeRequest field, so a preset's
+    request_defaults can turn it on and the materializer must carry it through
+    untouched — the google_search presets rely on exactly that to get
+    followable links back out of Google's `/goto?url=` stubs."""
+
+    def test_google_search_asks_for_its_links_to_be_resolved(self):
+        for name in ("google_search_chromium", "google_search_camoufox"):
+            req = materialize(_builtin(name), PresetScrapeRequest(source=name, locale="de", preset_params={"query": "x"}))
+            assert req.resolve_redirects == ["links"], name
+
+    def test_a_preset_that_says_nothing_gets_none(self):
+        req = materialize(_builtin("bing_search_chromium"), PresetScrapeRequest(source="bing_search_chromium", locale="us", preset_params={"query": "x"}))
+        assert req.resolve_redirects is None
+
+
+class TestPresetMetaCarriesLinksStayOnSite:
+    """mobile.de's listings are the site's own query-addressed pages on one
+    path; the worker skips the self-referential-links guard on the preset's
+    say-so, which has to travel with the plan."""
+
+    def test_a_declaring_preset_is_echoed(self):
+        req = materialize(_builtin("mobile_de_search_chromium"),
+                          PresetScrapeRequest(source="mobile_de_search_chromium", preset_params={"make_id": "3500", "model_id": "20"}))
+        assert req.preset_meta.links_stay_on_site is True
+
+    def test_the_default_is_off(self):
+        req = materialize(_builtin("bing_search_chromium"),
+                          PresetScrapeRequest(source="bing_search_chromium", preset_params={"query": "x"}))
+        assert req.preset_meta.links_stay_on_site is False
+
+
+class TestPresetMetaCarriesTheQuery:
+    """`preset_meta.query` is how the worker learns what the caller asked for
+    after the page is parsed -- the query-relevance guard reads it."""
+
+    def test_the_rendered_query_is_carried(self):
+        req = materialize(_builtin("bing_search_chromium"),
+                          PresetScrapeRequest(source="bing_search_chromium", locale="ru", preset_params={"query": "best laptop 2026"}))
+        assert req.preset_meta.query == "best laptop 2026"
+
+    def test_the_query_is_the_string_the_url_was_rendered_from(self):
+        req = materialize(_builtin("bing_search_chromium"),
+                          PresetScrapeRequest(source="bing_search_chromium", preset_params={"query": 2026}))
+        assert req.preset_meta.query == "2026"
+
+    def test_only_a_schema_with_result_rows_is_judged(self):
+        """The rule was calibrated on a `titles` list. Facets or navigation
+        links -- from a caller's parsing_override or a user preset's own
+        schema -- are not result rows, whatever the URL asked for."""
+        facets = ParsingInstructions(type="css", fields={"facets": FieldRule(selector="a", all=True)})
+        req = materialize(_builtin("bing_search_chromium"),
+                          PresetScrapeRequest(source="bing_search_chromium", preset_params={"query": "x"}, parsing_override=facets))
+        assert req.preset_meta.query is None
+        user_preset = _amazon_preset(url_template="https://www.amazon.{domain}/s?k={query}", parsing_instructions=facets)
+        req = materialize(user_preset, PresetScrapeRequest(source="amazon_product", preset_params={"query": "x"}))
+        assert req.preset_meta.query is None
+        rows = ParsingInstructions(type="css", fields={"titles": FieldRule(selector="h2", all=True)})
+        req = materialize(_builtin("bing_search_chromium"),
+                          PresetScrapeRequest(source="bing_search_chromium", preset_params={"query": "x"}, parsing_override=rows))
+        assert req.preset_meta.query == "x", "an override that extracts result rows is judged"
+
+    def test_a_preset_without_a_query_placeholder_carries_none(self):
+        """Placeholder-driven, not param-driven: a stray `query` param on a
+        product preset was never applied, so it is not what the page answers."""
+        req = materialize(_amazon_preset(), PresetScrapeRequest(source="amazon_product", preset_params={"asin": "B0", "query": "ignored"}))
+        assert req.preset_meta.query is None

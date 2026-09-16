@@ -114,6 +114,16 @@ class Preset(BaseModel):
     parsing_instructions: ParsingInstructions | None = None
     output_schema: dict[str, Any] | None = None
     self_heal: bool = True
+    links_stay_on_site: bool = Field(
+        default=False,
+        description=(
+            "The extracted URLs are the site's own pages -- query-addressed "
+            "detail pages such as mobile.de's /fahrzeuge/details.html?id=... -- "
+            "so the worker's self-referential-links guard must not read them as "
+            "an unwrapped redirect. Leave unset for engines and marketplaces "
+            "whose results link out or give every row its own path."
+        ),
+    )
     prompt_schema: dict[str, Any] | None = None
     llm_extract_prompt: str | None = None
     version: int = 1
@@ -149,6 +159,24 @@ class PresetMeta(BaseModel):
     source: str
     locale: str | None = None
     version: int = 1
+    query: str | None = Field(
+        default=None,
+        description=(
+            "The search query the URL was rendered with: the preset's `{query}` "
+            "placeholder, as a string. The worker judges the parsed page against "
+            "it (the serp_query_mismatch warning). None for presets without that "
+            "placeholder or without a `titles` list to judge, and for stored "
+            "requests that predate this field."
+        ),
+    )
+    links_stay_on_site: bool = Field(
+        default=False,
+        description=(
+            "Echo of the preset's `links_stay_on_site`: the worker skips the "
+            "self-referential-links guard for a preset whose results are the "
+            "site's own pages."
+        ),
+    )
 
 
 class ParserPlan(BaseModel):
@@ -167,6 +195,26 @@ class ParserPlan(BaseModel):
     llm_extract_prompt: str | None = None
     preset_name: str | None = None
     preset_kind: PresetKind | None = None
+    preset_stamp: str | None = Field(
+        default=None,
+        description=(
+            "Fingerprint of the stored preset AS THIS JOB READ IT. The worker "
+            "writes healed selectors only while the file still matches, so an "
+            "edit its owner saved during the minutes this job spent rendering "
+            "is not overwritten by a language model's guess. None on a "
+            "built-in (never written) and on a job enqueued before this "
+            "field existed, both of which keep the old unconditional write."
+        ),
+    )
+    instructions_from_override: bool = Field(
+        default=False,
+        description=(
+            "True when the request replaced the preset's parsing_instructions "
+            "with its own `parsing_override`. A self-heal on that contract "
+            "describes the caller's fields, not the preset's, so it is never "
+            "persisted to the preset."
+        ),
+    )
     materializer_injected: dict[str, list[str]] = Field(
         default_factory=dict,
         description=(

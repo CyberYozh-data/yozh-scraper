@@ -166,6 +166,58 @@ async def test_chrome_channel_launch_kwarg(monkeypatch, channel, engine, expect_
     assert captured.get("channel") == expect_channel
 
 
+@pytest.mark.asyncio
+async def test_the_launch_hands_the_browser_a_narrowed_environment(monkeypatch):
+    """Without an explicit `env`, Playwright gives the browser this process's
+    own -- measured on real Chrome in the service image: 25-27 variables
+    including the service token and the LLM key, in the browser and in both
+    crashpad handlers. The browser needs the display and its path, not the
+    keys.
+    """
+    import src.browser.runner as runner_mod
+
+    monkeypatch.setenv("SERVICE_TOKEN", "s3cret")
+    monkeypatch.setenv("DISPLAY", ":99")
+    captured = {}
+
+    class _BT:
+        def __init__(self, name):
+            self.name = name
+
+        async def launch(self, **kwargs):
+            captured.update(kwargs)
+            return object()
+
+    class _PW:
+        chromium = _BT("chromium")
+        firefox = _BT("firefox")
+        webkit = _BT("webkit")
+
+        async def stop(self):
+            pass
+
+    class _CM:
+        async def __aenter__(self):
+            return _PW()
+
+        async def __aexit__(self, *_):
+            pass
+
+        async def start(self):
+            return _PW()
+
+    monkeypatch.setattr(runner_mod, "async_playwright", lambda: _CM())
+    runner = PlaywrightRunner(engine="chromium", headless=True, block_assets=False,
+                              timeout_ms=30000)
+    runner._browser = None
+    await runner.start()
+
+    env = captured.get("env")
+    assert env is not None, "no env passed: the browser inherits everything"
+    assert "SERVICE_TOKEN" not in env
+    assert env.get("DISPLAY") == ":99"
+
+
 def test_default_engine_is_chromium():
     runner = PlaywrightRunner(headless=True, block_assets=False, timeout_ms=30000)
     assert runner._engine == "chromium"

@@ -4,7 +4,7 @@ import base64
 import logging
 import re
 from html import unescape
-from typing import Any, Dict, Tuple
+from typing import Any, Callable, Dict, Tuple
 from urllib.parse import unquote, urljoin, urlsplit
 
 from lxml import etree, html as lxml_html
@@ -26,6 +26,92 @@ def _select(doc, selector: str, kind: str):
     if kind == "css":
         return doc.cssselect(selector)
     return doc.xpath(selector)
+
+
+def _select_rows(doc, rule) -> tuple[list | None, str | None]:
+    """The row nodes for a rule, or a message naming what went wrong.
+
+    Selected ONCE per rule rather than once per field: with the container on
+    the rule, every field walks the same rows, and re-selecting them per field
+    would be both wasted work and a second place for them to disagree.
+
+    A selector can legally return a float, a bool or a list of strings
+    (`count(//div)`, `boolean(//h3)`, `//div/@class`). None of those are rows,
+    and iterating them raised out of `extract_fields` all the way to the
+    worker's outer handler, which discards the whole ScrapeResponse -- the
+    page rendered fine and the caller lost the HTML, the screenshot and the
+    meta over one string in `extract`. Refused as a field warning instead.
+    """
+    try:
+        rows = _select(doc, rule.container, rule.type)
+    except Exception:  # pylint: disable=broad-exception-caught
+        return None, "container selector is invalid"
+    if not isinstance(rows, list):
+        return None, "container selector did not match elements"
+    if any(isinstance(row, str) for row in rows):
+        return None, "container selector did not match elements"
+    return rows, None
+
+
+def _inside(node, row) -> bool:
+    """Did this match actually come from `row`?
+
+    The validator is a claim about selector SYNTAX and it has been wrong twice:
+    a prefix check let `..//h3` climb, and CSS was exempted on a rule about
+    `descendant-or-self` that sibling combinators break -- `.row ~ .row h3`
+    compiles through `following-sibling::` and returns the NEXT row's value.
+    Syntax will keep finding new ways to be wrong (`id()` in a later step is
+    one this still cannot see), so the guarantee is made here, on the node:
+    a value counts when it is the row or sits under it, and otherwise it does
+    not count at all.
+
+    lxml's smart strings (an `@href`, a `text()`) carry `getparent`; a computed
+    string (`string(...)`) does not, and a value whose origin cannot be
+    established is refused rather than assumed -- fail closed.
+    """
+    element = node.getparent() if isinstance(node, str) else node
+    if element is None or not hasattr(element, "getparent"):
+        return False
+    while element is not None:
+        if element is row:
+            return True
+        element = element.getparent()
+    return False
+
+
+def _one_per_row(rows, field_rule, selector_type: str) -> tuple[list | None, bool]:
+    """One value per row, `None` where a row has no match.
+
+    Both halves are load-bearing. `None` in place keeps every column the same
+    length -- a hole that shifts its neighbours up is the defect the container
+    removes. Taking only the first match means extra matches inside one row
+    contribute nothing, which is the sitelinks case where a single card
+    carrying three `h3` pushed every later row out of step.
+    """
+    values, escaped = [], False
+    for row in rows:
+        try:
+            found = _select(row, field_rule.selector, selector_type)
+        except Exception:  # pylint: disable=broad-exception-caught
+            return None, False
+        if not isinstance(found, list) or not found:
+            values.append(None)
+            continue
+        inside = [node for node in found if _inside(node, row)]
+        if len(inside) < len(found):
+            escaped = True
+        if not inside:
+            values.append(None)
+            continue
+        try:
+            values.append(_pick(inside[0], field_rule.attr))
+        except Exception:  # pylint: disable=broad-exception-caught
+            # `.//comment()` reaches `_pick` as an HtmlComment and raises. This
+            # helper's whole promise is that a caller-supplied string costs the
+            # field and not the response, so the promise covers reading the
+            # node as well as finding it.
+            return None, escaped
+    return values, escaped
 
 
 def _pick(node, attr: str):
@@ -92,12 +178,46 @@ def _strip_tags(value: Any) -> str | None:
 # switches ("12 345,67"), a phone number's next group does not. `(?!\1\d)` is
 # therefore the whole locale question answered without knowing the locale.
 #
-# The space stays in the class in both spellings. Localised pages emit U+00A0,
-# but `_text` collapses it to an ASCII space before this function ever sees it,
-# so refusing the ASCII one would break every grouped Russian and French count on
-# the ordinary attr="text" path.
-_INT_RE = re.compile(r"\d{1,3}(?:([.,  ])\d{3})(?:\1\d{3})*(?!\d)(?!\1\d)|\d+")
-_INT_GROUPING = str.maketrans("", "", ".,  ")
+# The spaces that group thousands, in every spelling a page can carry: the
+# ASCII space (what `_text` collapses every other one to on the attr="text"
+# path, so refusing it would break every grouped Russian and French count),
+# U+00A0 (localised pages), U+2009 (the thin space Ozon prints, "55 119 ₽")
+# and U+202F (French narrow no-break space). They matter on the attr="html"
+# path, where the row-alignment recipes dig a value out of a container's
+# serialised html and no collapse ever ran: `_parse_price("55\u2009119")` was
+# 55.0, a price 1000x low with a full fill-rate. Not `\s`: a newline or a tab
+# between two runs of digits separates two numbers, it never groups one.
+_GROUPING_SPACES = " \u00a0\u2009\u202f"
+_INT_RE = re.compile(
+    rf"\d{{1,3}}(?:([.,{_GROUPING_SPACES}])\d{{3}})(?:\1\d{{3}})*(?!\d)(?!\1\d)|\d+"
+)
+_INT_GROUPING = str.maketrans("", "", ".," + _GROUPING_SPACES)
+_SPACE_GROUPING = str.maketrans("", "", _GROUPING_SPACES)
+# A separator may open the number ("$.99" is ordinary sub-dollar retail
+# typography) but only when a digit follows it, which is what keeps a bare
+# grouping space out of the match (see `_parse_price`).
+_PRICE_RE = re.compile(rf"(?:\d|[.,]\d)[\d.,{_GROUPING_SPACES}]*")
+# A separator only groups or points a decimal when it stands BETWEEN two digits.
+_INNER_SEPARATOR_RE = re.compile(rf"\d[.,{_GROUPING_SPACES}]\d")
+# "3999,-" / "3999.-": zero cents, stated. Matched from the separator itself.
+_STATED_WHOLE_RE = re.compile(r"[.,]\s*-")
+# Currencies whose prices this repo has measured as two-decimal AND grouped:
+# every one of them writes 1299 as "1.299,00", "1,299.00" or "1 299". A POSITIVE
+# list, because the alternative -- excluding the zero-decimal currencies we
+# happen to know (yen, won, rupiah) -- admits every one we did not enumerate,
+# and a yen page would then warn on every genuine price. Rouble stays off it:
+# Ozon writes "55 119 RUB" grouped, so a bare "3999 RUB" is ordinary elsewhere.
+#
+# A symbol counts wherever it sits; a three-letter CODE only counts next to the
+# number. `\bEUR` would have missed "3999EUR" outright -- a digit and a letter
+# are both word characters, so there is no boundary between them -- while
+# allowing the code anywhere would read the "EUR" inside "NEUROLOGY 4000" as a
+# currency.
+_CURRENCY_SYMBOL_RE = re.compile(r"[€$£]")
+_CURRENCY_CODE_BEFORE_RE = re.compile(r"(?:EUR|USD|GBP)[\s]*$", re.IGNORECASE)
+_CURRENCY_CODE_AFTER_RE = re.compile(r"^[\s]*(?:EUR|USD|GBP)", re.IGNORECASE)
+# Below this a missing separator says nothing: "Now $199" is a real price.
+_UNGROUPED_PRICE_FLOOR = 1000
 
 
 def _parse_int(value: Any) -> int | None:
@@ -128,34 +248,38 @@ def _parse_int(value: Any) -> int | None:
         return None
 
 
-def _parse_price(value: Any, locale: str = "us") -> float | None:
+def _parse_price(value: Any) -> float | None:
+    """Parse a price. See `_parse_price_detail` for the separator rules."""
+    return _parse_price_detail(value)[0]
+
+
+def _parse_price_detail(value: Any) -> tuple[float | None, bool]:
     """Parse a numeric string with currency and thousands/decimal separators.
 
-    A lone `.` or `,` is read from the TEXT itself wherever the text alone
-    settles it, regardless of `locale`:
-      - a 2-digit tail is always a decimal point ("899,00" == 899.0 no
-        matter what `locale` says) — no locale groups thousands two digits
-        at a time, so that shape cannot mean anything else.
-      - a 3-or-more-digit tail, or more than one occurrence of the same
-        separator, is always a thousands grouping ("1.399" == 1399.0 no
-        matter what `locale` says).
+    The second element says whether the number's digits were SEPARATED at all,
+    which is what lets the caller name a four-figure price whose decimal point
+    never arrived (`tests/extract/test_price_ungrouped_digits.py`).
 
-    `locale` has exactly one remaining vote: a lone separator with a
-    1-digit tail, which really is ambiguous ("1.3" as one-point-three vs.
-    "1.3" as a stray separator around "13"):
-      - "us" (default): a lone `.` with a 1-digit tail is decimal; a lone
-        `,` with a 1-digit tail is not (thousands-stripped instead).
-      - "eu": a lone `,` with a 1-digit tail is decimal; a lone `.` with a
-        1-digit tail is not.
+    The separator convention is read from the TEXT, never from a hint:
+      - both `.` and `,` present: the last one is the decimal point.
+      - a lone separator followed by one or two digits is the decimal point
+        ("899,00" == 899.0, "4,2" == 4.2) -- a thousands group is three
+        digits in every locale, so neither shape can be grouping.
+      - a repeated separator of one kind, or a tail of three or more digits
+        (or none), is grouping ("1.399" == 1399.0, "1.234.567" == 1234567.0).
 
-    When both `.` and `,` appear, the last-position-wins rule is used and the
-    locale arg is ignored — that case is unambiguous regardless of locale.
+    Measured, not assumed: a preset's declared country and the page it is
+    served disagree (a preset for Germany got an English dot-decimal page and
+    "€32.99" parsed as 3299.0), which is why every vote a locale hint once had
+    went to the text. The `parse_price` op still accepts a locale arg for
+    older presets and ignores it.
     """
     if value is None:
-        return None
+        return None, False
     text = str(value)
-    # The class keeps the space because it is a thousands separator in several
-    # locales ("1 234,56"). Requiring the match to START with a digit is what
+    # The class keeps the grouping spaces (`_GROUPING_SPACES`) because a space
+    # is a thousands separator in several locales ("1 234,56", "55 119 ₽").
+    # Requiring the match to START with a digit is what
     # separates that from a space merely sitting in front of the number: with a
     # leading `[\d., ]`, "Now $199.00" matched the single space at index 3,
     # which `replace(" ", "")` then reduced to "" and the guard below rejected.
@@ -163,10 +287,24 @@ def _parse_price(value: Any, locale: str = "us") -> float | None:
     # A separator may open the number ("$.99" is ordinary sub-dollar retail
     # typography) but only when a digit follows it, which is what keeps the
     # bare-space match out.
-    match = re.search(r"(?:\d|[.,]\d)[\d., ]*", text)
+    match = _PRICE_RE.search(text)
     if match is None:
-        return None
-    raw = match.group(0).replace(" ", "")
+        return None, False
+    # BETWEEN digits, and read BEFORE the grouping spaces are stripped. Both
+    # halves matter: a space is one of the separators that makes a large number
+    # unambiguous ("55 119"), while `_PRICE_RE` also swallows a separator that
+    # merely sits between the number and its currency ("3999 EUR" matches
+    # "3999 "), which looked like grouping and silenced the warning on the
+    # commonest rendering of the defect. `,-` is the exception: it STATES zero
+    # cents rather than omitting them, so it counts as a decimal point.
+    # The window starts at the match so a separator the regex swallowed is still
+    # visible: "3999, - EUR" matches "3999, " including the space, so anchoring
+    # on the last matched character looked at the space and missed the ",-".
+    separator_seen = bool(
+        _INNER_SEPARATOR_RE.search(match.group(0))
+        or _STATED_WHOLE_RE.search(text[match.start():match.end() + 3])
+    )
+    raw = match.group(0).translate(_SPACE_GROUPING)
     # The sign no longer rides along in the match, so read it from whatever sits
     # between the minus and the digits — a currency symbol, typically.
     # The sign must be ADJACENT: only currency symbols may sit between the minus
@@ -181,62 +319,20 @@ def _parse_price(value: Any, locale: str = "us") -> float | None:
         if not head or head[-1].isspace():
             sign = -1.0
     if not raw:
-        return None
+        return None, False
 
     last_dot = raw.rfind(".")
     last_comma = raw.rfind(",")
     decimal: str | None
     if last_dot > -1 and last_comma > -1:
         decimal = "." if last_dot > last_comma else ","
-    elif last_dot > -1:
-        tail = raw.rsplit(".", 1)[-1]
-        if raw.count(".") != 1:
-            # More than one dot with no comma anywhere: always a thousands
-            # grouping ("1.234.567" == 1234567.0). `locale` is never
-            # consulted here, in either branch below -- there is no locale
-            # in which repeated same-kind separators inside one number mean
-            # anything but grouping.
-            decimal = None
-        elif len(tail) == 2:
-            # Unambiguous from the TEXT alone: no locale groups thousands
-            # two digits at a time, so a lone `.` immediately followed by
-            # exactly two digits can only be a decimal point. `locale` is
-            # not consulted. `locale` comes from the preset's DECLARED
-            # country (materializer.py), while the separator actually used
-            # comes from whichever page the browser was served; the two are
-            # independent and can disagree. Live failure: a preset declared
-            # for Germany carried locale="eu", but the browser announced
-            # en-DE and Amazon served an English dot-decimal page, so
-            # "€32.99" parsed as 3299.0 -- numeric, positive, euro sign
-            # intact in price_raw, so every shipped check passed it.
-            decimal = "."
-        elif len(tail) == 1:
-            # The one shape `locale` still decides: "1.3" is genuinely
-            # ambiguous between one-point-three and a stray separator
-            # around "13". Measured: _parse_price("1.3", "us") == 1.3 but
-            # _parse_price("1.3", "eu") == _parse_price("1.3", "zz") == 13.0.
-            decimal = "." if locale == "us" else None
-        else:
-            # 3-or-more-digit tail: always a thousands grouping, and
-            # `locale` has NO effect here despite what an earlier version of
-            # this comment claimed -- measured:
-            # _parse_price("1.399", "us") == _parse_price("1.399", "eu")
-            # == 1399.0.
-            decimal = None
-    elif last_comma > -1:
-        tail = raw.rsplit(",", 1)[-1]
-        # Mirror of the dot branch above: "32,99€" under a "us" hint is the
-        # same defect the other way around.
-        if raw.count(",") != 1:
-            decimal = None
-        elif len(tail) == 2:
-            decimal = ","
-        elif len(tail) == 1:
-            decimal = "," if locale == "eu" else None
-        else:
-            decimal = None
     else:
-        decimal = None
+        sep = "." if last_dot > -1 else ","
+        # Read from the text alone: a lone separator followed by one or two
+        # digits is a decimal point in every locale (a thousands group is three
+        # digits); repeated, or with a 3+-digit or empty tail ("19."), it is
+        # grouping. No separator at all falls through the same way.
+        decimal = sep if raw.count(sep) == 1 and len(raw.rsplit(sep, 1)[-1]) in (1, 2) else None
 
     if decimal == ".":
         clean = raw.replace(",", "")
@@ -246,9 +342,9 @@ def _parse_price(value: Any, locale: str = "us") -> float | None:
         clean = raw.replace(",", "").replace(".", "")
 
     try:
-        return sign * float(clean)
+        return sign * float(clean), separator_seen
     except ValueError:
-        return None
+        return None, False
 
 
 def _parse_float(value: Any) -> float | None:
@@ -369,19 +465,50 @@ def _is_followable_destination(candidate: str) -> bool:
     )
 
 
-def _unwrap_param(value: Any, param: str) -> Any:
+def _host_matches(value: str, host: str) -> bool:
+    """Whether `value`'s HOSTNAME is `host` or a subdomain of it.
+
+    A substring test is not good enough and was measured wrong: a legitimate
+    destination whose query merely mentions the host
+    (`https://example.org/article?source=bing.com`) matched one, and matching it
+    dropped a real row out of half the columns. Compared on DNS-label
+    boundaries via a leading dot, so `bing.com` and `www.bing.com` match while
+    `notbing.com` and `bing.com.evil.test` do not.
+    """
+    try:
+        netloc = urlsplit(value).netloc.lower()
+    except ValueError:
+        return False
+    hostname = netloc.rsplit("@", 1)[-1].split(":", 1)[0].rstrip(".")
+    return hostname == host or hostname.endswith("." + host)
+
+
+def _unwrap_param(
+    value: Any, param: str, encoding: str = "percent", prefix: str = "", host: str = ""
+) -> Any:
     """Recover a redirect's real destination from one of its own query params.
 
     Amazon's sponsored-result links carry the destination inline rather than
     behind an opaque token: `/sspa/click?ie=UTF8&spc=...&url=%2FAcer-...` --
     percent-decoding the `url` parameter's value yields the real (still
-    relative) product path directly, no base64 needed (contrast Bing's
-    `bing.com/ck/a?...&u=a1<base64url>`, which does need `base64_decode`).
+    relative) product path directly. That is `encoding="percent"`, the default.
+
+    `encoding="base64url"` (with `prefix`) covers the other shape this repo
+    meets, Bing's `bing.com/ck/a?...&u=a1<base64url>`: strip `prefix` off the
+    parameter's value and base64url-decode the rest. It exists because the
+    `regex` + `base64_decode` pair that used to do this NULLS a value it cannot
+    match, and Bing links no longer arrive in one shape -- uBlock Origin, which
+    Camoufox loads on every launch, rewrites the organic ones to their
+    destination before we ever see them (see CAMOUFOX_DISABLE_UBO). A field now
+    has to survive both, which is exactly the mixed-shape problem this op's
+    pass-through already solves for Amazon.
 
     A value that does NOT carry `param` is returned UNCHANGED, not null --
     the defining property that lets this run over a field mixing wrapped and
     unwrapped values (amazon_search's `urls`: sponsored rows carry `url=`,
     organic rows don't) in one pipeline without a separate branch per shape.
+    A value that carries `param` but not `prefix`, or whose payload does not
+    base64-decode, passes through the same way and for the same reason.
 
     The decoded value is returned only when it is an http(s) URL or a plain
     relative path (see `_is_followable_destination`); anything else is
@@ -393,11 +520,96 @@ def _unwrap_param(value: Any, param: str) -> Any:
     """
     if value is None:
         return None
+    if host and not _host_matches(str(value), host):
+        # Not a redirect this wrapper serves, so its query is the DESTINATION's
+        # own and must not be read as the wrapper's. Without this, a real result
+        # whose URL happens to carry the same parameter name
+        # (`https://trusted.example/page?u=a1<base64>`) is "unwrapped" a second
+        # time and the column ships a different site than the page linked to.
+        return value
     match = _unwrap_param_pattern(param).search(str(value))
     if match is None:
         return value
-    unwrapped = unquote(match.group(1))
+    raw = match.group(1)
+    if encoding == "base64url":
+        if prefix:
+            if not raw.startswith(prefix):
+                # The parameter is there but not in the shape this preset
+                # described, so nothing has been recovered and there is nothing
+                # to hand on. Passing the wrapper through is the same fail-safe
+                # the followability check below uses.
+                return value
+            raw = raw[len(prefix):]
+        try:
+            unwrapped = _base64_decode(raw)
+        except Exception:  # noqa: BLE001 - _base64_decode RAISES on a bad payload
+            # Not `is None`: `_base64_decode` signals failure by raising
+            # (binascii.Error / UnicodeDecodeError), so a None check here would
+            # be dead code and the broad handler in `_apply_post_process` would
+            # null the value instead -- breaking the pass-through this op's
+            # contract promises and which the mixed-shape column depends on.
+            return value
+    else:
+        unwrapped = unquote(raw)
     return unwrapped if _is_followable_destination(unwrapped) else value
+
+
+def _states_two_decimal_currency(text: str) -> bool:
+    """Is this text priced in a currency we know writes cents and groups?
+
+    A symbol anywhere is enough. A three-letter code has to touch the number it
+    prices, so the "EUR" inside an ordinary word cannot make one.
+    """
+    if _CURRENCY_SYMBOL_RE.search(text):
+        return True
+    match = _PRICE_RE.search(text)
+    if match is None:
+        return False
+    return bool(
+        _CURRENCY_CODE_BEFORE_RE.search(text[: match.start()])
+        or _CURRENCY_CODE_AFTER_RE.search(text[match.end():])
+    )
+
+
+def _warn_if_ungrouped(
+    value: float | None,
+    separator_seen: bool,
+    raw: Any,
+    field_name: str,
+    warn: Callable[[str, str, str], None],
+) -> None:
+    """Name a four-figure price whose digits were never separated.
+
+    Measured once in the 276 runs of the 2026-09-12 retest: a node reading
+    `3999EUR` published 3999.0 for a 44 EUR product, with a full fill rate and
+    no warning. The value is NOT changed -- 3999 may genuinely be 3999, and a
+    substituted guess would be worse than the ambiguity -- so this only ends the
+    silence, which is the rule `_parse_int` states in its own docstring: a null
+    gets noticed, a plausible number does not.
+
+    The raw text goes to the log and never into `warnings`, for the reason
+    `_report_silent_nulls` gives two screens down: warnings are returned to API
+    callers and substring-scanned downstream, and a price node reading "Block
+    detected 1500" would otherwise publish a blocked verdict on a page that
+    merely renders those words.
+    """
+    if value is None or separator_seen or abs(value) < _UNGROUPED_PRICE_FLOOR:
+        return
+    if not _states_two_decimal_currency(str(raw)):
+        return
+    warn(
+        "parse_price", "ungrouped",
+        f"field '{field_name}': parse_price read a four-figure price whose digits "
+        f"carry no separator and returned {value!r} -- the shape a page rendering "
+        "'39,99' as '3999' leaves behind, while a genuine price this size is "
+        "grouped in this currency. The value is unchanged; the text it came from "
+        "is in the worker log. Check it against the page.",
+    )
+    log.warning(
+        "parse_price read an ungrouped four-figure price field=%r value=%r sample=%r",
+        field_name, value,
+        " ".join(str(raw)[: _DROPPED_SAMPLE_CHARS * 2].split())[:_DROPPED_SAMPLE_CHARS],
+    )
 
 
 def _apply_post_process(
@@ -441,8 +653,11 @@ def _apply_post_process(
             elif op == "parse_float":
                 current = _parse_float(current)
             elif op == "parse_price":
-                locale = args[0] if args else "us"
-                current = _parse_price(current, locale=locale)
+                # The locale arg is accepted for older presets and ignored:
+                # the separator is read from the text (see _parse_price).
+                before = current
+                current, separator_seen = _parse_price_detail(current)
+                _warn_if_ungrouped(current, separator_seen, before, field_name, _warn)
             elif op == "lowercase":
                 current = str(current).lower()
             elif op == "uppercase":
@@ -452,15 +667,21 @@ def _apply_post_process(
             elif op == "base64_decode":
                 current = _base64_decode(current)
             elif op == "unwrap_param":
-                current = _unwrap_param(current, str(args[0]))
+                current = _unwrap_param(
+                    current,
+                    str(args[0]),
+                    str(args[1]) if len(args) > 1 else "percent",
+                    str(args[2]) if len(args) > 2 else "",
+                    str(args[3]) if len(args) > 3 else "",
+                )
             elif op == "urljoin":
                 # extract_fields is never given the page's own URL, so a
                 # preset that relies on the materializer to inject the base
                 # (see materializer.inject_url_base) leaves this arg empty at
                 # rest. No base -> the value is left UNCHANGED (never
-                # crashed, never nulled) -- but unlike parse_price's "us"
-                # default, there is no sensible default transform for a URL
-                # with no base, so this is not silent: it warns, once per
+                # crashed, never nulled) -- but there is no sensible default
+                # transform for a URL with no base, so this is not silent:
+                # it warns, once per
                 # field, so "urls came back relative" has a stated cause
                 # instead of looking like a healthy, absolute result.
                 base = args[0] if args else None
@@ -499,6 +720,12 @@ def _apply_post_process(
 # collapsing a 10 MB `attr="html"` value first costs ~0.1s and ~200 MB of peak
 # RSS, twice per page on the presets that anchor two fields on the document.
 _DROPPED_SAMPLE_CHARS = 120
+# Kinds that mean "an op SUCCEEDED and the value looks odd" rather than "an op
+# complained". `_report_silent_nulls` stands down when an op already named a
+# field's cause; an advisory names no cause, so it must not take that slot --
+# measured, it replaced "returned null for every non-empty value" with a line
+# asserting the value was unchanged, on a field that shipped null.
+_ADVISORY_WARNING_KINDS = frozenset({"ungrouped"})
 
 
 # A leftover regex for the unparseable case only. `[^<>]` rather than `[^>]`:
@@ -586,7 +813,10 @@ def _warn_on_silent_nulls(
     changed, so this is a signal to go and look, not an error. Suppressed when an
     op already warned for this field, since that warning names the actual cause.
     """
-    if any(key[0] == field_name for key in seen_warnings):
+    if any(
+        key[0] == field_name and key[2] not in _ADVISORY_WARNING_KINDS
+        for key in seen_warnings
+    ):
         return
     if is_column and len(raw_values) < 2:
         # A one-row page cannot tell "this result has no snippet" from "the
@@ -632,26 +862,67 @@ def extract_fields(page_html: str, rule: ExtractRule) -> Tuple[Dict[str, Any], l
     warnings: list[str] = []
     seen_warnings: set[tuple[str, str, str]] = set()
 
+    rows, rows_failure = _select_rows(doc, rule) if rule.container else (None, None)
+
     for name, field_rule in rule.fields.items():
         selector_type = field_rule.type or rule.type
-        try:
-            nodes = _select(doc, field_rule.selector, selector_type)
-        except Exception:  # pylint: disable=broad-exception-caught
-            warnings.append(f"field '{name}': invalid selector")
-            data[name] = [] if field_rule.all else None
-            continue
 
-        if not nodes:
-            if field_rule.required:
-                warnings.append(f"field '{name}': required selector not found")
-            data[name] = [] if field_rule.all else None
-            continue
+        if rule.container:
+            if rows_failure is not None:
+                # Rule-level, said once: a five-field recipe with one broken
+                # container used to emit five identical lines into a list that
+                # is substring-scanned downstream.
+                if rows_failure not in warnings:
+                    warnings.append(rows_failure)
+                data[name] = []
+                continue
+            if not rows:
+                if field_rule.required:
+                    warnings.append(f"field '{name}': container matched no rows")
+                data[name] = []
+                continue
+            raw_values, escaped = _one_per_row(rows, field_rule, selector_type)
+            if raw_values is None:
+                warnings.append(f"field '{name}': invalid selector")
+                data[name] = []
+                continue
+            if escaped:
+                # Silence here would be the whole defect wearing a disguise:
+                # the column is still full height, so nothing downstream can
+                # tell that some of it came from the wrong row.
+                warnings.append(
+                    f"field '{name}': selector matched outside its row; "
+                    f"those matches were discarded"
+                )
+            if field_rule.required and not any(v is not None for v in raw_values):
+                # Rows present, no row matched: the drift mode a container
+                # creates, because the row selector is the coarse stable one.
+                # Without this the single signal that surfaces it is gone --
+                # `row_alignment_mismatch` is a length check and every column
+                # here is the same length by construction.
+                warnings.append(
+                    f"field '{name}': required selector matched no row "
+                    f"(0 of {len(rows)})"
+                )
+        else:
+            try:
+                nodes = _select(doc, field_rule.selector, selector_type)
+            except Exception:  # pylint: disable=broad-exception-caught
+                warnings.append(f"field '{name}': invalid selector")
+                data[name] = [] if field_rule.all else None
+                continue
 
-        raw_values = (
-            [_pick(node, field_rule.attr) for node in nodes]
-            if field_rule.all
-            else [_pick(nodes[0], field_rule.attr)]
-        )
+            if not nodes:
+                if field_rule.required:
+                    warnings.append(f"field '{name}': required selector not found")
+                data[name] = [] if field_rule.all else None
+                continue
+
+            raw_values = (
+                [_pick(node, field_rule.attr) for node in nodes]
+                if field_rule.all
+                else [_pick(nodes[0], field_rule.attr)]
+            )
 
         if field_rule.post_process:
             processed = [

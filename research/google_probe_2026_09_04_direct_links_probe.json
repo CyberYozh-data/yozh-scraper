@@ -1,0 +1,63 @@
+[
+ {
+  "label": "de control (preset defaults)",
+  "run": 0,
+  "url": "https://www.google.de/search?q=best+laptop+2026&gl=de&hl=de",
+  "status": "done",
+  "http": 200,
+  "final_url": "https://www.google.de/search?q=best+laptop+2026&gl=de&hl=de&sei=yiibapyQO8Xg7_UPr4egkQo",
+  "blocked": false,
+  "took_ms": 11616,
+  "warnings": [
+   "attempt 1/3 shortened to 36109ms of the requested 45000ms to fit the p"
+  ],
+  "goto_hrefs": 26,
+  "direct_h3_hrefs": 0,
+  "any_h3": 9,
+  "cites": 18,
+  "translate_leaks": 0,
+  "bytes": 617278,
+  "sample_goto": "https://www.google.com/goto?url=CAESYQHrOzAVJnWqteHvKxRmHGbZkh99-cXNu0U4nOkg7iBH3NGMIVrEoWiulf_vWVg3Shzz5qeOz-V5k4D1X5gY50f6wXwKjqHYZIhflm-RPio2Lir2X3M1aec0lPLMwFXY2h4"
+ },
+ {
+  "label": "de assets ON + humanize + dwell 8s",
+  "run": 0,
+  "url": "https://www.google.de/search?q=best+laptop+2026&gl=de&hl=de",
+  "status": "done",
+  "http": 200,
+  "final_url": "https://www.google.de/search?q=best+laptop+2026&gl=de&hl=de&sei=3Cibas7cJrCWxc8PvpOyyQU",
+  "blocked": false,
+  "took_ms": 17534,
+  "warnings": [
+   "attempt 1/3 shortened to 34243ms of the requested 45000ms to fit the p"
+  ],
+  "goto_hrefs": 33,
+  "direct_h3_hrefs": 0,
+  "any_h3": 9,
+  "cites": 18,
+  "translate_leaks": 0,
+  "bytes": 670694,
+  "sample_goto": "https://www.google.com/goto?url=CAESaQHrOzAVZyx-1CRs1x6UXRy47qUxuiJ38wW7jVOf6JoaNpj3eGem6RLnUCbyAYJzVXn7qmenG_oWjI9fjEOIh8F-jApPsc1EMeOvT4VlHSohVcXsWQObAImPTGJsRuRUJc9kCMX_ai6pYA"
+ },
+ {
+  "label": "de assets ON + humanize + dwell 8s",
+  "run": 1,
+  "url": "https://www.google.de/search?q=best+laptop+2026&gl=de&hl=de",
+  "status": "done",
+  "http": 200,
+  "final_url": "https://www.google.de/search?q=best+laptop+2026&gl=de&hl=de&sei=AimbaoGfDMeN-d8P5JLVkAk",
+  "blocked": false,
+  "took_ms": 37671,
+  "warnings": [
+   "attempt 1/3 shortened to 34051ms of the requested 45000ms to fit the p",
+   "attempt 2/3 shortened to 28802ms of the requested 45000ms to fit the p"
+  ],
+  "goto_hrefs": 29,
+  "direct_h3_hrefs": 0,
+  "any_h3": 9,
+  "cites": 18,
+  "translate_leaks": 0,
+  "bytes": 1062715,
+  "sample_goto": "https://www.google.com/goto?url=CAESagHrOzAVjkMmugnq-ZhWQuGGEpHbl51HHDbUH01foPL-4tDA9_O5v1X0sJJUxkd6tDD568Gt_nZfloUCeBtcxSzAs3ncnsK1GELb2eRbMtIOc6bDIrQyG5RyLEXQljOLU8j5Ywo5kq6luKk"
+ }
+]

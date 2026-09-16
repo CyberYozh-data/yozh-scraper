@@ -66,6 +66,9 @@ class Settings(BaseSettings):
     map_http_timeout_ms: int = Field(default=10_000, alias="MAP_HTTP_TIMEOUT_MS")
     map_max_urls: int = Field(default=5_000, alias="MAP_MAX_URLS")
     map_max_sitemaps: int = Field(default=50, alias="MAP_MAX_SITEMAPS")
+    # A sitemap or the seed page is read up to this many DECODED bytes and cut
+    # there (audit H-17); MAP_MAX_URLS makes anything larger moot.
+    map_max_body_bytes: int = Field(default=10 * 1024 * 1024, gt=0, alias="MAP_MAX_BODY_BYTES")
     # Hard cap on the seed-render leg of /map. The render (a JS-heavy SPA via a
     # residential proxy) can stall for minutes; without a tight cap it blocks the
     # otherwise-fast sitemap result past the caller's create_map timeout, forcing

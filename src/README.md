@@ -366,12 +366,22 @@ curl -s -X POST http://localhost:8000/api/v1/scrape/page \
     "url": "https://httpbin.org/headers",
     "proxy_type": "none",
     "headers": {
-      "User-Agent": "open-scraper/1.0",
-      "Accept-Language": "en-US,en;q=0.9"
+      "Accept-Language": "en-US,en;q=0.9",
+      "X-Request-Id": "demo-42"
     },
     "raw_html": true
   }'
 ```
+
+> `User-Agent` is the one header that is **not** forwarded. Every engine states
+> the only UA its transport can back -- a header claiming otherwise contradicts
+> the TLS handshake and, on Chromium, the Client Hints, which is a bot tell
+> rather than a disguise. A `User-Agent` you send is dropped, `warnings` carries
+> `ignored_request_field: headers['User-Agent']`, and `meta.applied_user_agent`
+> reports what actually went out. The one identity the caller may choose is
+> `device` -- including `legacy_wap`, whose Symbian UA no engine can back either,
+> offered because the endpoint it exists for keys on the string and not on the
+> handshake.
 
 ---
 
@@ -526,9 +536,9 @@ python geo_scraping.py
 | `wait_until` | `domcontentloaded` \| `load` \| `networkidle` | `domcontentloaded` | When to consider page loaded |
 | `wait_for_selector` | string | — | Wait for CSS selector before extracting |
 | `timeout_ms` | integer | — | Per-page timeout (ms), overrides global |
-| `device` | `desktop` \| `mobile` | `desktop` | Device emulation |
-| `browser_engine` | `chromium` \| `camoufox` | `chromium` | Rendering engine. `chromium` drives a real Google Chrome when `CHROME_CHANNEL=chrome`; `camoufox` is anti-detect Firefox for hostile anti-bot targets |
-| `viewport` | object | `1920×1080` (desktop) | `{ width, height }` in CSS px; `window.screen` is set to match. Sessions pin it across login + scrapes |
+| `device` | `desktop` \| `mobile` \| `legacy_wap` | `desktop` | Device emulation. `legacy_wap` claims a 2004 feature phone and suppresses Client Hints, for sites that serve a JavaScript-free layout to legacy User-Agents -- Google's `/wml/search` answers it with real `/url?q=` links instead of `/goto?url=` stubs. **Requires `render: false`** (422 otherwise: rendering runs the JavaScript the identity claims not to have), rejected with 422 on `camoufox`, which owns its own fingerprint, and cannot be pinned to a session, whose login runs JS |
+| `browser_engine` | `chromium` \| `firefox` \| `webkit` \| `camoufox` | `chromium` | Rendering engine. `chromium` drives a real Google Chrome when `CHROME_CHANNEL=chrome`; `camoufox` is anti-detect Firefox for hostile anti-bot targets. Each states its own User-Agent -- `firefox` and `webkit` never claim Chrome |
+| `viewport` | object | `1920×1080` (desktop) | `{ width, height }` in CSS px; `window.screen` is set to match. `device` picks the default: mobile its preset's size, `legacy_wap` a 176×208 feature-phone screen. Sessions pin it across login + scrapes |
 | `headers` | object | — | Custom HTTP headers |
 | `cookies` | array | — | Cookies to inject |
 | `proxy_type` | string | `none` | See proxy types above |
@@ -559,10 +569,55 @@ python geo_scraping.py
 | Field | Values | Description |
 |-------|--------|-------------|
 | `type` | `css` \| `xpath` | Selector type |
+| `container` | string | **Rule-level.** Selector for the ROW every field belongs to — see below |
 | `selector` | string | CSS selector or XPath expression |
 | `attr` | `text` (default) \| `html` \| attribute name | What to extract |
 | `all` | boolean | Return all matches as array instead of first match |
 | `required` | boolean | Log warning if field not found |
+
+#### `container` — one value per row
+
+Set `container` on the rule and every field's `selector` is evaluated relative
+to each matching row, contributing exactly one entry per row — `null` where
+that row has no match, never a shorter list. All columns are therefore the
+same length, so `titles[i]`, `links[i]` and `snippets[i]` describe the same
+result.
+
+```json
+{
+  "type": "css",
+  "container": "#rso div.tF2Cxc",
+  "fields": {
+    "titles":   {"selector": "h3", "all": true},
+    "links":    {"selector": "a:has(h3)", "attr": "href", "all": true},
+    "snippets": {"selector": "div.VwiC3b", "all": true}
+  }
+}
+```
+
+Without it, a field matching more nodes in one card than its neighbours do
+shifts every later row: one Google result with sitelinks carries three `h3`,
+so `titles` and `links` return 4 entries while `snippets` returns 2.
+
+Rules:
+
+- Every field must set `all: true` — a container makes each field a column.
+- A `selector` must not be able to leave its row. XPath is checked per step:
+  the first step opens with `.`, `./`, `.//`, `self::`, `child::`,
+  `descendant::`, `descendant-or-self::` or `attribute::`, no later step uses
+  `..` or a climbing axis, and `|` unions are refused (predicates and string
+  literals are not read as steps, so `.//a[descendant::h3]` is fine). Use
+  `.//` for a descendant at any depth — `./` and a bare step name are the
+  CHILD axis and match nothing on nested markup. `.` (or `self::*`) addresses
+  the row itself, which is how a field captures the whole card.
+- **CSS is checked the same way**, on the XPath it compiles to. Descendant and
+  child combinators compile to `descendant-or-self::` and are fine; the
+  sibling combinators do not — `.row ~ .row h3` compiles through
+  `following-sibling::` and, measured, returns the NEXT row's value from
+  inside the first one. Both are refused.
+- Regardless of the selector, a match that did not come from the row is
+  discarded at extraction time and the field is named in `warnings`. The
+  validator reads syntax; this reads the node.
 
 ### Response
 
@@ -583,6 +638,7 @@ Each result in `results[]` contains:
 | `meta.applied_locale` | string | Browser locale (`es-ES`, `en-US`, …) |
 | `meta.applied_timezone` | string | Browser timezone id |
 | `meta.applied_accept_language` | string | Effective `Accept-Language` |
+| `meta.applied_preset` | object | Preset runs only: `name`, `source`, `locale`, `version` and, for search presets, the `query` the URL was rendered with |
 | `data` | object | Extracted fields (if `extract` was set) |
 | `raw_html` | string | Raw HTML (if `raw_html: true`) |
 | `screenshot_base64` | string | Base64 PNG (if `screenshot: true`) |
@@ -597,11 +653,18 @@ optional LLM self-heal / AI extraction). Built-ins ship read-only;
 user-defined presets persist under `data/presets/` (mount the volume — see
 `docker-compose.yml`).
 
+That directory also holds one `*.lock` file per user preset. **They are
+permanent by design — do not clean them up.** Writers (the API and every
+worker container) take them to make the compare-and-replace of a preset one
+step; deleting one mid-write reintroduces the race where a self-heal
+overwrites an edit its owner just saved. They are empty, one per preset, and
+never grow.
+
 ### Built-in presets
 
 Every built-in ships twice, once per browser engine — `<name>_chromium` and
-`<name>_camoufox` — so `GET /api/v1/presets` returns twenty names, never the
-bare `<name>`:
+`<name>_camoufox` — so `GET /api/v1/presets` returns twenty-eight names, never
+the bare `<name>`:
 
 | name | source | params | locales |
 |------|--------|--------|---------|
@@ -619,12 +682,33 @@ bare `<name>`:
 | `google_shopping_chromium` | google | `query` | us, uk, de |
 | `linkedin_profile_camoufox` | linkedin | `username` | global (needs auth session) |
 | `linkedin_profile_chromium` | linkedin | `username` | global (needs auth session) |
+| `mobile_de_ad_camoufox` ⚠ | mobile_de | `ad_id` | de |
+| `mobile_de_ad_chromium` ⚠ | mobile_de | `ad_id` | de |
+| `mobile_de_search_camoufox` ⚠ | mobile_de | `make_id`, `model_id` | de |
+| `mobile_de_search_chromium` ⚠ | mobile_de | `make_id`, `model_id` | de |
+| `ozon_product_camoufox` | ozon | `product_id` | ru |
+| `ozon_product_chromium` | ozon | `product_id` | ru |
+| `ozon_search_camoufox` | ozon | `query` | ru |
+| `ozon_search_chromium` | ozon | `query` | ru |
 | `walmart_product_camoufox` | walmart | `product_id` | us |
 | `walmart_product_chromium` | walmart | `product_id` | us |
 | `yandex_search_camoufox` | yandex | `query` | ru, moscow, spb, by, kz, ua, uz, am, az, ge, kg, tj, tm, md, tr, us, de, fr, gb, pl, ee, lv, lt |
 | `yandex_search_chromium` | yandex | `query` | ru, moscow, spb, by, kz, ua, uz, am, az, ge, kg, tj, tm, md, tr, us, de, fr, gb, pl, ee, lv, lt |
 | `youtube_video_camoufox` | youtube | `video_id` | global |
 | `youtube_video_chromium` | youtube | `video_id` | global |
+
+A twin can be walled on its engine (Ozon's antibot passes Camoufox only, Google
+Shopping passes Chromium only) or low on both; the measured verdict lives in
+each preset's `description`, returned verbatim by `GET /api/v1/presets`, and a
+walled twin names the twin that carries the data.
+
+⚠ marks a preset the site admits only some of the time. mobile.de's Akamai
+let about one attempt in four through on either engine on 2026-09-06, and a
+refused attempt costs roughly two minutes and three proxy leases before the
+budget runs out. It returns the site's 227-byte sensor shell at HTTP 200 with
+every column empty, which reads exactly like a broken recipe and is not one --
+whenever the page arrives, all 24 listings extract. Re-measure before wiring
+one of these into anything that needs a first-try success.
 
 ### Scrape with a preset
 
@@ -662,6 +746,14 @@ raw `/api/v1/scrape/page` is rejected with 422.
 | `PUT /api/v1/presets/{name}` | Replace a user preset |
 | `DELETE /api/v1/presets/{name}` | Delete a user preset |
 | `POST /api/v1/presets/generate` | `manual` \| `from_schema` \| `from_prompt` |
+
+All three write paths check `request_defaults` against `ScrapeRequest` before
+storing: a profile the scrape endpoints would reject with 422 is refused with
+422 here, rather than saved and failing every run off the preset. `url`,
+`extract`, `preset_meta` and `parser_plan` are supplied per request and may not
+be set in `request_defaults`. Each locale's `country` must be usable as
+`proxy_geo.country_code` (two letters), which is what the materializer derives
+from it.
 | `POST /api/v1/presets/{name}/test` | Dry-run on `sample_url` or `sample_html` |
 | `GET /api/v1/presets/llm-models` | Models the configured keys can call |
 
@@ -696,13 +788,13 @@ wildcard.
 
 `FieldRule.post_process` is an ordered transform chain applied to matched
 values (per-item when `all: true`): `regex` (args `[pattern, group?]`),
-`parse_int`, `parse_float`, `parse_price` (args `["us"|"eu"]` for separator
-disambiguation), `strip`, `strip_tags`, `lowercase`, `uppercase`, `replace`
+`parse_int`, `parse_float`, `parse_price` (reads the separator convention
+from the text; its `["us"|"eu"]` arg is accepted for older presets and
+ignored), `strip`, `strip_tags`, `lowercase`, `uppercase`, `replace`
 (args `[old, new]`), `urljoin` (args `[base_url]`, resolves a relative href —
-usually left empty and injected per-request by the materializer, the same
-pattern as `parse_price`'s locale; with no base at all it leaves the value
-unchanged and warns, since unlike `parse_price` there is no sensible default
-transform for a URL with no base), `unwrap_param` (args `[param_name]`,
+usually left empty and injected per-request by the materializer; with no base
+at all it leaves the value unchanged and warns, since there is no sensible
+default transform for a URL with no base), `unwrap_param` (args `[param_name]`,
 percent-decodes a query parameter's value out of a click-tracking redirect
 that carries its destination inline — e.g. Amazon's `/sspa/click?...&url=
 %2Freal%2Fpath` — passing any value that doesn't have that parameter through
@@ -747,13 +839,18 @@ otherwise invisible, since the request still succeeds with the field simply null
 
 `strip_tags` renders an HTML fragment down to its text (tags dropped,
 entities decoded, whitespace collapsed). Pair `attr: "html"` + `regex` +
-`strip_tags` to read a value out of a container that is always present even
-when the value is missing — the row-alignment trick the `amazon_search_*` and
-`google_search_*` presets rely on. Fields returning flat parallel arrays (`all: true`)
-must match exactly one node per row: a selector pointed at an element that
-only exists when its value does silently shrinks the array and shifts every
-later row, whereas an always-present container yields `null` in the right
-slot.
+`strip_tags` to read a value out of an element that is always present even
+when the value is missing — the row-alignment workaround the `amazon_search_*`
+and `google_search_*` presets were written around. Fields returning flat
+parallel arrays (`all: true`) must match exactly one node per row: a selector
+pointed at an element that only exists when its value does silently shrinks
+the array and shifts every later row.
+
+Prefer the rule-level [`container`](#container--one-value-per-row) in new
+recipes. It states the row once and yields `null` in the right slot on its
+own, so the `attr: "html"` + `regex` pair — and `null_if_regex`, which exists
+for the same reason — are no longer needed to keep a column aligned. The
+shipped recipes still use the older shape; they are migrated separately.
 
 ## Search
 
@@ -784,7 +881,10 @@ is validated).
 Response: `{query, count, results: [{url, title, snippet, scrape?}], took_ms, warnings}`.
 A blocked/empty SERP degrades to `count: 0` plus a `warnings` entry (HTTP 200)
 rather than an error — results depend on a working residential proxy for the
-SERP fetch.
+SERP fetch. A SERP that answered a different query than the one asked (an
+engine's autocorrect, or Bing's cached page for someone else's query) carries
+a `serp_query_mismatch` warning next to its results — counts only, never the
+page's text.
 
 ## MCP Integration
 

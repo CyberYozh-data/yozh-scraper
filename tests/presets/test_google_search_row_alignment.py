@@ -35,13 +35,13 @@ _GOOGLE_SERP = """
 <div id="rso">
   <div class="tF2Cxc">
     <div class="yuRUbf">
-      <a href="https://a.example/1" jsname="UWckNb"><h3>Result One</h3></a>
+      <a href="https://a.example/1" jsname="UWckNb"><h3>Result One</h3><cite>https://a.example<span> › 1</span></cite></a>
       <a href="https://cache.example/1">Cached</a>
     </div>
     <div class="VwiC3b" data-sncf="1">Snippet one text<span class="VwiC3b"> nested duplicate</span></div>
   </div>
   <div class="tF2Cxc">
-    <div class="yuRUbf"><a href="https://b.example/2" jsname="UWckNb"><h3>Result Two</h3></a></div>
+    <div class="yuRUbf"><a href="https://b.example/2" jsname="UWckNb"><h3>Result Two</h3><cite>https://b.example › 2</cite></a></div>
     <div class="VwiC3b" data-sncf="1">Snippet two text</div>
   </div>
 </div>
@@ -149,10 +149,10 @@ class TestGoogleSearchSnippetlessResult:
         serp = """
         <html><body><div id="rso">
           <div class="tF2Cxc">
-            <div class="yuRUbf"><a href="https://a.example"><h3>Rich result, no snippet</h3></a></div>
+            <div class="yuRUbf"><a href="https://a.example"><h3>Rich result, no snippet</h3><cite>https://a.example</cite></a></div>
           </div>
           <div class="tF2Cxc">
-            <div class="yuRUbf"><a href="https://b.example"><h3>Second</h3></a></div>
+            <div class="yuRUbf"><a href="https://b.example"><h3>Second</h3><cite>https://b.example</cite></a></div>
             <div class="kb0PBd" data-sncf="1"><div class="VwiC3b"><span>Snippet that belongs to Second</span></div></div>
           </div>
         </div></body></html>
@@ -225,7 +225,7 @@ class TestGoogleSearchKnownAlignmentLimitations:
         serp = """
         <html><body><div id="rso">
           <div class="tF2Cxc">
-            <div class="yuRUbf"><a href="https://main.example"><h3>Main Result</h3></a></div>
+            <div class="yuRUbf"><a href="https://main.example"><h3>Main Result</h3><cite>https://main.example</cite></a></div>
             <div class="VwiC3b" data-sncf="1">Main snippet</div>
             <div class="HiHjCd"><table><tr>
               <td><a href="https://main.example/about"><h3 class="zBAuLc">About</h3></a></td>
@@ -233,7 +233,7 @@ class TestGoogleSearchKnownAlignmentLimitations:
             </tr></table></div>
           </div>
           <div class="tF2Cxc">
-            <div class="yuRUbf"><a href="https://b.example"><h3>Second Result</h3></a></div>
+            <div class="yuRUbf"><a href="https://b.example"><h3>Second Result</h3><cite>https://b.example</cite></a></div>
             <div class="VwiC3b" data-sncf="1">Second snippet</div>
           </div>
         </div></body></html>
@@ -353,7 +353,7 @@ class TestGoogleSearchSnippetRegexBoundary:
             <span>trailing inline node</span>
           </div>
           <div class="tF2Cxc">
-            <div class="yuRUbf"><a href="https://b.example"><h3>Second</h3></a></div>
+            <div class="yuRUbf"><a href="https://b.example"><h3>Second</h3><cite>https://b.example</cite></a></div>
             <div class="VwiC3b" data-sncf="1">Snippet of Second</div>
           </div>
         </div></body></html>

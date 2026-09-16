@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import pytest
 
-from src.browser.runner import redirected_to_block
+from src.browser.runner import looks_like_captcha_or_block, redirected_to_block
 
 
 class TestRedirectedToBlock:
@@ -200,3 +200,121 @@ async def test_the_self_resolving_interstitial_still_gets_its_wait():
     await _playwright_fetch(page)
 
     page.wait_for_selector.assert_awaited_once()
+
+
+class TestTheWarmupHopIsClassifiedToo:
+    """The warmup was the one navigation with a pre-flight and no block check.
+
+    `run_warmup` asserted the landing was PUBLIC — an egress question — and
+    then declared success for anything that did not raise. A homepage warmup
+    landing on `/sorry/` is the exit being turned away before the request we
+    care about, and it reported `applied={...}` with no error: the refusal
+    reached the caller only as an empty result page, one navigation later.
+    """
+
+    @staticmethod
+    def _page(landed_on: str):
+        from unittest.mock import AsyncMock, Mock
+
+        page = AsyncMock()
+        page.goto = AsyncMock(return_value=Mock(status=200))
+        page.url = landed_on
+        page.wait_for_timeout = AsyncMock()
+        return page
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("landed", [
+        "https://www.google.com/sorry/index?continue=x",
+        "https://yandex.ru/showcaptcha?cc=1",
+    ])
+    async def test_a_warmup_that_lands_on_a_block_says_so(self, landed, monkeypatch):
+        from unittest.mock import AsyncMock
+
+        from src.browser import runner as mod
+
+        monkeypatch.setattr(mod, "assert_navigable", AsyncMock())
+        monkeypatch.setattr(mod, "assert_landing_public", AsyncMock())
+        out = await mod.run_warmup(
+            self._page(landed), "https://www.google.com/search?q=x",
+            {"type": "homepage"}, timeout_ms=5000, default_dwell_ms=0,
+        )
+        assert out.blocked is True
+        assert out.error is None, "nothing raised; it is not a failure"
+        assert out.applied is not None, "it did run, and applied must say what"
+        # The CARRIER, not just the field: `applied` is what every FetchResult
+        # return in both runners passes on, and a mutation that left this False
+        # while `out.blocked` stayed True survived the whole suite once.
+        assert out.applied["blocked"] is True
+
+    @pytest.mark.asyncio
+    async def test_an_ordinary_warmup_is_not_flagged(self, monkeypatch):
+        from unittest.mock import AsyncMock
+
+        from src.browser import runner as mod
+
+        monkeypatch.setattr(mod, "assert_navigable", AsyncMock())
+        monkeypatch.setattr(mod, "assert_landing_public", AsyncMock())
+        out = await mod.run_warmup(
+            self._page("https://www.google.com/"), "https://www.google.com/search?q=x",
+            {"type": "homepage"}, timeout_ms=5000, default_dwell_ms=0,
+        )
+        assert out.blocked is False
+        assert out.applied == {
+            "type": "homepage", "url": "https://www.google.com/", "dwell_ms": 0,
+            "blocked": False,
+        }
+
+    @pytest.mark.asyncio
+    async def test_a_warmup_nobody_configured_is_still_nothing(self, monkeypatch):
+        from src.browser import runner as mod
+
+        out = await mod.run_warmup(
+            self._page("https://x.example/"), "https://x.example/a",
+            None, timeout_ms=5000, default_dwell_ms=0,
+        )
+        assert (out.applied, out.error, out.blocked) == (None, None, False)
+
+
+class TestAkamaiBehaviouralInterstitial:
+    """Akamai answers at HTTP 200 from the requested URL, with no redirect.
+
+    Measured 2026-09-11 on `suchen.mobile.de/fahrzeuge/details.html`: 6 of 6
+    runs of the shipped `mobile_de_ad_*` presets landed on a 2.5-2.7 KB page
+    with no `<title>`, zero `data-testid` nodes and an obfuscated sensor
+    script -- and were reported as `selector_not_found`, i.e. as a broken
+    recipe, when the exit had simply been refused. Neither the status code nor
+    the final URL carries the news, so the body is the only place to read it.
+    """
+
+    SHELL = (
+        '<!DOCTYPE html><html><head></head><body>'
+        '<script type="text/javascript" src="/FrDk19/-2RwM/Ns8bx/GrCt/4N9V6k7f'
+        '/GFM3AQ/Si5/pQxdGEBQb?v=f6ffd94c&amp;t=839117731"></script>'
+        '<div id="sec-if-cpt-container" role="main" style="display: none">'
+        '<div class="behavioral-content"><div id="sec-bc-text-container"></div>'
+        '<div class="scf-akamai-logo-sec-abc"><div class="scf-akamai-logo-msg">'
+        '<p class="scf-akamai-protected-by">Powered and protected by</p>'
+        '</div></div></div></div></body></html>'
+    )
+
+    def test_the_interstitial_is_a_block(self):
+        assert looks_like_captcha_or_block(self.SHELL) is True
+
+    def test_it_is_a_block_even_though_the_url_never_changed(self):
+        """The signal Google and Yandex give us -- a redirect to /sorry/ or
+        /showcaptcha -- is absent here."""
+        url = "https://suchen.mobile.de/fahrzeuge/details.html?id=391420794"
+        assert looks_like_captcha_or_block(self.SHELL, final_url=url) is True
+
+    def test_a_real_page_mentioning_akamai_is_not(self):
+        """The needles are Akamai's own element id and class, not the visible
+        text, which is localised -- and an article about Akamai must not read
+        as a block."""
+        page = (
+            "<html><body><h1>Akamai Bot Manager review</h1>"
+            "<p>Powered and protected by clever marketing, apparently. "
+            "We tested the behavioral content challenge.</p>"
+            + "<p>filler</p>" * 200
+            + "</body></html>"
+        )
+        assert looks_like_captcha_or_block(page) is False

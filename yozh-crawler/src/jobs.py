@@ -249,29 +249,31 @@ class JobRunner:
             def on_stats(stats: CrawlStats, _job=job_id) -> None:
                 self._store.update_stats(_job, stats)
 
-            engine = CrawlEngine(
-                job_id=job_id,
-                request=rec.request,
-                scraper=self._scraper,
-                limiter=self._limiter,
-                settings=self._settings,
-                on_event=on_event,
-                on_page=on_page,
-                on_stats=on_stats,
-            )
-            # Register engine BEFORE flipping status to "running" — otherwise a
-            # DELETE arriving in this window falls through the non-engine cancel
-            # path, marks status cancelled, then we'd overwrite it back to
-            # running+done without honoring the cancel.
-            self._engines[job_id] = engine
-            await self._store.set_status(job_id, "running")
-
-            # In case a cancel slipped in between create and now, honour it.
-            if self._store.get(job_id).status == "cancelled":
-                self._engines.pop(job_id, None)
-                continue
-
+            # Everything a job does -- construction included -- is inside this
+            # try: an exception that escaped it ended the worker task for good
+            # while /health stayed green (audit 2026-09-03, H-15).
             try:
+                engine = CrawlEngine(
+                    job_id=job_id,
+                    request=rec.request,
+                    scraper=self._scraper,
+                    limiter=self._limiter,
+                    settings=self._settings,
+                    on_event=on_event,
+                    on_page=on_page,
+                    on_stats=on_stats,
+                )
+                # Register engine BEFORE flipping status to "running" — otherwise
+                # a DELETE arriving in this window falls through the non-engine
+                # cancel path, marks status cancelled, then we'd overwrite it
+                # back to running+done without honoring the cancel.
+                self._engines[job_id] = engine
+                await self._store.set_status(job_id, "running")
+
+                # In case a cancel slipped in between create and now, honour it.
+                if self._store.get(job_id).status == "cancelled":
+                    continue
+
                 await asyncio.wait_for(engine.run(), timeout=self._settings.job_timeout_ms / 1000.0)
                 # Preserve externally-set terminal status; don't clobber "cancelled".
                 current_status = self._store.get(job_id).status

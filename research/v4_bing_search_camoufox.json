@@ -1,0 +1,416 @@
+[
+ {
+  "preset": "bing_search_camoufox",
+  "locale": "de",
+  "run": 0,
+  "params": {
+   "query": "best laptop 2026"
+  },
+  "job_id": "req_418a1debd6674ce1b20407b4",
+  "status": "done",
+  "meta": {
+   "fetch_ok": true,
+   "status_code": 200,
+   "final_url": "https://www.bing.com/search?q=best+laptop+2026&cc=de&setlang=de",
+   "retries": 0,
+   "proxy_type": "prem_res_rotating",
+   "applied_locale": "de-DE",
+   "applied_timezone": "UTC",
+   "error": null
+  },
+  "took_ms": 16360,
+  "job_error": null,
+  "warnings": [],
+  "data": {
+   "titles": [
+    "The Best Laptops We've Tested (September 2026) | PCMag",
+    "Notebook-Test.2026: Allround-Laptops auf dem Prüfstand - CHIP",
+    "Laptop-Test 2026: Die besten Notebooks aller Klassen im Vergleich",
+    "Laptops in Tests: Aktueller Vergleich 2026 - MediaMarkt",
+    "The best laptops in 2026 — tested, reviewed, and worth your money",
+    "Laptop Testsieger 2026 | Stiftung Warentest - Produkte im Test",
+    "Laptops Tests 2026 - Alle Bestenlisten im Überblick! - COMPUTER BILD",
+    "Best Laptops 2026: Our benchmarked picks for productivity, …",
+    "Die besten Laptops | Test 08/2026 – Testberichte.de",
+    "Das beste Laptop | Vergleich 09/2026 | F.A.Z. Kaufkompass"
+   ],
+   "links": [
+    "https://www.pcmag.com/picks/the-best-laptops",
+    "https://www.chip.de/artikel/Laptop-Vergleich-Das-sind-die-Notebook-Testsieger_119941475.html",
+    "https://www.pcwelt.de/article/2215385/die-besten-laptops-test.html",
+    "https://www.mediamarkt.de/de/content/it-informatik/notebooks/beste-laptops-in-tests?msockid=1d9abdc8368968fc1f12aa02377b6942",
+    "https://www.tomsguide.com/computing/laptops/best-laptops",
+    "https://produkte-im-test.de/laptops-im-test-stiftung-warentest/",
+    "https://www.computerbild.de/bestenlisten/notebooks/",
+    "https://www.tomshardware.com/laptops/best-laptops",
+    "https://www.testberichte.de/computer-hardware/2573/notebooks.html",
+    "https://www.faz.net/kaufkompass/vergleich/das-beste-laptop-fuer-die-meisten/"
+   ],
+   "snippets": [
+    "Vor 3 Tagen · Whether you want a simple budget PC, a productivity workhorse, or a screamer of a gaming notebook, our experts …",
+    "19. Juli 2026 · Der Markt ist groß und unübersichtlich – mit unserem Notebook Test behalten Sie jederzeit den Überblick. Wir stellen …",
+    "Unser Notebook-Testvergleich 2026 bietet Ihnen einen kompakten Überblick und hilft, den besten Laptop für Ihre Bedürfnisse zu finden.",
+    "29. Apr. 2026 · Entdecke die besten Laptops für Gaming, Arbeit, Streaming & Co. Jetzt die Top-Modelle in Laptop-Tests bei …",
+    "Here are the best laptops my team and I recommend based on our lab testing and hands-on reviews",
+    "Vor 14 Stunden · Die folgende Tabelle zeigt die besten Laptops im Test 2026 von Stiftung Warentest auf einen Blick. Der Apple …",
+    "Egal ob performanter Gaming-Laptop, günstiges Chrome-Book, oder stylischer MacBook Pro: Um da als Käufer das richtige …",
+    "Go beyond the headlines with Tom’s Hardware Premium. Access Bench, Roadmaps, deep analysis and other exclusive tools. …",
+    "Im Vergleich zu den teureren ThinkPads haben sie es häufiger schwerer, sich gegen Mitbewerber durchzusetzen – schneiden aber …",
+    "8. Juli 2026 · Wir haben uns 77 Laptops angesehen. Unser Favorit: das Lenovo Thinkpad X9 15 Aura Edition. Es läuft lang, hat ein …"
+   ],
+   "result_blocks__slimmed_rows": 10
+  },
+  "fill": {
+   "titles": 1.0,
+   "links": 1.0
+  },
+  "entries": 10,
+  "has_data": true,
+  "elapsed_s": 18.0
+ },
+ {
+  "preset": "bing_search_camoufox",
+  "locale": "de",
+  "run": 1,
+  "params": {
+   "query": "best laptop 2026"
+  },
+  "job_id": "req_0a155a444f70e3d00066e6cc",
+  "status": "done",
+  "meta": {
+   "fetch_ok": true,
+   "status_code": 200,
+   "final_url": "https://www.bing.com/search?q=best+laptop+2026&cc=de&setlang=de",
+   "retries": 0,
+   "proxy_type": "prem_res_rotating",
+   "applied_locale": "de-DE",
+   "applied_timezone": "UTC",
+   "error": null
+  },
+  "took_ms": 16363,
+  "job_error": null,
+  "warnings": [],
+  "data": {
+   "titles": [
+    "The Best Laptops We've Tested (September 2026) | PCMag",
+    "Notebook-Test.2026: Allround-Laptops auf dem Prüfstand - CHIP",
+    "Laptop-Test 2026: Die besten Notebooks aller Klassen im Vergleich",
+    "Laptops in Tests: Aktueller Vergleich 2026 - MediaMarkt",
+    "The best laptops in 2026 — tested, reviewed, and worth your money",
+    "Laptop Testsieger 2026 | Stiftung Warentest - Produkte im Test",
+    "Laptops Tests 2026 - Alle Bestenlisten im Überblick! - COMPUTER BILD",
+    "Best Laptops 2026: Our benchmarked picks for productivity, …",
+    "Die besten Laptops | Test 08/2026 – Testberichte.de",
+    "Das beste Laptop | Vergleich 09/2026 | F.A.Z. Kaufkompass"
+   ],
+   "links": [
+    "https://www.pcmag.com/picks/the-best-laptops",
+    "https://www.chip.de/artikel/Laptop-Vergleich-Das-sind-die-Notebook-Testsieger_119941475.html",
+    "https://www.pcwelt.de/article/2215385/die-besten-laptops-test.html",
+    "https://www.mediamarkt.de/de/content/it-informatik/notebooks/beste-laptops-in-tests?msockid=1965ac4c72966ba303fbbb8673936a8f",
+    "https://www.tomsguide.com/computing/laptops/best-laptops",
+    "https://produkte-im-test.de/laptops-im-test-stiftung-warentest/",
+    "https://www.computerbild.de/bestenlisten/notebooks/",
+    "https://www.tomshardware.com/laptops/best-laptops",
+    "https://www.testberichte.de/computer-hardware/2573/notebooks.html",
+    "https://www.faz.net/kaufkompass/vergleich/das-beste-laptop-fuer-die-meisten/"
+   ],
+   "snippets": [
+    "Vor 3 Tagen · Whether you want a simple budget PC, a productivity workhorse, or a screamer of a gaming notebook, our experts …",
+    "19. Juli 2026 · Der Markt ist groß und unübersichtlich – mit unserem Notebook Test behalten Sie jederzeit den Überblick. Wir stellen …",
+    "Unser Notebook-Testvergleich 2026 bietet Ihnen einen kompakten Überblick und hilft, den besten Laptop für Ihre Bedürfnisse zu finden.",
+    "29. Apr. 2026 · Entdecke die besten Laptops für Gaming, Arbeit, Streaming & Co. Jetzt die Top-Modelle in Laptop-Tests bei …",
+    "Here are the best laptops my team and I recommend based on our lab testing and hands-on reviews",
+    "Vor 14 Stunden · Die folgende Tabelle zeigt die besten Laptops im Test 2026 von Stiftung Warentest auf einen Blick. Der Apple …",
+    "Egal ob performanter Gaming-Laptop, günstiges Chrome-Book, oder stylischer MacBook Pro: Um da als Käufer das richtige …",
+    "Go beyond the headlines with Tom’s Hardware Premium. Access Bench, Roadmaps, deep analysis and other exclusive tools. …",
+    "Im Vergleich zu den teureren ThinkPads haben sie es häufiger schwerer, sich gegen Mitbewerber durchzusetzen – schneiden aber …",
+    "8. Juli 2026 · Wir haben uns 77 Laptops angesehen. Unser Favorit: das Lenovo Thinkpad X9 15 Aura Edition. Es läuft lang, hat ein …"
+   ],
+   "result_blocks__slimmed_rows": 10
+  },
+  "fill": {
+   "titles": 1.0,
+   "links": 1.0
+  },
+  "entries": 10,
+  "has_data": true,
+  "elapsed_s": 18.0
+ },
+ {
+  "preset": "bing_search_camoufox",
+  "locale": "ru",
+  "run": 0,
+  "params": {
+   "query": "best laptop 2026"
+  },
+  "job_id": "req_f6f2b4a9da56d32f08961bd6",
+  "status": "done",
+  "meta": {
+   "fetch_ok": true,
+   "status_code": 200,
+   "final_url": "https://www.bing.com/search?q=best+laptop+2026&cc=ru&setlang=ru",
+   "retries": 0,
+   "proxy_type": "prem_res_rotating",
+   "applied_locale": "ru-RU",
+   "applied_timezone": "UTC",
+   "error": null
+  },
+  "took_ms": 11699,
+  "job_error": null,
+  "warnings": [],
+  "data": {
+   "titles": [
+    "Patio & Driveway Sealers & Cleaning - SmartSeal",
+    "Colour intensifying sealer for natural stone paving - SmartSeal",
+    "Microsoft Word - Smartseal Concrete Sealer MSDS",
+    "Microsoft Word - Smartseal Concrete Sealer - Product Data Sheet",
+    "Sealers",
+    "Sandstone Patio Cleaner | Cleaning Patio Slabs - SmartSeal",
+    "Frequently Asked Questions (FAQs) - SmartSeal",
+    "Block Paving Sealer | Patio Sealer | Driveway Sealer - SmartSeal",
+    "Indian Sandstone and Natural Stone Sealer - SmartSeal",
+    "Asbestos Roof Coating, Asbestos Roof Paint, Asbestos Roof ... - SmartSeal"
+   ],
+   "links": [
+    "https://www.smartseal.co.uk/",
+    "https://www.smartseal.co.uk/natural-stone-ultimate-enhancer-.htm",
+    "http://images.smartseal.co.uk/resources/1390303584_87.pdf",
+    "http://images.smartseal.co.uk/resources/1390302576_52.pdf",
+    "https://www.smartseal.co.uk/sealers/",
+    "https://www.smartseal.co.uk/cleaning-products-accessories/patio-cleaner/",
+    "https://www.smartseal.co.uk/help-advice/faq-s.htm",
+    "https://www.smartseal.co.uk/sealers/block-paving-sealer/",
+    "https://www.smartseal.co.uk/driveway/natural-stone/sandstonenatural-stone-ultra-sealer-25-litre.htm",
+    "https://www.smartseal.co.uk/sealers/roof-sealer/asbestos-roof-coating.htm"
+   ],
+   "snippets": [
+    "Smartseal have built up an enviable reputation for the supply of high quality sealers and coatings for a wide range of hard surfaces. …",
+    "Suppliers of high quality colour enhancing, breathable sealers for natural stone surfaces such as sandstone, limestone, slate, …",
+    "Section 1: Identification of the substance/mixture and of the company/undertaking 1.1. Product identifier Product name: Smartseal …",
+    "PRODUCT DESCRIPTION Smartseal Concrete Sealer is an aqueous fluoropolymer dispersion treatment that prevents ingress of …",
+    "Sealers Smartseal can supply a wide range of high quality sealers for most types of hard surfaces such as driveways, patios, roofs, …",
+    "Best patio cleaners for removing dirt, moss, lichen & algae from patio paving slabs. Best sandstone patio cleaner for patio black spot. …",
+    "Yes, Smartseal can supply all the necessary paving cleaning equipment, paving sealer application tools and materials required for …",
+    "Smartseal supplies sealers for block paving to help prevent weed growth and protect from oil stains. Choose from solvent based …",
+    "Smartseal Indian Sandstone Sealer and Natural Stone Sealer is a high quality, clear, solvent free acrylic impregnating coating …",
+    "Used in conjunction with our asbestos roof sealer and primer, Smartseal asbestos roof coating is a solvent-free acrylic roof coating …"
+   ],
+   "result_blocks__slimmed_rows": 10
+  },
+  "fill": {
+   "titles": 1.0,
+   "links": 1.0
+  },
+  "entries": 10,
+  "has_data": true,
+  "elapsed_s": 12.0
+ },
+ {
+  "preset": "bing_search_camoufox",
+  "locale": "ru",
+  "run": 1,
+  "params": {
+   "query": "best laptop 2026"
+  },
+  "job_id": "req_8f2b4424e491bbf7f23d241f",
+  "status": "done",
+  "meta": {
+   "fetch_ok": true,
+   "status_code": 200,
+   "final_url": "https://www.bing.com/search?q=best+laptop+2026&cc=ru&setlang=ru",
+   "retries": 0,
+   "proxy_type": "prem_res_rotating",
+   "applied_locale": "ru-RU",
+   "applied_timezone": "UTC",
+   "error": null
+  },
+  "took_ms": 15121,
+  "job_error": null,
+  "warnings": [],
+  "data": {
+   "titles": [
+    "Перевод BEST с английского на русский: Cambridge Dictionary",
+    "BEST | English meaning - Cambridge Dictionary",
+    "Best - перевод, транскрипция, произношение, примеры",
+    "BEST Definition & Meaning - Merriam-Webster",
+    "Best - definition of best by The Free Dictionary",
+    "Домашняя страница - ЛУЧШИЕ В РОССИИ – КОМПАНИИ И …",
+    "best - WordReference.com Dictionary of English",
+    "BEST: Board of European Students of Technology",
+    "best - Longman Dictionary of Contemporary English Online",
+    "Best Buy | Official Online Store | Shop Now & Save"
+   ],
+   "links": [
+    "https://dictionary.cambridge.org/ru/%D1%81%D0%BB%D0%BE%D0%B2%D0%B0%D1%80%D1%8C/%D0%B0%D0%BD%D0%B3%D0%BB%D0%BE-%D1%80%D1%83%D1%81%D1%81%D0%BA%D0%B8%D0%B9/best",
+    "https://dictionary.cambridge.org/dictionary/english/best",
+    "https://wooordhunt.ru/word/best",
+    "https://www.merriam-webster.com/dictionary/best",
+    "https://www.thefreedictionary.com/best",
+    "https://best.ru/",
+    "https://www.wordreference.com/definition/best",
+    "https://best.eu.org/index.jsp",
+    "https://www.ldoceonline.com/dictionary/best",
+    "https://www.bestbuy.com/"
+   ],
+   "snippets": [
+    "She's one of our best students. Give her my best wishes. Susie's my best friend (= the friend I like more than any other). What's the …",
+    "best adjective, adverb (HIGHEST QUALITY) of the highest quality, to the greatest degree, in the most effective way, or being the …",
+    "Перевод Best - лучший, больший, лучше всего, больше всего, провести, перехитрить. Транскрипция - |best|. Примеры - at …",
+    "27 авг. 2026 г. · In the best of all possible worlds, no one would be without food and clean water. I have a wonderful family and a …",
+    "1. In a most excellent way; most creditably or advantageously. 2. To the greatest degree or extent; most: \"He was certainly the best …",
+    "Платформа, посвящённая признанию лучших компаний и персон года в России.",
+    "Idioms (all) for the best, producing good as the final result: It turned out to be all for the best when I didn't get that job. Idioms as best …",
+    "BEST, Board of European Students of Technology is a voluntary and politically unaffiliated non-profit organisation. Since 1989 we …",
+    "best From Longman Dictionary of Contemporary English best1 /best/ S1 W1 adjective [superlative of good] 1 better than anything else …",
+    "Shop Best Buy for electronics, computers, appliances, cell phones, video games & more new tech. Store pickup & free 2-day …"
+   ],
+   "result_blocks__slimmed_rows": 10
+  },
+  "fill": {
+   "titles": 1.0,
+   "links": 1.0
+  },
+  "entries": 10,
+  "has_data": true,
+  "elapsed_s": 18.0
+ },
+ {
+  "preset": "bing_search_camoufox",
+  "locale": "us",
+  "run": 0,
+  "params": {
+   "query": "best laptop 2026"
+  },
+  "job_id": "req_031b7638019a875cd20c2b29",
+  "status": "done",
+  "meta": {
+   "fetch_ok": true,
+   "status_code": 200,
+   "final_url": "https://www.bing.com/search?q=best+laptop+2026&cc=us&setlang=en",
+   "retries": 0,
+   "proxy_type": "prem_res_rotating",
+   "applied_locale": "en-US",
+   "applied_timezone": "UTC",
+   "error": null
+  },
+  "took_ms": 16276,
+  "job_error": null,
+  "warnings": [],
+  "data": {
+   "titles": [
+    "The Best Laptops We've Tested (September 2026) | PCMag",
+    "Best Laptops of 2026: Top Picks Tested by CNET",
+    "The 15 Best Laptops of 2026 | Reviews by Wirecutter",
+    "Best Laptops 2026 - Forbes Vetted",
+    "Best Laptops (2026): My Top Recommendations After Testing Hundreds | WIRED",
+    "Best laptops 2026: Premium, budget, gaming, 2-in-1, and more",
+    "Best Laptops 2026: Our benchmarked picks for productivity, …",
+    "The best laptops in 2026 — tested, reviewed, and worth your money",
+    "The Best Laptops for 2026 - PCMag UK",
+    "Best Laptop 2026: Top picks, rated and ranked - Trusted Reviews"
+   ],
+   "links": [
+    "https://www.pcmag.com/picks/the-best-laptops",
+    "https://www.cnet.com/tech/computing/best-laptop/",
+    "https://www.nytimes.com/wirecutter/reviews/best-laptops/",
+    "https://www.forbes.com/sites/forbes-personal-shopper/article/best-laptop/",
+    "https://www.wired.com/story/best-laptops/",
+    "https://www.pcworld.com/article/436674/best-pc-laptops.html",
+    "https://www.tomshardware.com/laptops/best-laptops",
+    "https://www.tomsguide.com/computing/laptops/best-laptops",
+    "https://uk.pcmag.com/laptops/158/the-best-laptops",
+    "https://www.trustedreviews.com/best/best-laptops-3431966"
+   ],
+   "snippets": [
+    "3 days ago · Whether you want a simple budget PC, a productivity workhorse, or a screamer of a gaming notebook, our experts have …",
+    "Aug 11, 2026 · Tech> Computing> Laptops Best Laptops of 2026: Top Picks Tested by CNET I have a new favorite Windows laptop, …",
+    "4 days ago · From budget-friendly options to thin-and-light ultrabooks to powerful gaming laptops, we’ve spent hundreds of hours …",
+    "Jun 15, 2026 · Here are the best laptops you can buy today, for different types of consumers and use cases. We tested over 20 …",
+    "Aug 28, 2026 · I’ve been reviewing laptops for over a decade, and this is my advice on how to find the right laptop for you.",
+    "2 days ago · To find the best laptops, we employ thorough hands-on, testing-based evaluations of laptop PCs from all the top brands.",
+    "Prime portable PCs for work, play, and general use.",
+    "Here are the best laptops my team and I recommend based on our lab testing and hands-on reviews",
+    "3 days ago · Our current best laptop for most people is the 14-inch HP OmniBook 5, a stellar-value OLED notebook with incredible 34 …",
+    "Aug 10, 2026 · Our experts have tested hundreds of laptops to sort the wheat from the chaff, and their top picks have been rounded …"
+   ],
+   "result_blocks__slimmed_rows": 10
+  },
+  "fill": {
+   "titles": 1.0,
+   "links": 1.0
+  },
+  "entries": 10,
+  "has_data": true,
+  "elapsed_s": 18.0
+ },
+ {
+  "preset": "bing_search_camoufox",
+  "locale": "us",
+  "run": 1,
+  "params": {
+   "query": "best laptop 2026"
+  },
+  "job_id": "req_7e28504a1e3ddff961485541",
+  "status": "done",
+  "meta": {
+   "fetch_ok": true,
+   "status_code": 200,
+   "final_url": "https://www.bing.com/search?q=best+laptop+2026&cc=us&setlang=en",
+   "retries": 0,
+   "proxy_type": "prem_res_rotating",
+   "applied_locale": "en-US",
+   "applied_timezone": "UTC",
+   "error": null
+  },
+  "took_ms": 13300,
+  "job_error": null,
+  "warnings": [],
+  "data": {
+   "titles": [
+    "The Best Laptops We've Tested (September 2026) | PCMag",
+    "Best Laptops of 2026: Top Picks Tested by CNET",
+    "The 15 Best Laptops of 2026 | Reviews by Wirecutter",
+    "Best Laptops 2026 - Forbes Vetted",
+    "Best Laptops (2026): My Top Recommendations After Testing Hundreds | WIRED",
+    "Best laptops 2026: Premium, budget, gaming, 2-in-1, and more",
+    "Best Laptops 2026: Our benchmarked picks for productivity, …",
+    "The best laptops in 2026 — tested, reviewed, and worth your money",
+    "The Best Laptops for 2026 - PCMag UK",
+    "Best Laptop 2026: Top picks, rated and ranked - Trusted Reviews"
+   ],
+   "links": [
+    "https://www.pcmag.com/picks/the-best-laptops",
+    "https://www.cnet.com/tech/computing/best-laptop/",
+    "https://www.nytimes.com/wirecutter/reviews/best-laptops/",
+    "https://www.forbes.com/sites/forbes-personal-shopper/article/best-laptop/",
+    "https://www.wired.com/story/best-laptops/",
+    "https://www.pcworld.com/article/436674/best-pc-laptops.html",
+    "https://www.tomshardware.com/laptops/best-laptops",
+    "https://www.tomsguide.com/computing/laptops/best-laptops",
+    "https://uk.pcmag.com/laptops/158/the-best-laptops",
+    "https://www.trustedreviews.com/best/best-laptops-3431966"
+   ],
+   "snippets": [
+    "3 days ago · Whether you want a simple budget PC, a productivity workhorse, or a screamer of a gaming notebook, our experts have …",
+    "Aug 11, 2026 · Tech> Computing> Laptops Best Laptops of 2026: Top Picks Tested by CNET I have a new favorite Windows laptop, …",
+    "4 days ago · From budget-friendly options to thin-and-light ultrabooks to powerful gaming laptops, we’ve spent hundreds of hours …",
+    "Jun 15, 2026 · Here are the best laptops you can buy today, for different types of consumers and use cases. We tested over 20 …",
+    "Aug 28, 2026 · I’ve been reviewing laptops for over a decade, and this is my advice on how to find the right laptop for you.",
+    "2 days ago · To find the best laptops, we employ thorough hands-on, testing-based evaluations of laptop PCs from all the top brands.",
+    "Prime portable PCs for work, play, and general use.",
+    "Here are the best laptops my team and I recommend based on our lab testing and hands-on reviews",
+    "3 days ago · Our current best laptop for most people is the 14-inch HP OmniBook 5, a stellar-value OLED notebook with incredible 34 …",
+    "Aug 10, 2026 · Our experts have tested hundreds of laptops to sort the wheat from the chaff, and their top picks have been rounded …"
+   ],
+   "result_blocks__slimmed_rows": 10
+  },
+  "fill": {
+   "titles": 1.0,
+   "links": 1.0
+  },
+  "entries": 10,
+  "has_data": true,
+  "elapsed_s": 15.0
+ }
+]

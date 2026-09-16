@@ -137,6 +137,32 @@ class TestUpdateEndpoint:
         )
         assert response.status_code == 403
 
+    def test_a_preset_another_writer_holds_answers_503_not_500(
+        self, client: TestClient, store_dirs: tuple[Path, Path]
+    ):
+        """A write refused because somebody else holds the lock is
+        operational, and retrying is the right answer -- which a traceback
+        does not say. Every other store refusal here has a status of its
+        own."""
+        import fcntl
+
+        import src.presets.store as store_mod
+
+        client.post("/api/v1/presets", json=_payload())
+        _, user_dir = store_dirs
+        lock = store_mod._lock_path(user_dir / "user_one.json")
+
+        with open(lock, "w", encoding="utf-8") as held:
+            fcntl.flock(held.fileno(), fcntl.LOCK_EX)
+            with pytest.MonkeyPatch.context() as patch:
+                patch.setattr(store_mod, "PRESET_LOCK_TIMEOUT_S", 0.1)
+                response = client.put(
+                    "/api/v1/presets/user_one", json=_payload(description="mine")
+                )
+
+        assert response.status_code == 503
+        assert response.json()["detail"] == "preset_locked"
+
     def test_update_missing(self, client: TestClient):
         response = client.put("/api/v1/presets/user_missing", json=_payload(name="user_missing"))
         assert response.status_code == 404

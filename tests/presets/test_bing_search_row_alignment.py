@@ -155,7 +155,12 @@ from either loosening.
 """
 from __future__ import annotations
 
+import base64
 import json
+import re
+from html import unescape
+
+import pytest
 
 from src.extract.extractor import extract_fields
 from src.extract.models import ExtractRule, FieldRule
@@ -191,6 +196,40 @@ _CLASSIC_ALGO_BLOCKS = [
 ]
 
 BING_CLASSIC_SERP = "<html><body><ol id=\"b_results\">" + "".join(_CLASSIC_ALGO_BLOCKS) + "</ol></body></html>"
+
+# A RICH CARD result (bing.com `best laptop 2026`, cc=de, 2026-09-05): an
+# organic `li.b_algo` whose caption holds a `b_richcard` tab strip and no `<p>`
+# at all. The snippet does not exist for this row; a snippets selector that
+# ends in `//p` drops the row instead of yielding null, and every snippet
+# after it moves up one title.
+_CHIP_ALGO_HEADER = (
+    '<li class="b_algo" data-id="" iid="SERP.5344"><div class="b_tpcn"><a class="tilk" aria-label="chip.de" '
+    'href="https://www.bing.com/ck/a?!&amp;&amp;p=81419ab70fd2698c1f0c75a078eb33abcb0116df077a976a8fcb568c383bb3eeJmltdHM9MTc4Nzg3NTIwMA&amp;ptn=3&amp;ver=2&amp;hsh=4&amp;fclid=22b6b899-acd1-69a0-18d9-af5aad9568d8&amp;u=a1aHR0cHM6Ly93d3cuY2hpcC5kZS9hcnRpa2VsL0xhcHRvcC1WZXJnbGVpY2gtRGFzLXNpbmQtZGllLU5vdGVib29rLVRlc3RzaWVnZXJfMTE5OTQxNDc1Lmh0bWw&amp;ntb=1">'
+    '<div class="tptxt"><div class="tptt">chip.de</div></div></a></div>'
+    '<h2 class=""><a target="_blank" href="https://www.bing.com/ck/a?!&amp;&amp;p=81419ab70fd2698c1f0c75a078eb33abcb0116df077a976a8fcb568c383bb3eeJmltdHM9MTc4Nzg3NTIwMA&amp;ptn=3&amp;ver=2&amp;hsh=4&amp;fclid=22b6b899-acd1-69a0-18d9-af5aad9568d8&amp;u=a1aHR0cHM6Ly93d3cuY2hpcC5kZS9hcnRpa2VsL0xhcHRvcC1WZXJnbGVpY2gtRGFzLXNpbmQtZGllLU5vdGVib29rLVRlc3RzaWVnZXJfMTE5OTQxNDc1Lmh0bWw&amp;ntb=1" h="ID=SERP,5134.2">'
+    '<strong>Notebook</strong>-Test.<strong>2026</strong>: Allround-<strong>Laptops</strong> auf dem Prüfstand - CHIP</a></h2>'
+)
+BING_RICH_CARD_ALGO = (
+    _CHIP_ALGO_HEADER
+    + '<div class="b_caption b_stsp1"><div class="b_richcard"><div class="rc_herotabheader"><div class="tab-head">'
+    '<ul class="tab-menu"><li class="tab-active">Testsieger</li><li>Preis-Leistung</li></ul></div></div></div></div></li>'
+)
+# A result whose caption is empty but whose deep links (`ul.b_vList`) carry
+# `<p>` descriptions of their own (a shape the 2026-07-26 `us` capture has
+# without the `<p>`). The snippet is the `b_lineclamp` paragraph or nothing:
+# a sitelink's description must not be promoted to the result's snippet,
+# because it reads as one and no consumer could tell.
+BING_DEEP_LINKS_ALGO = (
+    _CHIP_ALGO_HEADER
+    + '<div class="b_caption b_rich"></div><ul class="b_vList b_divsec"><li><div class="b_deep">'
+    '<h3><a href="https://www.chip.de/tests/notebooks">Notebook-Tests</a></h3>'
+    '<p>Alle Notebook-Tests von CHIP im Überblick, sortiert nach Kategorie.</p></div></li></ul></li>'
+)
+BING_RICH_CARD_SERP = (
+    "<html><body><ol id=\"b_results\">"
+    + _CLASSIC_ALGO_BLOCKS[0] + BING_RICH_CARD_ALGO + _CLASSIC_ALGO_BLOCKS[2]
+    + "</ol></body></html>"
+)
 
 
 # ---------------------------------------------------------------------------
@@ -454,6 +493,31 @@ class TestBingSearchClassicLayout:
             assert "bing.com" not in link
 
 
+class TestBingSearchRichCard:
+    """bing_search_chromium/de, 2026-09-04 audit and 2026-09-05 probe: 3 titles,
+    3 links, 2 snippets -- the rich-card result has no `<p>`."""
+
+    def setup_method(self):
+        self.preset = _load("bing_search_chromium")
+
+    def test_a_rich_card_keeps_its_row_with_a_null_snippet(self):
+        data, warnings = extract_fields(BING_RICH_CARD_SERP, self.preset.parsing_instructions)
+        assert len(data["titles"]) == len(data["links"]) == len(data["result_blocks"]) == 3
+        assert data["titles"][1] == "Notebook-Test.2026: Allround-Laptops auf dem Prüfstand - CHIP"
+        assert len(data["snippets"]) == 3, data["snippets"]
+        assert data["snippets"][1] is None
+        assert data["snippets"][0].startswith("1. Aug. 2026 · Whether you want")
+        assert data["snippets"][2].startswith("Unser Notebook-Testvergleich 2026")
+        assert not [w for w in warnings if "row_alignment" in w], warnings
+
+    def test_a_sitelinks_description_is_not_promoted_to_the_snippet(self):
+        serp = "<html><body><ol id=\"b_results\">" + _CLASSIC_ALGO_BLOCKS[0] + BING_DEEP_LINKS_ALGO + "</ol></body></html>"
+        data, warnings = extract_fields(serp, self.preset.parsing_instructions)
+        assert len(data["titles"]) == len(data["links"]) == len(data["snippets"]) == 2
+        assert data["snippets"][1] is None, data["snippets"]
+        assert not [w for w in warnings if "row_alignment" in w], warnings
+
+
 class TestBingSearchCopilotLayout:
     """The layout that under-collected live: 2 rows and 5 rows measured
     2026-08-27, both times with row_alignment_mismatch. Ground truth on
@@ -623,11 +687,82 @@ class TestBingSearchLinksPostProcessPinned:
     def setup_method(self):
         self.preset = _load("bing_search_chromium")
 
-    def test_regex_pattern_requires_the_a1_prefix(self):
-        links_rule = self.preset.parsing_instructions.fields["links"]
-        regex_step = links_rule.post_process[0]
-        assert regex_step.op == "regex"
-        assert regex_step.args[0] == r"[?&]u=a1([A-Za-z0-9_-]+)"
+    def test_the_pipeline_still_requires_the_a1_prefix(self):
+        """The `a1` prefix moved from a regex into `unwrap_param`'s own
+        argument when the pipeline had to start surviving uBO-sanitized
+        hrefs, but it is the same property: Bing's ORGANIC redirect is
+        `u=a1<base64>` and its AD redirect is `u=<base64>`, so dropping the
+        prefix would make the two indistinguishable."""
+        steps = self.preset.parsing_instructions.fields["links"].post_process
+        assert [s.op for s in steps] == [
+            "unwrap_param", "null_if_regex", "null_if_regex",
+        ]
+        assert steps[0].args == ["u", "base64url", "a1", "bing.com"]
+
+    def test_anything_left_on_bing_com_is_nulled(self):
+        """The second half of the defence the `a1` prefix used to carry alone.
+
+        `unwrap_param` never nulls -- passing the original through is what
+        lets one pipeline serve both the wrapped and the uBO-sanitized shape.
+        So the "an ad must not come back as a plausible link" property is
+        carried by the step after it: a value still pointing at bing.com is
+        one nothing recovered a destination from, and it is nulled rather
+        than shipped."""
+        from src.extract.extractor import _apply_post_process
+
+        steps = self.preset.parsing_instructions.fields["links"].post_process
+        for wrapper in (
+            "https://www.bing.com/ck/a?!&&p=x&featru=a1zzzz&ntb=1",
+            "https://www.bing.com/ck/a?!&&p=x&u=notbase64!!&ntb=1",
+            # Uppercase host: the first leak measured on 2026-09-04 defeated a
+            # case-sensitive check.
+            "https://WWW.BING.COM/aclk?ld=e8&u=aHR0cA&ntb=1",
+            # Not an absolute destination: relative and javascript: shapes are
+            # not links a caller can follow, and must not be handed on as if
+            # they were.
+            "/videos/search?q=laptop",
+            "javascript:void(0)",
+        ):
+            assert _apply_post_process(wrapper, steps, "links", [], set()) is None, wrapper
+
+    def test_a_destination_that_merely_mentions_bing_is_not_dropped(self):
+        """Host, not substring. A real result whose QUERY names bing.com was
+        nulled by the link guard and dropped by the anchor gate — and dropping
+        it from titles/links alone SHIFTS the columns, because snippets and
+        result_blocks keep the `li.b_algo` container unconditionally."""
+        from src.extract.extractor import _apply_post_process
+
+        steps = self.preset.parsing_instructions.fields["links"].post_process
+        url = "https://example.org/article?source=bing.com"
+        assert _apply_post_process(url, steps, "links", [], set()) == url
+
+        html = (
+            '<html><body><ol id="b_results"><li class="b_algo"><h2>'
+            f'<a href="{url}">Article that cites bing.com</a></h2></li></ol></body></html>'
+        )
+        data, _ = extract_fields(html, self.preset.parsing_instructions)
+        assert data["titles"] == ["Article that cites bing.com"]
+        assert data["links"] == [url]
+
+    def test_a_destinations_own_u_parameter_is_not_decoded_as_bings(self):
+        """`unwrap_param` reads a parameter out of a redirect. Once uBO has
+        replaced the href with the DESTINATION, that query belongs to the
+        destination — decoding it a second time shipped a different site than
+        the page actually linked to."""
+        from src.extract.extractor import _apply_post_process
+
+        steps = self.preset.parsing_instructions.fields["links"].post_process
+        url = "https://trusted.example/page?u=a1aHR0cHM6Ly9vdGhlci5leGFtcGxl"
+        assert _apply_post_process(url, steps, "links", [], set()) == url
+
+    def test_a_real_destination_survives_all_three_steps(self):
+        """The guards above must not be so wide they null the answer."""
+        from src.extract.extractor import _apply_post_process
+
+        steps = self.preset.parsing_instructions.fields["links"].post_process
+        assert _apply_post_process(
+            "https://www.pcmag.com/picks/the-best-laptops", steps, "links", [], set()
+        ) == "https://www.pcmag.com/picks/the-best-laptops"
 
     def test_ad_shaped_href_does_not_decode_even_if_fed_to_the_pipeline(self):
         """Behavioural pin, not just a string match: if an ad's `u=`
@@ -709,3 +844,266 @@ class TestNaiveContainerOnlyWideningWouldRegress:
         # the correct 4, and it drags in non-result text.
         joined = " ".join(data["titles"])
         assert "Top 3 Best Laptops of 2026" in joined or "Mehr entdecken" in joined
+
+
+# --- uBlock Origin's href-sanitizer -------------------------------------------
+# Camoufox ships uBO on EVERY launch (`add_default_addons()` is called
+# unconditionally inside camoufox's `launch_options()`), and uBO's Privacy list
+# — enabled by default — carries:
+#
+#   bing.com##+js(href-sanitizer, a[href*="bing.com/ck/a"], ?u /^a1(.*)$/ -base64)
+#
+# whose scriptlet does `elem.setAttribute('href', hrefAfter)`. So on every
+# Camoufox run the organic anchors reach us ALREADY DECODED, with no `u=a1` left
+# to key on. Measured live 2026-09-04 on a real SERP: 10 anchors, 10 carrying
+# `u=a1` with uBO excluded, 0 with uBO loaded — and `bing_search_camoufox` went
+# from 0 selector misses on 09-02 to 4 of 6 on 09-03, its Chromium twin
+# unaffected in the same run, because a container recreate had pulled a fresh
+# uBO. Nothing in this repo pins uBO or its filter lists: it is downloaded at
+# first browser LAUNCH, not at image build.
+#
+# The transformation below is not a hand-written guess at that output; it
+# applies uBO's own rule to the same captures, so this fixture cannot drift from
+# what the addon actually does without the rule itself changing.
+_UBO_CK_A_HREF = re.compile(r'href="(https://www\.bing\.com/ck/a\?[^"]*)"')
+_UBO_U_A1 = re.compile(r"[?&]u=a1([A-Za-z0-9_-]+)")
+
+
+def _ubo_sanitize(html: str) -> str:
+    """Rewrite `bing.com/ck/a` hrefs to their decoded destination, as uBO does.
+
+    Faithful to the filter on three points that matter to the decoys:
+      * it selects on `bing.com/ck/a`, so an `aclk` AD href is left alone;
+      * it reads the query parameter named exactly `u`, so `&featru=a1zzzz`
+        (the boundary decoy) is left alone;
+      * a payload that does not decode is left alone rather than replaced.
+    """
+    def _rewrite(match: re.Match[str]) -> str:
+        raw = unescape(match.group(1))
+        payload = _UBO_U_A1.search(raw)
+        if payload is None:
+            return match.group(0)
+        blob = payload.group(1)
+        try:
+            dest = base64.b64decode(
+                (blob + "=" * (-len(blob) % 4)).encode(), altchars=b"-_", validate=True
+            ).decode("utf-8")
+        except Exception:  # noqa: BLE001 - mirrors uBO leaving a bad payload alone
+            return match.group(0)
+        return f'href="{dest}"'
+
+    return _UBO_CK_A_HREF.sub(_rewrite, html)
+
+
+BING_CLASSIC_SERP_UBO = _ubo_sanitize(BING_CLASSIC_SERP)
+BING_COPILOT_SERP_UBO = _ubo_sanitize(BING_COPILOT_SERP)
+
+
+class TestBingSearchUnderUblockOrigin:
+    """The same captures as every class above, after uBO has rewritten them.
+
+    This is the production posture for every `_camoufox` variant, not an exotic
+    case: uBO cannot be opted out of per request, and it ships by default.
+    """
+
+    def setup_method(self):
+        self.preset = _load("bing_search_camoufox")
+
+    def test_the_fixture_really_is_sanitized(self):
+        """Guards the guard: if the transformation silently stopped applying,
+        every test below would pass against the ORIGINAL capture and prove
+        nothing. Mutation-proofing the fixture, not the preset."""
+        assert "u=a1" not in BING_CLASSIC_SERP_UBO
+        assert "bing.com/ck/a" not in BING_CLASSIC_SERP_UBO
+        assert "https://www.pcmag.com/picks/the-best-laptops" in BING_CLASSIC_SERP_UBO
+        # The ad keeps its aclk wrapper: uBO's rule selects on `ck/a` only.
+        assert "bing.com/aclk" in BING_COPILOT_SERP_UBO
+
+    def test_ten_aligned_organic_rows_survive_sanitization(self):
+        data, warnings = extract_fields(BING_CLASSIC_SERP_UBO, self.preset.parsing_instructions)
+        for key in ("titles", "links", "snippets", "result_blocks"):
+            assert len(data[key]) == 10, f"{key}: {data[key]!r}"
+        assert not warnings
+        assert data["titles"][0] == "The Best Laptops We've Tested (August 2026) | PCMag"
+
+    def test_links_are_the_destinations_sanitization_already_produced(self):
+        """Same values the wrapped capture decodes to — the pipeline must reach
+        the same answer whether uBO decoded the href or we did."""
+        data, _ = extract_fields(BING_CLASSIC_SERP_UBO, self.preset.parsing_instructions)
+        assert data["links"][0] == "https://www.pcmag.com/picks/the-best-laptops"
+        assert data["links"][1] == (
+            "https://www.chip.de/artikel/Laptop-Vergleich-Das-sind-die-"
+            "Notebook-Testsieger_119941475.html"
+        )
+        for link in data["links"]:
+            assert link.startswith("https://")
+            assert "bing.com" not in link
+
+    def test_promoted_copilot_result_survives_sanitization(self):
+        """All FOUR columns, not just titles: snippets/result_blocks gate the
+        `div.b_wpt_bl` container on it CONTAINING a qualifying anchor, so a
+        widening that only touched titles/links would drop the promoted result
+        from the other two and silently misalign the rows."""
+        data, warnings = extract_fields(BING_COPILOT_SERP_UBO, self.preset.parsing_instructions)
+        for key in ("titles", "links", "snippets", "result_blocks"):
+            assert len(data[key]) == 4, f"{key}: {data[key]!r}"
+        assert not warnings
+        assert data["links"][0] == "https://www.pcmag.com/picks/the-best-laptops"
+
+    def test_the_ad_with_an_h2_is_still_excluded_after_sanitization(self):
+        """THE regression this widening could cause, and the reason the fix is
+        not simply "drop the u=a1 predicate".
+
+        `u=a1` was the only thing rejecting this card (see
+        test_ad_with_h2_still_excluded_by_the_u_a1_requirement) — a real
+        `Gesponsert` badge and a title anchor inside an `<h2>`, so the h2 gate
+        alone accepts it. Sanitization removes `u=a1` from the ORGANIC anchors,
+        so whatever replaces the predicate must keep rejecting this one, whose
+        href is a bare `aclk` uBO does not touch."""
+        data, _ = extract_fields(BING_COPILOT_SERP_UBO, self.preset.parsing_instructions)
+        assert "Laptop Test 2026 - Gesponserter Vergleich" not in data["titles"]
+        haystack = json.dumps(data, ensure_ascii=False)
+        assert "Gesponserter Vergleich" not in haystack
+        assert "aclk" not in haystack
+
+    def test_the_two_decoys_are_still_excluded_after_sanitization(self):
+        data, _ = extract_fields(BING_COPILOT_SERP_UBO, self.preset.parsing_instructions)
+        haystack = json.dumps(data, ensure_ascii=False)
+        assert "Boundary decoy" not in haystack
+        assert "Unrelated container decoy" not in haystack
+
+    def test_the_widgets_without_an_h2_anchor_are_still_excluded(self):
+        data, _ = extract_fields(BING_COPILOT_SERP_UBO, self.preset.parsing_instructions)
+        haystack = json.dumps(data, ensure_ascii=False)
+        assert "Mehr entdecken" not in haystack
+        assert "/videos/riverview" not in haystack
+        assert "Top 3 Best Laptops of 2026" not in haystack
+
+
+class TestTheGateIsPositiveNotMerelyNotBingCom:
+    """Five shapes that a "not on bing.com" gate lets through, all measured.
+
+    The first attempt at surviving uBO widened the anchor gate with
+    `not(contains(@href, 'bing.com'))`. That is a NEGATIVE test, and a negative
+    test fails OPEN on everything its author did not think of. Measured
+    2026-09-04 against the shipped preset, every one of these put a believable
+    title into the column with no warning a consumer could act on -- and in a
+    real SERP, alongside genuine rows, the leaked node is its own container so
+    all four columns grow together and `row_alignment_mismatch` cannot fire
+    either.
+
+    The worst is the first: an ad whose anchor points straight at the
+    advertiser ships a REAL followable link, so a consumer that zips these
+    columns and follows them (yozh-law-checker does) gets an advertiser landing
+    page presented as an organic result. The second is the exact failure the
+    comment on BING_COPILOT_WPT_AD_WITH_H2 predicted and said must never
+    happen: `contains('', 'bing.com')` is false for an anchor with NO href at
+    all, so `not()` was true and the row was accepted.
+
+    Relying on "an ad's href says bing.com" was doubly wrong, because that fact
+    is a property of an UNPINNED, auto-updating third-party filter list -- uBO's
+    rule selects on `ck/a` and leaves `aclk` alone TODAY. One upstream edit
+    turns every ad into shape 1. So the gate is positive now (Bing's own
+    organic redirect, or an absolute http(s) URL off every bing host) and the
+    ad exclusion is structural (`mma_acf*`, `b_ads1line`) rather than resting on
+    what an ad's href happens to spell.
+    """
+
+    LEAKS = {
+        "ad pointing straight at the advertiser": (
+            '<div class="b_wpt_bl"><div class="mma_acf_label_container">'
+            '<span>Gesponsert</span></div><h2><a '
+            'href="https://ads.example/landing?msclkid=1">AD direct</a></h2></div>'
+        ),
+        "anchor with no href attribute at all": (
+            '<div class="b_wpt_bl"><h2><a>No href at all</a></h2></div>'
+        ),
+        "relative in-site href": (
+            '<div class="b_wpt_bl"><h2><a href="/videos/search?q=laptop">'
+            'Relative row</a></h2></div>'
+        ),
+        "javascript: href": (
+            '<div class="b_wpt_bl"><h2><a href="javascript:void(0)">JS row</a></h2></div>'
+        ),
+        "uppercase bing host": (
+            '<div class="b_wpt_bl"><h2><a href="https://WWW.BING.COM/aclk?ld=e8&amp;'
+            'u=aHR0cA">UPPER ad</a></h2></div>'
+        ),
+        "in-b_algo ad unit EasyList targets by b_ads1line": (
+            '<li class="b_algo"><div class="b_title"><h2><span class="b_ads1line">'
+            'Anzeige</span><a href="https://ads.example/inline">Inline ad</a>'
+            '</h2></div></li>'
+        ),
+    }
+
+    def setup_method(self):
+        self.preset = _load("bing_search_camoufox")
+
+    @pytest.mark.parametrize("label", sorted(LEAKS))
+    def test_the_shape_reaches_no_column(self, label):
+        html = f"<html><body><ol id=\"b_results\">{self.LEAKS[label]}</ol></body></html>"
+        data, _ = extract_fields(html, self.preset.parsing_instructions)
+        assert data["titles"] == [], f"{label}: {data['titles']!r}"
+        assert data["links"] == [], f"{label}: {data['links']!r}"
+
+    def test_a_real_organic_row_still_passes_the_positive_gate(self):
+        """The gate must reject those six WITHOUT rejecting the answer.
+
+        Both accepted shapes, since the preset now meets both in production:
+        Bing's own wrapper, and the destination uBO leaves behind."""
+        for html in (_CLASSIC_ALGO_BLOCKS[0], _ubo_sanitize(_CLASSIC_ALGO_BLOCKS[0])):
+            page = f"<html><body><ol id=\"b_results\">{html}</ol></body></html>"
+            data, _ = extract_fields(page, self.preset.parsing_instructions)
+            assert data["titles"] == [
+                "The Best Laptops We've Tested (August 2026) | PCMag"
+            ], html[:60]
+            assert data["links"] == ["https://www.pcmag.com/picks/the-best-laptops"]
+
+
+class TestEveryColumnSelectsFromTheSameCards:
+    """A card the gate rejects must leave NO column, not some.
+
+    Review finding, 2026-09-08 (Раиль): the organic test sat at two different
+    levels. `titles`/`links` filtered the ANCHOR -- `(cards)//h2//a[gate]` --
+    while `snippets`/`result_blocks` filtered the CARD, and only on the
+    `b_wpt_bl` branch. So a `li.b_algo` card whose h2 anchor points back at
+    bing.com contributed no title and no link, but did contribute a snippet
+    and a block: snippets ran one row long and every row after it paired with
+    the wrong result. Reproduced before the fix -- titles 2, snippets 3, and
+    the second real title zipped against the self-link's snippet.
+
+    `row_alignment_mismatch` cannot save a consumer here: the columns simply
+    have different lengths, and the wrong pairing is silent.
+    """
+
+    SELF_LINK = (
+        '<li class="b_algo"><h2><a href="https://www.bing.com/search?q=more">'
+        'More results on Bing</a></h2><div class="b_caption">'
+        '<p class="b_lineclamp2">a snippet on a card that links back to bing</p>'
+        '</div></li>'
+    )
+
+    def _page(self, blocks):
+        return f"<html><body><ol id=\"b_results\">{''.join(blocks)}</ol></body></html>"
+
+    @pytest.mark.parametrize("name", ["bing_search_chromium", "bing_search_camoufox"])
+    def test_a_self_linking_card_leaves_every_column(self, name):
+        preset = _load(name)
+        real = _CLASSIC_ALGO_BLOCKS[0]
+        data, _ = extract_fields(self._page([real, self.SELF_LINK, real]), preset.parsing_instructions)
+        lengths = {col: len(data[col]) for col in ("titles", "links", "snippets", "result_blocks")}
+        assert len(set(lengths.values())) == 1, lengths
+        assert lengths["titles"] == 2, lengths
+        assert all("bing" not in (s or "").lower() or "back to bing" not in (s or "")
+                   for s in data["snippets"]), data["snippets"]
+
+    @pytest.mark.parametrize("name", ["bing_search_chromium", "bing_search_camoufox"])
+    def test_the_rows_still_pair_correctly_around_the_rejected_card(self, name):
+        preset = _load(name)
+        real = _CLASSIC_ALGO_BLOCKS[0]
+        data, _ = extract_fields(self._page([real, self.SELF_LINK, real]), preset.parsing_instructions)
+        # both surviving rows are the real one, each with its own snippet
+        assert data["titles"] == ["The Best Laptops We've Tested (August 2026) | PCMag"] * 2
+        assert all("Der Markt ist" in s or "PCMag" in s or s.strip()
+                   for s in data["snippets"]), data["snippets"]
+        assert "back to bing" not in " ".join(data["snippets"])
