@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+import logging
+
 import pytest
 from unittest.mock import Mock, AsyncMock, MagicMock, call, patch
 import base64
 
 from src.browser.runner import (
     PlaywrightRunner, FetchResult, DESKTOP, MOBILE, classify_fetch, _chrome_ua_metadata,
+    strip_engine_owned_headers,
 )
 from src.proxy.models import ProxyConfig
 from playwright.async_api import Error as PWError
@@ -229,6 +232,334 @@ class TestPlaywrightRunner:
             assert mock_async_playwright_instance.start.call_count == 1
 
             await runner.stop()
+
+
+async def _new_context_kwargs(
+    engine: str, *, device: str = "desktop", headers: dict | None = None,
+    version: str = "152.0.7977.82",
+):
+    """The kwargs `_new_context` hands Playwright, with the browser mocked out.
+
+    Shared by every class below that asserts on the context Playwright is
+    actually given: three of them grew a private copy of this setup, and the
+    copies then disagreed on the Chrome major they pinned.
+    """
+    runner = PlaywrightRunner(headless=True, block_assets=False, timeout_ms=30000)
+    runner._engine = engine
+    mock_browser = AsyncMock()
+    mock_browser.version = version
+    mock_browser.new_context = AsyncMock(return_value=AsyncMock())
+    runner._browser = mock_browser
+    await runner._new_context(
+        device=device, proxy=None, headers=headers, render=True,
+        viewport=None, proxy_geo=None,
+    )
+    return mock_browser.new_context.await_args.kwargs
+
+
+class TestPerEngineUserAgent:
+    """A UA is only safe to state when the transport agrees with it.
+
+    Measured 2026-09-06 against a TLS mirror: our Firefox sent
+    `Chrome/124.0.0.0 (Windows NT 10.0)` while its JA4 was
+    `t13d1717h2_5b57614c22b0` (Firefox), its HTTP/2 settings hash was
+    Firefox's, and it sent no Sec-CH-UA at all -- Firefox has no Client
+    Hints. Three axes contradicting the header at once, which no real user
+    produces. The desktop preset's Chrome UA is therefore stated only by the
+    engine that can back it.
+    """
+
+    @pytest.mark.asyncio
+    async def test_chromium_states_the_chrome_ua_aligned_to_its_build(self):
+        kwargs = await _new_context_kwargs("chromium")
+        ua = kwargs["user_agent"]
+        assert "Chrome/152.0.0.0" in ua, ua
+        assert "Windows NT 10.0" in ua, ua
+
+    @pytest.mark.asyncio
+    async def test_webkit_under_mobile_emulation_keeps_the_iphone_ua(self):
+        """The mobile preset's UA is an iPhone Safari string, which WebKit CAN
+        back -- same engine family, unlike the desktop Chrome string."""
+        kwargs = await _new_context_kwargs("webkit", device="mobile")
+        assert "iPhone" in (kwargs["user_agent"] or ""), kwargs["user_agent"]
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("engine", ["firefox", "webkit"])
+    async def test_other_engines_keep_their_own_true_ua(self, engine):
+        """None means "browser default": Playwright leaves the engine's real UA,
+        which is the only string its TLS and Client-Hints behaviour can back."""
+        kwargs = await _new_context_kwargs(engine)
+        assert kwargs["user_agent"] is None, (
+            f"{engine} must not advertise the Chrome desktop UA: its JA4 and "
+            "its absent/!=Chrome Client Hints contradict it on sight"
+        )
+
+
+class TestStripEngineOwnedHeaders:
+    """The choke point both runners go through, tested on its own.
+
+    It exists because the rule was written twice and the copies drifted, so the
+    thing worth pinning is the function, not each caller's use of it.
+    """
+
+    @pytest.mark.parametrize(
+        "spelling", ["User-Agent", "user-agent", "USER-AGENT", "uSeR-aGeNt"]
+    )
+    def test_every_spelling_is_removed(self, spelling):
+        kept, dropped = strip_engine_owned_headers({spelling: "curl/8", "X-Keep": "yes"})
+        assert kept == {"X-Keep": "yes"}
+        assert dropped == ["headers['User-Agent']"]
+
+    def test_the_reported_name_is_canonical_not_the_callers_spelling(self):
+        """The warning text is a cross-repo string; it must not vary with how
+        the caller happened to capitalise the header."""
+        _, dropped = strip_engine_owned_headers({"uSeR-aGeNt": "curl/8"})
+        assert dropped == ["headers['User-Agent']"]
+
+    def test_the_client_hints_family_goes_with_it(self):
+        """Four of the presets in scraper-tester send these NEXT TO the UA.
+        Dropping only the UA left firefox stating an honest `Firefox/144`
+        beside `sec-ch-ua: "Google Chrome"` -- two headers contradicting each
+        other, which is worse than the contradiction being removed."""
+        kept, dropped = strip_engine_owned_headers({
+            "User-Agent": "Chrome/124", "sec-ch-ua": '"Google Chrome";v="124"',
+            "sec-ch-ua-platform": '"Windows"', "sec-ch-ua-mobile": "?0",
+            "X-Keep": "yes",
+        })
+        assert kept == {"X-Keep": "yes"}
+        assert dropped == [
+            "headers['Sec-CH-UA']", "headers['Sec-CH-UA-Mobile']",
+            "headers['Sec-CH-UA-Platform']", "headers['User-Agent']",
+        ]
+
+    def test_absent_ua_is_reported_as_not_dropped(self):
+        kept, dropped = strip_engine_owned_headers({"X-Keep": "yes"})
+        assert kept == {"X-Keep": "yes"}
+        assert dropped == []
+
+    @pytest.mark.parametrize("empty", [None, {}])
+    def test_no_headers_at_all(self, empty):
+        assert strip_engine_owned_headers(empty) == ({}, [])
+
+    def test_a_header_merely_containing_the_word_is_kept(self):
+        """`not in` on a substring would eat these; the rule is an exact
+        case-insensitive name match."""
+        headers = {"X-User-Agent": "a", "User-Agent-Original": "b",
+                   "X-Sec-CH-UA": "c"}
+        kept, dropped = strip_engine_owned_headers(headers)
+        assert kept == headers
+        assert dropped == []
+
+    def test_the_input_mapping_is_not_mutated(self):
+        headers = {"User-Agent": "curl/8", "X-Keep": "yes"}
+        strip_engine_owned_headers(headers)
+        assert headers == {"User-Agent": "curl/8", "X-Keep": "yes"}
+
+
+class TestCallerSuppliedUserAgentHeader:
+    """A `User-Agent` in the caller's `headers` is not a UA the engine can back.
+
+    Measured 2026-09-11 through `PlaywrightRunner.fetch` against a live header
+    echo, one engine per row, caller sending
+    `Nokia7610/2.0 (5.0509.0) SymbianOS/7.0s ...`:
+
+      chromium  wire UA = the preset's Chrome/143  (context UA wins over
+                `extra_http_headers`, so the caller's string never reaches the
+                wire), Sec-CH-UA = `Google Chrome/143`, applied_user_agent =
+                Chrome/143 -- coherent, but the caller was never told their
+                header was discarded.
+      firefox   wire UA = Nokia7610, Sec-CH-UA absent, applied_user_agent =
+                `Firefox/144`.
+      webkit    wire UA = Nokia7610, Sec-CH-UA absent, applied_user_agent =
+                `Safari/26`.
+
+    Firefox and WebKit pass `user_agent=None`, so nothing outranks the header
+    and the caller's string DOES go out -- over Gecko/WebKit TLS, with no
+    Client Hints. That is the shape PR #123 removed from our own presets,
+    reachable again through the public API. Worse, `meta.applied_user_agent`
+    then names a string that was NOT sent, and that field is the first thing
+    read when a scrape comes back blocked.
+
+    So the header is dropped on every Playwright engine and the drop is logged,
+    which is what the Camoufox runner already does (`camoufox_runner.py`, "the
+    fingerprint manages it"). On chromium this changes nothing on the wire; it
+    only stops the silence. Every other caller header is untouched.
+    """
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("engine", ["chromium", "firefox", "webkit"])
+    async def test_the_caller_ua_never_reaches_extra_http_headers(self, engine):
+        kwargs = await _new_context_kwargs(
+            engine, headers={"User-Agent": "Nokia7610/2.0 (5.0509.0) SymbianOS/7.0s"}
+        )
+        sent = kwargs.get("extra_http_headers") or {}
+        assert not any(k.lower() == "user-agent" for k in sent), (
+            f"{engine} would put the caller's UA on the wire: {sent!r}. On "
+            "firefox/webkit that is measured to actually happen -- an "
+            "unbackable UA over the wrong TLS with no Client Hints."
+        )
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("spelling", ["User-Agent", "user-agent", "USER-AGENT"])
+    async def test_a_caller_ua_is_matched_case_insensitively(self, spelling):
+        """HTTP header names are case-insensitive; `user-agent` must not slip
+        past a comparison written against the capitalised spelling.
+
+        One engine is enough: the filter sits above every engine branch. The
+        spelling is the input that carries the signal."""
+        engine = "firefox"
+        kwargs = await _new_context_kwargs(engine, headers={spelling: "curl/8", "X-Keep": "yes"})
+        sent = kwargs.get("extra_http_headers") or {}
+        assert not any(k.lower() == "user-agent" for k in sent), sent
+        assert sent.get("X-Keep") == "yes", "an unrelated header was collateral"
+
+    @pytest.mark.asyncio
+    async def test_every_other_caller_header_survives(self):
+        kwargs = await _new_context_kwargs(
+            "chromium",
+            headers={"User-Agent": "curl/8", "X-Probe": "yes", "Accept-Language": "de-DE"},
+        )
+        sent = kwargs.get("extra_http_headers") or {}
+        assert sent.get("X-Probe") == "yes"
+        assert sent.get("Accept-Language") == "de-DE", (
+            "Accept-Language is the header most likely to be caught by a "
+            "sloppier filter, since the line below this one also touches it"
+        )
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("engine", ["chromium", "firefox", "webkit"])
+    async def test_the_engine_ua_decision_is_unchanged_by_the_drop(self, engine):
+        """Dropping the header must not become a back door into `user_agent`:
+        chromium still states its own aligned Chrome string, firefox and webkit
+        are still given None."""
+        kwargs = await _new_context_kwargs(engine, headers={"User-Agent": "curl/8"})
+        if engine == "chromium":
+            assert "Chrome/152.0.0.0" in (kwargs["user_agent"] or "")
+        else:
+            assert kwargs["user_agent"] is None
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("headers,expected", [
+        ({"User-Agent": "curl/8"}, ["headers['User-Agent']"]),
+        ({"X-Probe": "yes"}, []),
+        (None, []),
+    ])
+    async def test_the_drop_reaches_the_envelope_through_the_real_context(
+        self, headers, expected, monkeypatch,
+    ):
+        """Drives the REAL `_new_context`, not a patched one.
+
+        An earlier version of this test hand-set the value the production code
+        was supposed to produce, so deleting that production line left the whole
+        suite green -- the exact failure this repo has recorded twice. The
+        wiring is what needs pinning, not the copy.
+        """
+        import src.browser.runner as mod
+        monkeypatch.setattr(mod, "assert_navigable", AsyncMock())
+        monkeypatch.setattr(mod, "assert_page_public", AsyncMock())
+        monkeypatch.setattr(mod, "apply_page_masking", AsyncMock())
+
+        mock_page = AsyncMock()
+        mock_response = Mock(request=Mock(redirected_from=None))
+        mock_response.status = 200
+        mock_page.goto = AsyncMock(return_value=mock_response)
+        mock_page.content = AsyncMock(return_value="<html><body>ok</body></html>")
+        mock_page.url = "https://example.com"
+        mock_page.close = AsyncMock()
+
+        mock_context = AsyncMock()
+        mock_context.new_page = AsyncMock(return_value=mock_page)
+        mock_context.close = AsyncMock()
+
+        runner = PlaywrightRunner(headless=True, block_assets=False, timeout_ms=30000)
+        runner._engine = "chromium"
+        mock_browser = AsyncMock()
+        mock_browser.version = "152.0.7977.82"
+        mock_browser.new_context = AsyncMock(return_value=mock_context)
+        runner._browser = mock_browser
+        runner.start = AsyncMock()
+
+        result = await runner.fetch(
+            url="https://example.com", device="desktop", proxy=None,
+            headers=headers, wait_until="domcontentloaded",
+            wait_for_selector=None, timeout_ms=None, screenshot=False,
+        )
+        assert result.ignored_request_fields == expected
+
+    @pytest.mark.asyncio
+    async def test_dropping_it_is_logged_so_the_caller_can_find_out(self, caplog):
+        with caplog.at_level(logging.WARNING, logger="src.browser.runner"):
+            await _new_context_kwargs("firefox", headers={"User-Agent": "curl/8"})
+        assert any(
+            "user-agent" in rec.message.lower() for rec in caplog.records
+        ), "a silently discarded request field is how #123 stayed hidden"
+
+    @pytest.mark.asyncio
+    async def test_no_warning_when_the_caller_sent_no_ua(self, caplog):
+        with caplog.at_level(logging.WARNING, logger="src.browser.runner"):
+            await _new_context_kwargs("firefox", headers={"X-Probe": "yes"})
+        assert not any("user-agent" in rec.message.lower() for rec in caplog.records)
+
+
+class TestAppliedUserAgentReadback:
+    """`meta.applied_user_agent` is documented as the UA that was actually sent
+    and is the first field anyone reads when a scrape comes back blocked.
+    Chromium echoes the override we stated; Firefox and WebKit are given none,
+    so the runner reads the engine's own UA back off the page -- the same
+    read-back CamoufoxRunner already does.
+    """
+
+    @staticmethod
+    async def _fetch_with(engine: str, ua_from_page: str, evaluate_raises=None):
+        runner = PlaywrightRunner(headless=True, block_assets=False, timeout_ms=30000)
+        runner._engine = engine
+        runner._browser = AsyncMock()
+
+        mock_page = AsyncMock()
+        mock_response = Mock(request=Mock(redirected_from=None))
+        mock_response.status = 200
+        mock_page.goto = AsyncMock(return_value=mock_response)
+        mock_page.content = AsyncMock(return_value="<html><body>ok</body></html>")
+        mock_page.url = "https://example.com"
+        mock_page.close = AsyncMock()
+        mock_page.evaluate = AsyncMock(
+            side_effect=evaluate_raises if evaluate_raises else None,
+            return_value=ua_from_page,
+        )
+
+        mock_context = AsyncMock()
+        mock_context._applied_user_agent = None      # what firefox/webkit leave behind
+        mock_context._applied_locale = "en-US"
+        mock_context._applied_timezone = "America/New_York"
+        mock_context._applied_accept_language = None
+        mock_context.new_page = AsyncMock(return_value=mock_page)
+        mock_context.close = AsyncMock()
+
+        with patch.object(runner, "_new_context", return_value=mock_context):
+            return await runner.fetch(
+                url="https://example.com", device="desktop", proxy=None, headers=None,
+                wait_until="domcontentloaded", wait_for_selector=None, timeout_ms=None,
+                screenshot=False,
+            )
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("engine,ua", [
+        ("firefox", "Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0"),
+        ("webkit", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 "
+                   "(KHTML, like Gecko) Version/17.0 Safari/605.1.15"),
+    ])
+    async def test_the_engines_own_ua_reaches_the_envelope(self, engine, ua):
+        result = await self._fetch_with(engine, ua)
+        assert result.applied_user_agent == ua
+
+    @pytest.mark.asyncio
+    async def test_a_failed_readback_does_not_fail_the_fetch(self):
+        """A restricted page must cost the field, never the scrape."""
+        result = await self._fetch_with(
+            "firefox", "unused", evaluate_raises=RuntimeError("execution context destroyed"),
+        )
+        assert result.ok is True
+        assert result.applied_user_agent is None
 
 
 class TestFetch:

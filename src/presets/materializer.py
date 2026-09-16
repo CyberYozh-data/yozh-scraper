@@ -29,13 +29,10 @@ log = logging.getLogger(__name__)
 _PLACEHOLDER = re.compile(r"\{(\w+)\}")
 
 # Countries that write prices with a comma decimal separator ("12,34").
-# parse_price defaults to "us" (dot decimal). This subsystem is still needed,
-# but only for a 1-digit-tail price ("12,3 €"): _parse_price reads a 2-digit
-# tail straight from the text regardless of locale, so "12,34 €" no longer
-# needs this to parse correctly, but "12,3 €" without an "eu" hint still
-# comes back as 123.0 rather than 12.3. The set is a pragmatic majority —
-# explicit args on a step always win, so a preset author can override per
-# field.
+# `parse_price` reads the separator from the text since 2026-09-05, so the
+# arg this set feeds changes no parse; the injection stays only so stored
+# presets and older callers keep validating. Explicit args on a step still
+# win. Removing the whole path is a follow-up.
 _COMMA_DECIMAL_COUNTRIES = frozenset(
     {
         "DE", "FR", "ES", "IT", "NL", "BE", "AT", "PT", "FI", "SE", "NO",
@@ -52,8 +49,8 @@ def _price_locale_for(country: str) -> str:
 def _inject_price_locale(
     instructions: "ParsingInstructions", price_locale: str
 ) -> tuple["ParsingInstructions", list[str]]:
-    """Fill empty parse_price args with the locale-appropriate separator
-    rule. Explicit args set by the preset author are left untouched.
+    """Fill empty parse_price args with the market's locale tag (accepted and
+    ignored by the op). Explicit args set by the preset author are left untouched.
 
     Returns the (possibly unchanged) instructions AND the field names that
     were actually injected -- the caller records this on `ParserPlan.
@@ -248,6 +245,22 @@ class PresetScrapeRequest(BaseModel):
     )
 
 
+def _placeholders(template: str) -> set[str]:
+    return set(_PLACEHOLDER.findall(template))
+
+
+def _extracts_result_rows(instructions: ParsingInstructions | None) -> bool:
+    """The query-relevance rule was calibrated on result rows: a `titles` list.
+
+    A schema without one -- facets, navigation, a caller's parsing_override, an
+    AI-only preset -- is not judged, whatever its URL asked for.
+    """
+    if instructions is None:
+        return False
+    rule = instructions.fields.get("titles")
+    return rule is not None and rule.all
+
+
 def _render_template(template: str, variables: dict[str, str]) -> str:
     """Substitute {placeholders} with context-aware percent-encoding.
 
@@ -256,8 +269,7 @@ def _render_template(template: str, variables: dict[str, str]) -> str:
     application/x-www-form-urlencoded (space -> +). Values are raw here and
     encoded per-position so a single quoting strategy can't corrupt a path.
     """
-    needed = set(_PLACEHOLDER.findall(template))
-    missing = sorted(needed - variables.keys())
+    missing = sorted(_placeholders(template) - variables.keys())
     if missing:
         raise MaterializeError(f"missing template params: {missing}")
 
@@ -271,7 +283,9 @@ def _render_template(template: str, variables: dict[str, str]) -> str:
     return _PLACEHOLDER.sub(_sub, template)
 
 
-def materialize(preset: Preset, req: PresetScrapeRequest) -> ScrapeRequest:
+def materialize(
+    preset: Preset, req: PresetScrapeRequest, *, preset_stamp: str | None = None
+) -> ScrapeRequest:
     locale_key = req.locale or preset.default_locale
     locale = preset.locales.get(locale_key)
     if locale is None:
@@ -392,6 +406,14 @@ def materialize(preset: Preset, req: PresetScrapeRequest) -> ScrapeRequest:
         source=preset.source,
         locale=locale_key,
         version=preset.version,
+        # The worker judges the parsed page against this (query_relevance_warning):
+        # a search, by its URL, that extracts result rows.
+        query=(
+            template_vars["query"]
+            if "query" in _placeholders(preset.url_template) and _extracts_result_rows(instructions)
+            else None
+        ),
+        links_stay_on_site=preset.links_stay_on_site,
     )
 
     self_heal = req.self_heal if req.self_heal is not None else preset.self_heal
@@ -403,6 +425,8 @@ def materialize(preset: Preset, req: PresetScrapeRequest) -> ScrapeRequest:
         llm_extract_prompt=preset.llm_extract_prompt,
         preset_name=preset.name,
         preset_kind=preset.kind,
+        preset_stamp=preset_stamp,
+        instructions_from_override=req.parsing_override is not None,
         materializer_injected=materializer_injected,
     )
 

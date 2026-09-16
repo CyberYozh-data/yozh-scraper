@@ -23,6 +23,13 @@ def _build_broker():
         queue_name=QUEUE_NAME,
         consumer_group_name=CONSUMER_GROUP,
         maxlen=STREAM_MAXLEN,
+        # One entry per XREADGROUP: the default 100 let a single consumer take
+        # a whole burst into its pending list and run it on its one async
+        # task while the other workers idled (audit 2026-09-03, H-05). A
+        # consumer's PEL now holds only the entry it is executing; what a
+        # reclaimer can still replay is a page whose consumer died mid-task,
+        # by design.
+        xread_count=1,
     )
 
 

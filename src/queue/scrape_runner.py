@@ -9,8 +9,10 @@ from __future__ import annotations
 import asyncio
 import logging
 import re
+import unicodedata
 import time
 import traceback
+from itertools import zip_longest
 from urllib.parse import urlsplit
 from typing import Any, Coroutine, TypeVar
 
@@ -23,6 +25,10 @@ from src.browser.runner import (
     FetchResult,
     PlaywrightRunner,
 )
+from src.browser.teardown import close_quietly
+from src.proxy.models import ProxyConfig
+from src.security.egress_guard import open_egress_guard
+from src.extract.resolve import BATCH_TIMEOUT_S, resolve_redirect_fields
 from src.markdown_build import apply as apply_markdown, resolve_formats
 from src.queue.envelope import ScrapeEnvelope, ScrapeErr, ScrapeOk
 from src.presets.models import PresetMeta
@@ -72,6 +78,11 @@ _ATTEMPT_SLACK_MAX_S = 5.0
 # would burn a proxy to learn nothing, so the loop stops and reports what it has.
 _MIN_ATTEMPT_TIMEOUT_MS = 100
 
+
+def attempt_slack_s(ceiling_s: float) -> float:
+    """The slack above, for a ceiling: what the attempt loop may not spend of it."""
+    return min(_ATTEMPT_SLACK_MAX_S, ceiling_s * _ATTEMPT_SLACK_FRACTION)
+
 # Residential rotating proxy types whose exit country is otherwise random when
 # no proxy_geo.country_code is pinned. We default their country so the exit and
 # the browser timezone/locale stay aligned (see settings.default_proxy_country).
@@ -113,6 +124,14 @@ _ERROR_CLASS_PREFIX_RE = re.compile(r"^(?:playwrighterror|timeouterror|unexpecte
 # Page.wait_for_selector's deadline is a different signal (for SERP presets a
 # missing selector usually means a block) and must keep rotating.
 _NAVIGATION_DEADLINE_RE = re.compile(r"page\.goto: timeout \d+ms exceeded\.?")
+# A URL sitting inline in the message, outside the call log. The call log is
+# already dropped above, which is what keeps a crawled host out of the needle
+# match -- but `net::ERR_ABORTED at https://club.dns-shop.ru/p` puts the host in
+# the message itself, and "dns" is a three-letter needle. The host is chosen by
+# the TARGET, so leaving it in hands a site the lever that decides whether we
+# spend a fresh exit. Measured: `club.dns-shop.ru` is a real result host from
+# our own RU SERP corpus.
+_INLINE_URL_RE = re.compile(r"https?://\S+")
 
 # These shapes are pinned to playwright==1.57 wording; re-verify on a bump.
 
@@ -180,6 +199,26 @@ def egress_warnings(fetch_result) -> list[str]:
     return [f"egress_blocked: {count} non-public {noun} refused"]
 
 
+def ignored_field_warnings(fetch_result) -> list[str]:
+    """A request field the engine dropped, said to the caller and not only logged.
+
+    `egress_warnings` withholds the target-chosen hostnames because `warnings`
+    is pattern-matched across repositories. Here the opposite reasoning applies
+    and lands in the same place: the field NAME is ours, not the target's, so
+    naming it leaks no lever -- and without it the only record is a worker log
+    line the caller cannot read.
+
+    The concrete case: the scraper-tester UI offers four User-Agent header
+    presets, and a `User-Agent` is dropped on every engine. Silently, the
+    operator picks one and watches nothing change.
+    """
+    ignored = getattr(fetch_result, "ignored_request_fields", None)
+    if not isinstance(ignored, list) or not ignored:
+        return []
+    return [f"ignored_request_field: {name} (the engine states its own)"
+            for name in ignored]
+
+
 def should_rotate_for(fetch_result) -> bool:
     """Whether this failure is worth a fresh exit.
 
@@ -217,6 +256,7 @@ def looks_like_proxy_failure(status_code: int | None, error: str | None) -> bool
     # deadline from being retried to exhaustion. Removing the phrase rather
     # than returning early keeps a transport fault named alongside it retryable.
     error = _NAVIGATION_DEADLINE_RE.sub("", error)
+    error = _INLINE_URL_RE.sub("", error)
     needles = (
         "proxy",
         "tunnel",
@@ -392,6 +432,171 @@ def better_failure_evidence(
     if incumbent is None:
         return candidate
     return candidate if _evidence_rank(candidate) >= _evidence_rank(incumbent) else incumbent
+
+
+# Query terms: word characters (Unicode-aware) of three or more, so "a", "of",
+# "in" and Russian prepositions drop out. Operator tokens (`site:example.com`,
+# `inurl:...`) and exclusions (`-snake`, `-"snake oil"`) are constraints, not
+# words a result is expected to echo -- a correct SERP for `python -snake` has
+# no snakes -- and a query with alternatives (`python OR rust`, `|`) is not
+# judged at all: the rule requires every term, and an alternative is not. Pure
+# numbers are not judged: a year the rows do not echo must not fail a real
+# page (a shopping page for "laptop 2026" lists this year's models under last
+# year's names). Words of scripts written without spaces are not judged
+# either: `\w{3,}` cannot cut terms out of such a query -- a Japanese query is
+# ONE token, and its prefix matches nothing on a real page. That list is a
+# denylist by nature (there is no Unicode property for "space-separated"), so
+# a query in a script it misses is judged as one whole token and fails; it
+# carries every such script with a shipped or plausible locale. Each remaining
+# term is cut to a prefix ("laptops" -> "lapto", "ноутбуки" -> "ноутбу") so an
+# inflected form still counts, and matched as a lowercase substring of the row
+# text. At most a dozen terms are judged: a longer query is not a query, and
+# every term is one scan of the rows' text.
+_QUERY_OPERATOR_RE = re.compile(r"\b\w+:\S+|(?<!\S)-\"[^\"]*\"|(?<!\S)-\S+")
+_QUERY_ALTERNATIVES_RE = re.compile(r"\b(?:OR|AND)\b|\|")
+_QUERY_TERM_RE = re.compile(r"\w{3,}")
+_UNSEGMENTED_SCRIPT_RE = re.compile(  # Han, kana, bopomofo, Thai, Lao, Tibetan, Myanmar, Khmer, Yi, Javanese, Balinese
+    "[\u3040-\u30ff\u3100-\u312f\u31a0-\u31bf\u31f0-\u31ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff"
+    "\uff66-\uff9f\U00020000-\U0003ffff\u0e00-\u0eff\u0f00-\u0fff\u1000-\u109f\u1780-\u17ff"
+    "\ua000-\ua4cf\ua980-\ua9df\u1b00-\u1b7f]"
+)
+_RELEVANCE_MIN_ROWS = 3
+_RELEVANCE_MAX_TERMS = 12
+# A term counts as answered when it appears in at least a fifth of the rows.
+# Measured over 256 recorded runs: on every real SERP and product listing each
+# term reaches 0.29 of the rows or more (the lowest is "laptop" on a German
+# shopping page of model names); on the 25 wrong Bing pages the missing term
+# reaches 0.10 at most -- one Best Buy snippet that happens to list laptops.
+_RELEVANCE_MIN_COVERAGE = 0.2
+
+
+def _fold(text: str) -> str:
+    """Lowercase, fold `ё` to `е`, and drop Latin diacritics.
+
+    Both sides of the comparison go through this, because the two sides come
+    from different writers. A caller types `ёлка` and the shop writes `елка`;
+    a caller types `café münchen` and the listing writes `Cafe Munchen`. Every
+    one of those was a false `serp_query_mismatch` on a page that answered the
+    question perfectly (measured: the diacritic pair flagged BOTH terms).
+
+    Cyrillic is folded by the explicit `ё`/`е` rule only, never by dropping
+    combining marks: NFKD decomposes `й` into `и` + breve, and stripping that
+    would make `мой` match `мои` -- a different word. Latin is decomposed,
+    where the marks really are decoration over the same letter.
+    """
+    text = text.lower().replace("\u0451", "\u0435")
+    out: list[str] = []
+    for char in text:
+        if "\u0400" <= char <= "\u04ff":
+            out.append(char)
+            continue
+        out.extend(c for c in unicodedata.normalize("NFKD", char) if not unicodedata.combining(c))
+    return "".join(out)
+
+
+def _query_stems(query: str) -> list[str]:
+    if _QUERY_ALTERNATIVES_RE.search(query):
+        return []
+    words = _QUERY_TERM_RE.findall(_QUERY_OPERATOR_RE.sub(" ", _fold(query)))
+    stems = dict.fromkeys(
+        word[: max(4, len(word) - 2)]
+        for word in words
+        # ANY digit disqualifies the word, not only an all-digit one: a caller
+        # writes `16gb` and the listing writes `16 GB`, so the glued token
+        # appears in no row and reads as an unanswered term. The number is
+        # never the part that tells a right page from a wrong one anyway --
+        # the words around it are.
+        if not any(char.isdigit() for char in word)
+        and not _UNSEGMENTED_SCRIPT_RE.search(word)
+    )
+    return list(stems)[:_RELEVANCE_MAX_TERMS]
+
+
+def _without_query_string(cell: str) -> str:
+    """A URL cell minus its query string and fragment.
+
+    Marketplaces echo the search in every result href (`?keywords=laptop`,
+    `_nkw=laptop`), which would answer for a page of unrelated titles; the
+    path's slug is kept, it names the result.
+    """
+    if cell.startswith(("http://", "https://", "/")):
+        return cell.partition("?")[0].partition("#")[0]
+    return cell
+
+
+def _rows(data: Any) -> list[str]:
+    """One lowercased string per extracted row: the i-th cell of every list column, joined.
+
+    Scalar fields are left out on purpose: a page-title field would echo the
+    query on the very pages this guard exists to catch. So are markup cells
+    (`attr: html` columns such as the search presets' `result_blocks`): their
+    text is already in the text columns, and their tags and hrefs would answer
+    any query term that is also a markup token. Rows with no text are dropped,
+    so a numeric column (`prices` after `parse_price`) or a run of nulls cannot
+    make a one-title page look like a full one. Records nested as `list[dict]`
+    (the LLM output path) are not read.
+    """
+    if not isinstance(data, dict):
+        return []
+    columns = [column for column in data.values() if isinstance(column, list)]
+    rows: list[str] = []
+    for cells in zip_longest(*columns):
+        text = " ".join(
+            _without_query_string(cell)
+            for cell in cells
+            if isinstance(cell, str) and not cell.lstrip().startswith("<")
+        )
+        if text.strip():
+            rows.append(_fold(text))
+    return rows
+
+
+def query_relevance_warning(data: Any, query: str | None) -> str | None:
+    """Report a page that answered a different query than the one asked.
+
+    Measured 2026-09-04: Bing serves a CACHED SERP FOR ANOTHER QUERY to some
+    clients — stable per IP, our query echoed in the page's own title and search
+    box above someone else's results. From this host `best laptop 2026` came
+    back as dictionary definitions of "best", Honda forums, UPS tracking,
+    Netflix threads and Arabic TikTok, ten rows each; in the recorded proxied
+    audits every `ru` Bing run on both engines was such a page. Every
+    count-based check (fill rate, row count, HTTP 200, `required`) scored them
+    as full pages, and this repo's own rule is to judge a scrape by its meaning.
+
+    The test: every content term of the query appears in at least a fifth of
+    the extracted rows. A real SERP echoes each query word across its titles,
+    snippets and URL slugs; the dictionary page has "best" in every row and
+    "laptop" in none, and the one that lists laptops in a single Best Buy
+    snippet is caught by the fifth. Calibrated on the fourteen recorded audits
+    (256 judged runs): the 25 pages it flags are exactly the Bing SERPs for
+    someone else's query -- 23 `ru`, 2 `us` -- and the 231 real SERPs and
+    product listings pass, including a one-word query that names a third of a
+    shopping page's rows. Below three rows nothing is judged: the shape
+    measured is a FULL page of the wrong results, and one or two rows can be
+    legitimately terse. An engine's autocorrect trips it too ("best lapotp"
+    answered with laptops), which is the same statement about the page; so
+    does a constraint word the results need not echo (`laptop under 1000` on
+    a marketplace whose titles carry prices, not the word) -- the warning is
+    advisory and carries only its counts, never a title or the query.
+    """
+    if not query:
+        return None
+    stems = _query_stems(query)
+    if not stems:
+        return None
+    rows = _rows(data)
+    if len(rows) < _RELEVANCE_MIN_ROWS:
+        return None
+    floor = _RELEVANCE_MIN_COVERAGE * len(rows)
+    missing = sum(1 for stem in stems if sum(stem in row for row in rows) < floor)
+    if not missing:
+        return None
+    return (
+        f"serp_query_mismatch: {missing} of {len(stems)} query terms appear in under a "
+        f"fifth of the {len(rows)} extracted rows -- the page answered a different query "
+        "than the one asked (an engine's autocorrect, or Bing's cached SERP for another "
+        "query)."
+    )
 
 
 def self_referential_link_warning(data: Any, final_url: str | None) -> str | None:
@@ -587,12 +792,7 @@ async def run_scrape(
         # Every way the ceiling changed what the loop did, in order. Silent
         # degradation is how a shortened attempt gets blamed on the target.
         budget_notes: list[str] = []
-        # The ceiling scrape_page enforces from outside, minus what packing the
-        # result still needs after the loop.
-        attempt_deadline = task_deadline - min(
-            _ATTEMPT_SLACK_MAX_S,
-            settings.page_task_timeout_s * _ATTEMPT_SLACK_FRACTION,
-        )
+        attempt_deadline = task_deadline - attempt_slack_s(settings.page_task_timeout_s)
 
         # raw_html / screenshot can be requested via the legacy
         # booleans OR by listing them in `formats` (union). Resolve
@@ -793,6 +993,9 @@ async def run_scrape(
 
         # --- Render result ---
         warnings: list[str] = []
+        applied_preset = model_or_none(
+            PresetMeta, request.get("preset_meta"), field="applied_preset", sink=warnings
+        )
         data = None
 
         # From here on the reported attempt is the subject: meta, warnings, the
@@ -825,10 +1028,22 @@ async def run_scrape(
         # attempt, and the response never said so.
         if fetch_result.warmup_error:
             warnings.append(f"warmup_failed: {fetch_result.warmup_error}")
+        # A warmup that RAN and was turned away. Reported separately from a
+        # failure because it is a different fact and a more useful one: the
+        # exit was refused before the request we care about, so an empty
+        # result page afterwards is the site, not the recipe. No URL in the
+        # text -- `applied_warmup` already carries it, and this string is
+        # substring-scanned in another repository, so nothing target-chosen
+        # goes into it (same rule as `egress_warnings`).
+        if (fetch_result.applied_warmup or {}).get("blocked"):
+            warnings.append(
+                "warmup_blocked: the warmup navigation landed on a challenge page"
+            )
         # What the transport guard refused, if anything. The browser reports a
         # denied hop as a bare transport error, so without this the caller sees
         # a proxy fault where the truth is "that target is not public".
         warnings.extend(egress_warnings(fetch_result))
+        warnings.extend(ignored_field_warnings(fetch_result))
         # The last attempt's error when it is not the one being reported: the
         # reported page explains the failure, but "attempts 2-3 both failed to
         # connect" is how a broken pool becomes visible, and dropping it makes
@@ -856,6 +1071,7 @@ async def run_scrape(
         # attempt-ranking function above already excludes these statuses for
         # exactly this reason; the gate did not, so the two disagreed about what
         # counts as a page.
+        page_url = fetch_result.final_url or url
         wants_parsing = bool(request.get("extract") or request.get("parser_plan"))
         not_genuine = fetch_result.blocked or (
             fetch_result.status_code in _RETRYABLE_HTTP_STATUSES
@@ -882,11 +1098,72 @@ async def run_scrape(
             )
             data = parsed_data
             warnings.extend(parse_warnings)
-            self_link_note = self_referential_link_warning(
-                data, fetch_result.final_url
-            )
-            if self_link_note:
-                warnings.append(self_link_note)
+            # Resolve the page's own redirect stubs BEFORE the self-link check
+            # below, which would otherwise (correctly) flag every stub as a link
+            # back to the page's host. The transport is the runner's own —
+            # `resolve_proxy(None)` is the egress guard on the direct path — so
+            # a page-controlled stub URL is judged and dialled in one act, and
+            # there is one lifecycle for it, unwound here the way fetch() does.
+            resolve_fields = request.get("resolve_redirects")
+            if resolve_fields and data is not None:
+                # 2-tuple from CamoufoxRunner, 3-tuple from PlaywrightRunner;
+                # only the first two matter here.
+                resolve_proxy, resolve_cm, *_ = await runner.resolve_proxy(None)
+                if resolve_proxy is None and settings.egress_transport_guard:
+                    # The runner put nothing in the slot — Camoufox guards its
+                    # own requests by route interception, which httpx never
+                    # sees. Same guard, opened here, unwound here.
+                    resolve_cm = open_egress_guard(resolve=True)
+                    resolve_proxy = ProxyConfig(server=(await resolve_cm.__aenter__()).url)
+                try:
+                    # Sized inside what remains of the attempt so the batch's
+                    # own deadline fires first and what already resolved is
+                    # kept — the outer wait_for would discard the partials. No
+                    # floor: a floor above the remaining budget is the same
+                    # discard. With too little left, say so and skip.
+                    batch_timeout_s = min(
+                        BATCH_TIMEOUT_S, attempt_deadline - time.perf_counter() - 0.5
+                    )
+                    if batch_timeout_s < 0.5:
+                        warnings.append(
+                            "redirect resolution skipped: the page-task ceiling left no budget for it"
+                        )
+                    else:
+                        data, resolve_warnings = await within_deadline(
+                            resolve_redirect_fields(
+                                data, list(resolve_fields), page_url,
+                                proxy=resolve_proxy, batch_timeout_s=batch_timeout_s,
+                            ),
+                            deadline=attempt_deadline,
+                            label="redirect resolution",
+                            warnings=warnings,
+                            default=(data, []),
+                        )
+                        warnings.extend(resolve_warnings)
+                finally:
+                    if resolve_cm is not None:
+                        await close_quietly(
+                            "egress guard",
+                            lambda: resolve_cm.__aexit__(None, None, None),
+                            owner=page_url,
+                        )
+            # A preset whose results ARE the site's own pages (mobile.de's
+            # query-addressed details.html?id=..., 24 of 24 on one path) says
+            # so; the guard would report every such page as an unwrapped
+            # redirect. The declaration lives on the preset, not on a name.
+            if not (applied_preset and applied_preset.links_stay_on_site):
+                self_link_note = self_referential_link_warning(
+                    data, fetch_result.final_url
+                )
+                if self_link_note:
+                    warnings.append(self_link_note)
+            # What the caller asked for reaches the worker only through the
+            # materializer's echo; a preset whose URL has no `{query}` is not judged.
+            if applied_preset and applied_preset.query:
+                relevance_note = query_relevance_warning(data, applied_preset.query)
+                if relevance_note:
+                    warnings.append(relevance_note)
+                    log.info("%s (request_id=%s)", relevance_note, request_id)
 
         raw_html = fetch_result.html if want_raw_html else None
         screenshot_b64 = fetch_result.screenshot_b64 if want_screenshot else None
@@ -898,7 +1175,7 @@ async def run_scrape(
             apply_markdown(
                 request,
                 fetch_result.html,
-                base_url=fetch_result.final_url or url,
+                base_url=page_url,
             ),
             deadline=attempt_deadline,
             label="markdown rendering",
@@ -943,9 +1220,7 @@ async def run_scrape(
                     applied_locale=fetch_result.applied_locale,
                     applied_timezone=fetch_result.applied_timezone,
                     applied_accept_language=fetch_result.applied_accept_language,
-                    applied_preset=model_or_none(
-                        PresetMeta, request.get("preset_meta"), field="applied_preset", sink=warnings
-                    ),
+                    applied_preset=applied_preset,
                     applied_prem_targeting=prem_targeting,
                     applied_warmup=model_or_none(
                         AppliedWarmup, fetch_result.applied_warmup, field="applied_warmup",

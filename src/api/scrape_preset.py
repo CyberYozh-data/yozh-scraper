@@ -47,13 +47,16 @@ def _resolve(
 ) -> ScrapeRequest:
     where = "" if index is None else f"page[{index}]: "
     try:
-        preset = store.get(req.source)
+        # Stamped HERE, where the job reads the preset -- not at persist time
+        # minutes later. The window a self-heal can overwrite is this read to
+        # that write; a stamp taken just before the write covers none of it.
+        preset, stamp = store.get_stamped(req.source)
     except PresetNotFound as exc:
         raise HTTPException(
             status_code=404, detail=f"{where}preset_not_found"
         ) from exc
     try:
-        return materialize(preset, req)
+        return materialize(preset, req, preset_stamp=stamp)
     except SessionConflictError as exc:
         raise HTTPException(status_code=422, detail=f"{where}{exc}") from exc
     except MaterializeError as exc:

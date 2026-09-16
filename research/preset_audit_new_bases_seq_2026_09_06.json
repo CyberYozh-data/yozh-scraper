@@ -1,0 +1,453 @@
+[
+ {
+  "preset": "mobile_de_ad_camoufox",
+  "locale": "de",
+  "run": 0,
+  "params": {
+   "ad_id": "391420794"
+  },
+  "job_id": "req_cd181354d96b23be66ae500d",
+  "status": "done",
+  "meta": {
+   "fetch_ok": false,
+   "status_code": 200,
+   "final_url": "https://suchen.mobile.de/fahrzeuge/details.html?id=391420794",
+   "retries": 3,
+   "proxy_type": "prem_res_rotating",
+   "applied_locale": "de-DE",
+   "applied_timezone": "Europe/Berlin",
+   "error": null
+  },
+  "took_ms": 112795,
+  "job_error": null,
+  "warnings": [
+   "selector_not_found: [data-testid='vip-ad-title']",
+   "status_code=200",
+   "attempt 2/3 shortened to 15993ms of the requested 31000ms to fit the page-task ceiling",
+   "attempt 3/3 shortened to 5481ms of the requested 31000ms to fit the page-task ceiling"
+  ],
+  "data": {
+   "title": "BMW 525",
+   "price": 3750.0,
+   "mileage_km": 256000,
+   "first_registration": "01/2008",
+   "power_kw": 160,
+   "fuel": "Benzin",
+   "transmission": "Automatik",
+   "color": "Grau Metallic",
+   "seller": "PKW Augsburg IMS GmbH Autoankauf und Verkauf in Gersthofen bei Augsburg",
+   "description": "Hier bieten wir einen BMW 525i Limousine Automatik Facelift mit folgender Ausstattung an:2.HandScheckheft gepflegtNichtraucherfahrzeugTierfreiBordmappe2 SchlüsselMotorkontrollleuchte leuchtet !!!Ausstattung:ArmlehneElektr. FensterheberElektr. SeitenspiegelElektr. SitzeinstellungLederlenkradSchlüssellose ZentralverriegelungSitzheizungZentralverriegelungBordcomputerMultifunktionslenkradServolenkungBluetoothCD-SpielerFreisprecheinrichtungNavigationssystemSommerreifenLeichtmetallfelgenScheinwerferreinigungTuner/Radio:Tuner/RadioGeschwindigkeitsregulierung:TempomatKlimatisierung:KlimaanlageSicherheit:ABSElektr. WegfahrsperreESPIsofixLichtsensorNebelscheinwerferRegensensorReifendruckkontrolleTraktionskontrolleAirbags:Front-, Seiten- und weitere AirbagsTagfahrlicht (Art):TagfahrlichtPannenhilfe:NotradInnenausstattung:StoffFarbe der Innenausstattung:GrauGerne nehmen wir Ihr bisheriges Fahrzeug als Anzahlung. Finanzierung zu derzeit sehr günstigen Konditionen ist ebenfalls möglich.Alle Ihre Fragen rund um das Fahrzeug klären unsere freundlichen Mitarbeiter gerne in einem persönlichen oder telefonischen Gespräch, oder Sie schreiben uns einfach eine E-Mail. Wir beraten Sie gerne.Wir laden Sie herzlich dazu ein, dieses Fahrzeug bei uns vor Ort zu besichtigen. Vorbeikommen lohnt sich!Dieses und viele weitere Fahrzeugangebote, sowie nähere Informationen über uns und unser Team finden Sie auch unter www.pkw-augsburg.deÄnderungen, Zwischenverkauf und Irrtümer vorbehalten! Trotz größtmöglicher Sorgfalt sind Ausstattungsirrtümer möglich. Bitte überprüfen Sie die Ausstattung vor Ort."
+  },
+  "fill": {
+   "title": 1.0,
+   "price": 1.0
+  },
+  "entries": 1,
+  "has_data": true,
+  "elapsed_s": 114.1
+ },
+ {
+  "preset": "mobile_de_ad_camoufox",
+  "locale": "de",
+  "run": 1,
+  "params": {
+   "ad_id": "391420794"
+  },
+  "job_id": "req_d2a8dd7bd32ab73861439cfd",
+  "status": "done",
+  "meta": {
+   "fetch_ok": false,
+   "status_code": 200,
+   "final_url": "https://suchen.mobile.de/fahrzeuge/details.html?id=391420794",
+   "retries": 3,
+   "proxy_type": "prem_res_rotating",
+   "applied_locale": "de-DE",
+   "applied_timezone": "Europe/Berlin",
+   "error": null
+  },
+  "took_ms": 101478,
+  "job_error": null,
+  "warnings": [
+   "selector_not_found: [data-testid='vip-ad-title']",
+   "status_code=200",
+   "warmup_failed: https://www.mobile.de/: TimeoutError: Page.goto: Timeout 6728ms exceeded.\nCall log:\n  - navigating to \"https://www.mobile.de/\", waiting until \"domcontentloaded\"\n",
+   "attempt 2/3 shortened to 17960ms of the requested 31000ms to fit the page-task ceiling",
+   "attempt 3/3 shortened to 6728ms of the requested 31000ms to fit the page-task ceiling"
+  ],
+  "data": {
+   "title": null,
+   "price": null,
+   "mileage_km": null,
+   "first_registration": null,
+   "power_kw": null,
+   "fuel": null,
+   "transmission": null,
+   "color": null,
+   "seller": null,
+   "description": null
+  },
+  "fill": {
+   "title": 0.0,
+   "price": 0.0
+  },
+  "entries": 1,
+  "has_data": false,
+  "elapsed_s": 102.1
+ },
+ {
+  "preset": "mobile_de_ad_chromium",
+  "locale": "de",
+  "run": 0,
+  "params": {
+   "ad_id": "391420794"
+  },
+  "job_id": "req_f6830b80fa556038c7bc948a",
+  "status": "done",
+  "meta": {
+   "fetch_ok": false,
+   "status_code": 200,
+   "final_url": "https://suchen.mobile.de/fahrzeuge/details.html?id=391420794",
+   "retries": 3,
+   "proxy_type": "prem_res_rotating",
+   "applied_locale": "de-DE",
+   "applied_timezone": "Europe/Berlin",
+   "error": null
+  },
+  "took_ms": 103224,
+  "job_error": null,
+  "warnings": [
+   "selector_not_found: [data-testid='vip-ad-title']",
+   "status_code=200",
+   "attempt 2/3 shortened to 18773ms of the requested 31000ms to fit the page-task ceiling",
+   "attempt 3/3 shortened to 8049ms of the requested 31000ms to fit the page-task ceiling",
+   "field 'title': required selector not found"
+  ],
+  "data": {
+   "title": null,
+   "price": null,
+   "mileage_km": null,
+   "first_registration": null,
+   "power_kw": null,
+   "fuel": null,
+   "transmission": null,
+   "color": null,
+   "seller": null,
+   "description": null
+  },
+  "fill": {
+   "title": 0.0,
+   "price": 0.0
+  },
+  "entries": 1,
+  "has_data": false,
+  "elapsed_s": 105.1
+ },
+ {
+  "preset": "mobile_de_ad_chromium",
+  "locale": "de",
+  "run": 1,
+  "params": {
+   "ad_id": "391420794"
+  },
+  "job_id": "req_1315e57b6ce7f7e44979ca12",
+  "status": "done",
+  "meta": {
+   "fetch_ok": false,
+   "status_code": 200,
+   "final_url": "https://suchen.mobile.de/fahrzeuge/details.html?id=391420794",
+   "retries": 2,
+   "proxy_type": "prem_res_rotating",
+   "applied_locale": "de-DE",
+   "applied_timezone": "Europe/Berlin",
+   "error": null
+  },
+  "took_ms": 103133,
+  "job_error": null,
+  "warnings": [
+   "selector_not_found: [data-testid='vip-ad-title']",
+   "status_code=200",
+   "last attempt: the page did not finish loading in time",
+   "attempt 2/3 shortened to 17150ms of the requested 31000ms to fit the page-task ceiling",
+   "attempt 3/3 shortened to 6857ms of the requested 31000ms to fit the page-task ceiling"
+  ],
+  "data": {
+   "title": "BMW 525",
+   "price": 3750.0,
+   "mileage_km": 256000,
+   "first_registration": "01/2008",
+   "power_kw": 160,
+   "fuel": "Benzin",
+   "transmission": "Automatik",
+   "color": "Grau Metallic",
+   "seller": "PKW Augsburg IMS GmbH Autoankauf und Verkauf in Gersthofen bei Augsburg",
+   "description": "Hier bieten wir einen BMW 525i Limousine Automatik Facelift mit folgender Ausstattung an:2.HandScheckheft gepflegtNichtraucherfahrzeugTierfreiBordmappe2 SchlüsselMotorkontrollleuchte leuchtet !!!Ausstattung:ArmlehneElektr. FensterheberElektr. SeitenspiegelElektr. SitzeinstellungLederlenkradSchlüssellose ZentralverriegelungSitzheizungZentralverriegelungBordcomputerMultifunktionslenkradServolenkungBluetoothCD-SpielerFreisprecheinrichtungNavigationssystemSommerreifenLeichtmetallfelgenScheinwerferreinigungTuner/Radio:Tuner/RadioGeschwindigkeitsregulierung:TempomatKlimatisierung:KlimaanlageSicherheit:ABSElektr. WegfahrsperreESPIsofixLichtsensorNebelscheinwerferRegensensorReifendruckkontrolleTraktionskontrolleAirbags:Front-, Seiten- und weitere AirbagsTagfahrlicht (Art):TagfahrlichtPannenhilfe:NotradInnenausstattung:StoffFarbe der Innenausstattung:GrauGerne nehmen wir Ihr bisheriges Fahrzeug als Anzahlung. Finanzierung zu derzeit sehr günstigen Konditionen ist ebenfalls möglich.Alle Ihre Fragen rund um das Fahrzeug klären unsere freundlichen Mitarbeiter gerne in einem persönlichen oder telefonischen Gespräch, oder Sie schreiben uns einfach eine E-Mail. Wir beraten Sie gerne.Wir laden Sie herzlich dazu ein, dieses Fahrzeug bei uns vor Ort zu besichtigen. Vorbeikommen lohnt sich!Dieses und viele weitere Fahrzeugangebote, sowie nähere Informationen über uns und unser Team finden Sie auch unter www.pkw-augsburg.deÄnderungen, Zwischenverkauf und Irrtümer vorbehalten! Trotz größtmöglicher Sorgfalt sind Ausstattungsirrtümer möglich. Bitte überprüfen Sie die Ausstattung vor Ort."
+  },
+  "fill": {
+   "title": 1.0,
+   "price": 1.0
+  },
+  "entries": 1,
+  "has_data": true,
+  "elapsed_s": 105.1
+ },
+ {
+  "preset": "mobile_de_search_camoufox",
+  "locale": "de",
+  "run": 0,
+  "params": {
+   "make_id": "3500",
+   "model_id": "20"
+  },
+  "job_id": "req_c91e619a9a35408bb433a3f3",
+  "status": "done",
+  "meta": {
+   "fetch_ok": false,
+   "status_code": 200,
+   "final_url": "https://suchen.mobile.de/fahrzeuge/search.html?isSearchRequest=true&makeModelVariant1.makeId=3500&makeModelVariant1.modelId=20",
+   "retries": 3,
+   "proxy_type": "prem_res_rotating",
+   "applied_locale": "de-DE",
+   "applied_timezone": "Europe/Berlin",
+   "error": null
+  },
+  "took_ms": 107751,
+  "job_error": null,
+  "warnings": [
+   "selector_not_found: [data-testid='listing-title-card-view']",
+   "status_code=200",
+   "attempt 2/3 shortened to 17603ms of the requested 31000ms to fit the page-task ceiling",
+   "attempt 3/3 shortened to 6425ms of the requested 31000ms to fit the page-task ceiling",
+   "field 'titles': required selector not found"
+  ],
+  "data": {
+   "titles": [],
+   "urls": [],
+   "prices": [],
+   "details": [],
+   "sponsored": []
+  },
+  "fill": {
+   "titles": 0.0,
+   "urls": 0.0,
+   "prices": 0.0
+  },
+  "entries": 0,
+  "has_data": false,
+  "elapsed_s": 108.1
+ },
+ {
+  "preset": "mobile_de_search_camoufox",
+  "locale": "de",
+  "run": 1,
+  "params": {
+   "make_id": "3500",
+   "model_id": "20"
+  },
+  "job_id": "req_d22ca8acb174e9e2b7a46f0c",
+  "status": "done",
+  "meta": {
+   "fetch_ok": false,
+   "status_code": 200,
+   "final_url": "https://suchen.mobile.de/fahrzeuge/search.html?isSearchRequest=true&makeModelVariant1.makeId=3500&makeModelVariant1.modelId=20&s=Car&vc=Car",
+   "retries": 3,
+   "proxy_type": "prem_res_rotating",
+   "applied_locale": "de-DE",
+   "applied_timezone": "Europe/Berlin",
+   "error": null
+  },
+  "took_ms": 111245,
+  "job_error": null,
+  "warnings": [
+   "selector_not_found: [data-testid='listing-title-card-view']",
+   "status_code=200",
+   "attempt 2/3 shortened to 17414ms of the requested 31000ms to fit the page-task ceiling",
+   "attempt 3/3 shortened to 5002ms of the requested 31000ms to fit the page-task ceiling",
+   "field 'titles': required selector not found"
+  ],
+  "data": {
+   "titles": [],
+   "urls": [],
+   "prices": [],
+   "details": [],
+   "sponsored": []
+  },
+  "fill": {
+   "titles": 0.0,
+   "urls": 0.0,
+   "prices": 0.0
+  },
+  "entries": 0,
+  "has_data": false,
+  "elapsed_s": 114.1
+ },
+ {
+  "preset": "mobile_de_search_chromium",
+  "locale": "de",
+  "run": 0,
+  "params": {
+   "make_id": "3500",
+   "model_id": "20"
+  },
+  "job_id": "req_173955edfe4b311a623a234f",
+  "status": "done",
+  "meta": {
+   "fetch_ok": false,
+   "status_code": 200,
+   "final_url": "https://suchen.mobile.de/fahrzeuge/search.html?isSearchRequest=true&makeModelVariant1.makeId=3500&makeModelVariant1.modelId=20",
+   "retries": 3,
+   "proxy_type": "prem_res_rotating",
+   "applied_locale": "de-DE",
+   "applied_timezone": "Europe/Berlin",
+   "error": null
+  },
+  "took_ms": 106887,
+  "job_error": null,
+  "warnings": [
+   "selector_not_found: [data-testid='listing-title-card-view']",
+   "status_code=200",
+   "attempt 2/3 shortened to 18622ms of the requested 31000ms to fit the page-task ceiling",
+   "attempt 3/3 shortened to 6876ms of the requested 31000ms to fit the page-task ceiling",
+   "field 'titles': required selector not found"
+  ],
+  "data": {
+   "titles": [],
+   "urls": [],
+   "prices": [],
+   "details": [],
+   "sponsored": []
+  },
+  "fill": {
+   "titles": 0.0,
+   "urls": 0.0,
+   "prices": 0.0
+  },
+  "entries": 0,
+  "has_data": false,
+  "elapsed_s": 108.1
+ },
+ {
+  "preset": "mobile_de_search_chromium",
+  "locale": "de",
+  "run": 1,
+  "params": {
+   "make_id": "3500",
+   "model_id": "20"
+  },
+  "job_id": "req_3852d6b41520246805cac5fe",
+  "status": "done",
+  "meta": {
+   "fetch_ok": false,
+   "status_code": 200,
+   "final_url": "https://suchen.mobile.de/fahrzeuge/search.html?isSearchRequest=true&makeModelVariant1.makeId=3500&makeModelVariant1.modelId=20",
+   "retries": 3,
+   "proxy_type": "prem_res_rotating",
+   "applied_locale": "de-DE",
+   "applied_timezone": "Europe/Berlin",
+   "error": null
+  },
+  "took_ms": 104467,
+  "job_error": null,
+  "warnings": [
+   "selector_not_found: [data-testid='listing-title-card-view']",
+   "status_code=200",
+   "last attempt: selector_not_found: [data-testid='listing-title-card-view']",
+   "attempt 2/3 shortened to 18229ms of the requested 31000ms to fit the page-task ceiling",
+   "attempt 3/3 shortened to 7554ms of the requested 31000ms to fit the page-task ceiling"
+  ],
+  "data": {
+   "titles": [],
+   "urls": [],
+   "prices": [],
+   "details": [],
+   "sponsored": []
+  },
+  "fill": {
+   "titles": 0.0,
+   "urls": 0.0,
+   "prices": 0.0
+  },
+  "entries": 0,
+  "has_data": false,
+  "elapsed_s": 105.1
+ },
+ {
+  "preset": "ozon_product_camoufox",
+  "locale": "ru",
+  "run": 0,
+  "params": {
+   "product_id": "3972904544"
+  },
+  "job_id": "req_d36ec3499023078e986b963c",
+  "status": "done",
+  "meta": {
+   "fetch_ok": true,
+   "status_code": 200,
+   "final_url": "https://www.ozon.ru/product/3972904544/?sh=yer0dYPZSw",
+   "retries": 0,
+   "proxy_type": "prem_res_rotating",
+   "applied_locale": "ru-RU",
+   "applied_timezone": "Asia/Yekaterinburg",
+   "error": null
+  },
+  "took_ms": 20652,
+  "job_error": null,
+  "warnings": [],
+  "data": {
+   "title": "MSI A17 AI B2HWFKG-048XRU Игровой ноутбук 17.30\", AMD Ryzen 7 260, RAM 16 ГБ, SSD 512 ГБ, NVIDIA GeForce RTX 5060 для ноутбуков (8 Гб), Без системы, (9S7-17UL32-048), черный, Русская раскладка",
+   "price": 208646.0,
+   "price_ozon_card": 193812.0,
+   "rating": 5.0,
+   "review_count": 3,
+   "sku": "3972904544",
+   "out_of_stock": ""
+  },
+  "fill": {
+   "title": 1.0,
+   "price": 1.0
+  },
+  "entries": 1,
+  "has_data": true,
+  "elapsed_s": 21.0
+ },
+ {
+  "preset": "ozon_product_camoufox",
+  "locale": "ru",
+  "run": 1,
+  "params": {
+   "product_id": "3972904544"
+  },
+  "job_id": "req_205c81d7f228d7318704a32a",
+  "status": "done",
+  "meta": {
+   "fetch_ok": true,
+   "status_code": 200,
+   "final_url": "https://www.ozon.ru/product/3972904544/?sh=cTyOTbFCOw",
+   "retries": 1,
+   "proxy_type": "prem_res_rotating",
+   "applied_locale": "ru-RU",
+   "applied_timezone": "Asia/Novokuznetsk",
+   "error": null
+  },
+  "took_ms": 73396,
+  "job_error": null,
+  "warnings": [
+   "attempt 2/3 shortened to 17625ms of the requested 31000ms to fit the page-task ceiling"
+  ],
+  "data": {
+   "title": "MSI A17 AI B2HWFKG-048XRU Игровой ноутбук 17.30\", AMD Ryzen 7 260, RAM 16 ГБ, SSD 512 ГБ, NVIDIA GeForce RTX 5060 для ноутбуков (8 Гб), Без системы, (9S7-17UL32-048), черный, Русская раскладка",
+   "price": 208646.0,
+   "price_ozon_card": 193812.0,
+   "rating": 5.0,
+   "review_count": 3,
+   "sku": "3972904544",
+   "out_of_stock": ""
+  },
+  "fill": {
+   "title": 1.0,
+   "price": 1.0
+  },
+  "entries": 1,
+  "has_data": true,
+  "elapsed_s": 75.1
+ }
+]

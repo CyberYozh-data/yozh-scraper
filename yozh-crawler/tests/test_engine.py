@@ -124,6 +124,59 @@ async def test_page_depth_is_zero_for_seed():
 
 # ─── link following ───────────────────────────────────────────────────────────
 
+def _seed_only(html: str):
+    """A fetch stub that serves `html` for the seed and an empty page elsewhere,
+    plus the list of URLs it was asked for."""
+    fetched: list[str] = []
+
+    async def fetch(url, opts):
+        fetched.append(url)
+        return _scrape(raw_html=html if url.rstrip("/") == "https://example.com" else "<html/>")
+
+    return fetch, fetched
+
+
+async def _crawl_seed(html: str) -> tuple[list[str], list[CrawlStats]]:
+    fetch, fetched = _seed_only(html)
+    engine, _pages, _events, stats = _make_engine(
+        scope_kwargs={"max_pages": 10, "max_depth": 1}, fetch_side_effect=fetch,
+    )
+    await asyncio.wait_for(engine.run(), timeout=5.0)
+    return fetched, stats
+
+
+@pytest.mark.asyncio
+async def test_a_bad_href_costs_one_link_not_the_worker():
+    """Audit H-16: an IPv6-literal href used to end the worker that parsed it."""
+    fetched, _ = await _crawl_seed(
+        '<html><body><a href="/ok1">a</a><a href="http://[::1]/">b</a>'
+        '<a href="http://[2001:db8::1]/">c</a><a href="/ok2">d</a></body></html>'
+    )
+    assert any(u.endswith("/ok1") for u in fetched) and any(u.endswith("/ok2") for u in fetched), fetched
+    assert not any("[" in u for u in fetched), "the IPv6 hosts are out of scope, not fetched"
+
+
+@pytest.mark.asyncio
+async def test_a_dedup_failure_costs_one_link_not_the_worker(monkeypatch):
+    """Pins the widened try independently of the IPv6 fix: whatever the dedup
+    step raises, the page's other links are followed and the drop is counted."""
+    from src import dedup as dedup_mod
+    original = dedup_mod.DedupSet.add
+
+    def exploding_add(self, url):
+        if "boom" in url:
+            raise RuntimeError("dedup exploded")
+        return original(self, url)
+
+    monkeypatch.setattr(dedup_mod.DedupSet, "add", exploding_add)
+    fetched, stats = await _crawl_seed(
+        '<html><body><a href="/ok1">a</a><a href="/boom">b</a><a href="/ok2">c</a></body></html>'
+    )
+    assert any(u.endswith("/ok1") for u in fetched) and any(u.endswith("/ok2") for u in fetched), fetched
+    assert not any("boom" in u for u in fetched)
+    assert stats[-1].links_dropped == 1
+
+
 @pytest.mark.asyncio
 async def test_follows_links_within_scope():
     """Seed returns a child link; child gets fetched at depth 1."""

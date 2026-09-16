@@ -4,6 +4,83 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.1.13] - 2026-09-16
+
+Extraction-correctness and identity-coherence release: a rule can be scoped to
+its rows so columns cannot drift apart, the browser owns the identity headers a
+caller used to be able to contradict, Camoufox moves to 0.5.5 with a pinned
+binary, and a refused page is now named as a block instead of reading as a
+broken recipe. One breaking change for callers that send a `User-Agent`.
+
+### Added
+
+- **Row-scoped extraction.** An extract rule takes a `container` selector; every
+  field is then evaluated inside each row, one value per row, `None` where a row
+  has no match. Columns stay the same length and the Nth value of two columns
+  comes from the same row. Membership is checked on the matched node, not on the
+  selector's spelling, so a selector that escapes its row contributes nothing.
+- **`device=legacy_wap`** — a feature-phone identity that unlocks Google's no-JS
+  layout. Requires `render: false` (422 otherwise, because JavaScript would
+  contradict the claim), is refused on Camoufox, and cannot be pinned to a
+  session.
+- **`resolve_redirects`** — names extracted fields whose values are the page's
+  own redirect stubs; the worker resolves them through the egress guard.
+  `google_search` uses it, so `links` carries real destinations again, and a
+  `display_urls` column ships alongside.
+- New built-in presets: `ozon_search`, `ozon_product`, `mobile_de_search`,
+  `mobile_de_ad` (per engine, as all built-ins are).
+- A warning when a search engine answered a different query than the one asked.
+- A warning when a price arrives with its decimal separator missing.
+- `request_defaults` saved on a preset are validated against what the scraper
+  would accept, so a bad profile is a 422 at save time instead of a failure on
+  every later scrape.
+
+### Changed
+
+- **BREAKING (callers sending identity headers):** `User-Agent` and the whole
+  `Sec-CH-UA` client-hints family are now engine-owned and dropped from
+  caller-supplied `headers` on every engine — a header contradicting the
+  engine's real fingerprint is a bot tell, not a disguise. The response says so
+  in `warnings` as `ignored_request_field: headers['User-Agent'] (the engine
+  states its own)`, and `meta.applied_user_agent` reports what actually went
+  out. Other headers (`Accept-Language`, `Referer`, `Cookie`, custom ones) are
+  unaffected.
+- **BREAKING (crawler):** `POST /crawl` forwarded extract rules through a schema
+  mirror that silently dropped a per-field `type` and every `post_process` step,
+  so a rule reached extraction altered with nothing in the response to say it.
+  Both are forwarded now, and an unknown `post_process` op is a 422 on the crawl
+  request instead of a failure on every page.
+- Camoufox upgraded to 0.5.5, with the browser binary pinned.
+- The Chrome User-Agent is stated only on the engine that can back it.
+- A country-pinned proxy lease now yields that country or an error, never a
+  silent fallback to another one.
+
+### Fixed
+
+- A page the site refused is classified as a block rather than as a failed
+  extraction: Akamai's behavioural interstitial (HTTP 200, no redirect, empty
+  columns) is recognised, and a warmup hop that lands on a block is reported
+  instead of passing as a successful warmup.
+- Self-heal no longer overwrites a preset edited while the scrape was running:
+  a job carries a fingerprint of the preset as it read it, and the write lands
+  only if the stored file still matches. Preset writes are serialised per file.
+- `bing_search` keeps working when a content blocker decodes its tracking links.
+- Column defects across built-in presets: nullable columns declared by the
+  recipe, a one-digit tail read as a decimal in every locale, honest timeouts.
+- An error message containing a hostname chosen by the target page can no longer
+  decide that a fresh proxy exit is spent.
+- `GET /map` reads response bodies up to a cap and uses what it read.
+
+### Security
+
+- The browser is launched with a narrowed environment instead of inheriting the
+  service's: `SERVICE_TOKEN`, LLM API keys and proxy credentials no longer reach
+  the process that renders caller-supplied pages.
+- Compose hardening: capabilities dropped, new privileges forbidden, process
+  count capped.
+- Secrets are kept out of request echoes, and the premium-proxy relay is bounded.
+- `qs` and `express` bumped in the bundled tester.
+
 ## [0.1.12] - 2026-09-01
 
 Security-hardening and reliability release: browser navigation is refused to

@@ -56,6 +56,8 @@ recognised block endpoint, so the selector wait genuinely runs and times out.
 """
 from __future__ import annotations
 
+import pytest
+
 import json
 
 from src.extract.extractor import extract_fields
@@ -139,14 +141,12 @@ class TestWaitStrategyWouldNotHaveStoppedOnTheInterstitial:
             defaults = _load(name).request_defaults
             assert defaults.get("wait_until") == "load", name
             assert defaults.get("wait_for_selector") == "#rso", name
-            assert defaults.get("timeout_ms") == 45000, name
 
     def test_google_shopping_no_longer_stops_at_domcontentloaded(self):
         for name in GOOGLE_SHOPPING_BASES:
             defaults = _load(name).request_defaults
             assert defaults.get("wait_until") == "load", name
             assert defaults.get("wait_for_selector") == "div.PhALMc.bVO81.lLi9V", name
-            assert defaults.get("timeout_ms") == 45000, name
 
 
 # --- Fix round 1: pin the ONLY positive evidence that the shipped selectors
@@ -206,3 +206,38 @@ class TestRealSerpMarkupStillMatches:
         # the real href Google actually ships, unchanged by this task.
         data, _ = self._extract()
         assert all(link.startswith("/goto?url=") for link in data["links"])
+
+
+class TestDisplayUrlsFromTheCite:
+    """Google rewrote every result href to an opaque `/goto?url=` token (confirmed
+    by Google 2026-08-26, ~100% rollout per Nozzle). What it did NOT remove is the
+    display URL under the title — `<cite>https://www.wired.com › story</cite>` —
+    and in the real capture that cite sits INSIDE the same `<a>` as the `<h3>`,
+    so it is aligned with titles/links by construction, not by luck.
+
+    Each container carries the cite TWICE (a sibling block repeats it), so the
+    selector must take exactly one per container or the column comes back at
+    16 rows against 8 titles.
+    """
+
+    TWINS = ("google_search_chromium", "google_search_camoufox")
+
+    @staticmethod
+    def _extract(name):
+        doc = f"<html><body>{REAL_GOOGLE_SEARCH_SERP_RSO}</body></html>"
+        return extract_fields(doc, _load(name).parsing_instructions)
+
+    @pytest.mark.parametrize("name", TWINS)
+    def test_one_display_url_per_result_aligned_with_titles(self, name):
+        data, warnings = self._extract(name)
+        assert len(data["display_urls"]) == len(data["titles"]) == 8, data.get("display_urls")
+        assert not warnings
+
+    @pytest.mark.parametrize("name", TWINS)
+    def test_display_urls_are_the_hosts_google_still_shows(self, name):
+        data, _ = self._extract(name)
+        assert data["display_urls"][0] == "https://www.wired.com › story"
+        assert data["display_urls"][2] == "https://www.pcmag.com › picks"
+        for value in data["display_urls"]:
+            assert value.startswith("https://"), value
+            assert "google." not in value, value

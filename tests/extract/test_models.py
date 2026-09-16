@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import pytest
+from pydantic import ValidationError
+
 from src.extract.models import FieldRule, ExtractRule, PostProcess
 
 
@@ -157,3 +160,29 @@ class TestPostProcessDocumentsTheUnwrapParamSafetyProperty:
         assert "must check the host itself" in text
         # The old wording must not come back.
         assert "did not supply" not in text
+
+
+class TestUnwrapParamEncodingValidator:
+    """The encoding argument is validated at preset-creation time, not per row.
+
+    Added after review found the validator had NO test: deleting it outright
+    left the whole suite green. Its own comment says an unknown encoding "would
+    otherwise silently fall back to percent-decoding and ship a base64 blob as
+    if it were a destination" -- which is exactly the shape of failure this
+    repo keeps meeting, a guard that is present and proves nothing.
+    """
+
+    def test_a_known_encoding_is_accepted(self):
+        for encoding in ("percent", "base64url"):
+            assert PostProcess(op="unwrap_param", args=["u", encoding]).args[1] == encoding
+
+    def test_the_default_needs_no_encoding_argument(self):
+        assert PostProcess(op="unwrap_param", args=["url"]).args == ["url"]
+
+    def test_an_unknown_encoding_is_refused(self):
+        with pytest.raises(ValidationError, match="must be 'percent' or 'base64url'"):
+            PostProcess(op="unwrap_param", args=["u", "rot13"])
+
+    def test_the_param_name_is_still_required(self):
+        with pytest.raises(ValidationError, match="requires 1 arg"):
+            PostProcess(op="unwrap_param", args=[])

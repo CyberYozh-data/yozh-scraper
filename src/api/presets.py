@@ -15,6 +15,7 @@ temp-directory backend without spinning the full app lifespan.
 """
 from __future__ import annotations
 
+import logging
 from functools import lru_cache
 from typing import Literal
 
@@ -33,9 +34,12 @@ from src.presets.store import (
     PresetAlreadyExists,
     PresetNameInvalid,
     PresetNotFound,
+    PresetLockUnavailable,
     PresetReadOnly,
     PresetStore,
 )
+
+log = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -133,6 +137,8 @@ def create_preset(
 ) -> Preset:
     try:
         return preset_service.create(preset, store)
+    except PresetValidationError as exc:
+        raise HTTPException(status_code=422, detail=exc.detail) from exc
     except PresetNameInvalid as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except PresetAlreadyExists as exc:
@@ -149,10 +155,18 @@ def update_preset(
 ) -> Preset:
     try:
         return preset_service.update(name, preset, store)
+    except PresetValidationError as exc:
+        raise HTTPException(status_code=422, detail=exc.detail) from exc
     except PresetNotFound as exc:
         raise HTTPException(status_code=404, detail="preset_not_found") from exc
     except PresetReadOnly as exc:
         raise HTTPException(status_code=403, detail=str(exc)) from exc
+    except PresetLockUnavailable as exc:
+        # Operational, and retrying is the right response -- which a 500 does
+        # not say. Something else is writing this preset, or a writer died
+        # holding the lock.
+        log.warning("preset write refused, lock held: %s", name)
+        raise HTTPException(status_code=503, detail="preset_locked") from exc
 
 
 @router.delete("/{name}", status_code=204, operation_id="delete_preset")
@@ -163,6 +177,9 @@ def delete_preset(
         preset_service.delete(name, store)
     except PresetNotFound as exc:
         raise HTTPException(status_code=404, detail="preset_not_found") from exc
+    except PresetLockUnavailable as exc:
+        log.warning("preset delete refused, lock held: %s", name)
+        raise HTTPException(status_code=503, detail="preset_locked") from exc
     except PresetReadOnly as exc:
         raise HTTPException(status_code=403, detail=str(exc)) from exc
     return Response(status_code=204)

@@ -14,7 +14,7 @@
       "type": "homepage"
     },
     "wait_until": "domcontentloaded",
-    "timeout_ms": 60000,
+    "timeout_ms": 50000,
     "block_assets": false,
     "browser_engine": "camoufox",
     "fingerprint_profile": "windows_on_host"
@@ -38,7 +38,7 @@
     "type": "css",
     "fields": {
       "titles": {
-        "selector": ".srp-river-results li.s-card--horizontal .su-card-container__header .s-card__title > span.su-styled-text",
+        "selector": ".srp-river-results li.s-card--horizontal .su-card-container__header .s-card__title > span.su-styled-text.primary",
         "all": true,
         "required": true,
         "post_process": [
@@ -85,7 +85,10 @@
       "prices": {
         "type": "array",
         "items": {
-          "type": "string"
+          "type": [
+            "string",
+            "null"
+          ]
         }
       },
       "urls": {
@@ -99,6 +102,6 @@
   "self_heal": true,
   "prompt_schema": null,
   "llm_extract_prompt": null,
-  "version": 3,
-  "updated_at": 1785024000.0
+  "version": 4,
+  "updated_at": 1788566400
 }

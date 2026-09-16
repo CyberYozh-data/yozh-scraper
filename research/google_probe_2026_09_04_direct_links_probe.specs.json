@@ -1,0 +1,4 @@
+[
+ {"label":"de control (preset defaults)", "runs":1, "req":{"url":"https://www.google.de/search?q=best+laptop+2026&gl=de&hl=de","proxy_geo":{"country_code":"DE"}}},
+ {"label":"de assets ON + humanize + dwell 8s", "runs":2, "req":{"url":"https://www.google.de/search?q=best+laptop+2026&gl=de&hl=de","proxy_geo":{"country_code":"DE"},"block_assets":false,"humanize":true,"warmup":{"type":"homepage","dwell_ms":8000}}}
+]

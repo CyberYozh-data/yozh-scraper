@@ -13,11 +13,13 @@ import logging
 from typing import Any, Literal, Optional, cast
 
 from browserforge.fingerprints import Screen
+from camoufox.addons import DefaultAddons
 from camoufox.async_api import AsyncCamoufox
 from camoufox.exceptions import InvalidLocale
-from camoufox.locale import handle_locales
+from camoufox.locales import handle_locales
 from playwright.async_api import Browser, TimeoutError as PWTimeoutError
 
+from src.browser.launch_env import browser_env
 from src.browser.runner import (
     DEFAULT_DESKTOP_VIEWPORT,
     FetchResult,
@@ -27,6 +29,7 @@ from src.browser.runner import (
     looks_like_captcha_or_block,
     redirected_to_block,
     run_warmup,
+    strip_engine_owned_headers,
 )
 from src.browser.fingerprint_profile import ResolvedFingerprint, resolve_fingerprint
 from src.browser.geo_profile import resolve_profile
@@ -261,6 +264,13 @@ def build_camoufox_options(
         opts["webgl_config"] = fingerprint.webgl_config
     if addons is not None:
         opts["addons"] = addons
+    # Camoufox calls `add_default_addons()` unconditionally inside
+    # `launch_options()`, so uBlock Origin ships on every launch whether or not
+    # `addons` is passed; `exclude_addons` is the only way out. See
+    # CAMOUFOX_DISABLE_UBO in settings for what uBO does to the pages we scrape
+    # and why the default is nonetheless to keep it.
+    if settings.camoufox_disable_ubo:
+        opts["exclude_addons"] = [DefaultAddons.UBO]
     if viewport is not None and _window_is_serveable(viewport):
         opts["window"] = (viewport["width"], viewport["height"])
         # Stated, not assumed: see the docstring. Without this floor the
@@ -277,6 +287,11 @@ def build_camoufox_options(
             viewport["width"], viewport["height"],
             _MIN_SERVEABLE_WINDOW_WIDTH, *_MAX_SERVEABLE_SCREEN_FLOOR,
         )
+    # Camoufox defaults this to the whole of os.environ and merges its own
+    # CAMOU_CONFIG_* chunks UNDER what we pass, so handing it a narrowed copy
+    # keeps the fingerprint config intact and leaves the service token, the
+    # LLM keys and the proxy passwords out of the Firefox process.
+    opts["env"] = browser_env()
     return opts
 
 
@@ -365,6 +380,18 @@ class CamoufoxRunner:
         and the WebRTC IP still come from Camoufox's own ``geoip`` alignment,
         not from ``proxy_geo``.
         """
+        # Identity headers are fingerprint-owned and filtered out; an explicit
+        # Accept-Language wins on the wire and is echoed via applied_* (see
+        # docstring). Computed before the pre-flight below so its refusal --
+        # and every other early return -- can report it: a caller who set a
+        # header needs the answer most on the paths that failed.
+        safe_headers, ignored_request_fields = strip_engine_owned_headers(headers)
+        if ignored_request_fields:
+            log.warning(
+                "camoufox: dropping %s for %s (the fingerprint manages them)",
+                ", ".join(ignored_request_fields), url,
+            )
+
         # Before any launch: Camoufox costs a fresh browser per request, and a
         # target we will refuse should not pay for one.
         try:
@@ -378,6 +405,7 @@ class CamoufoxRunner:
                 ok=False,
                 error=EGRESS_BLOCKED_ERROR,
                 element_status="no_screenshot",
+                ignored_request_fields=list(ignored_request_fields),
             )
 
         proxy_dict: dict | None = None
@@ -433,16 +461,6 @@ class CamoufoxRunner:
             proxy_geo=proxy_geo,
         )
 
-        # UA is fingerprint-owned and filtered out; an explicit Accept-Language
-        # wins on the wire and is echoed via applied_* (see docstring).
-        safe_headers = {
-            k: v for k, v in (headers or {}).items() if k.lower() != "user-agent"
-        }
-        if len(safe_headers) < len(headers or {}):
-            log.warning(
-                "camoufox: dropping User-Agent header override for %s "
-                "(the fingerprint manages it)", url,
-            )
         al_override = next(
             (v for k, v in safe_headers.items() if k.lower() == "accept-language"),
             None,
@@ -586,6 +604,7 @@ class CamoufoxRunner:
                     applied_warmup=applied_warmup,
                     warmup_error=warmup_error,
                     applied_fingerprint=fingerprint.as_meta(),
+                    ignored_request_fields=list(ignored_request_fields),
                 )
         # Before the broad arm: it stringifies the exception into `error`,
         # which would put the refused host into a caller-visible message.
@@ -600,6 +619,7 @@ class CamoufoxRunner:
                 element_status="no_screenshot",
                 applied_warmup=applied_warmup,
                 warmup_error=warmup_error,
+                ignored_request_fields=list(ignored_request_fields),
             )
         except Exception as exc:  # pylint: disable=broad-except
             error_type = type(exc).__name__
@@ -618,4 +638,5 @@ class CamoufoxRunner:
                 # profile is the prime suspect, and the error string names
                 # browserforge internals rather than the profile that chose them.
                 applied_fingerprint=fingerprint.as_meta(),
+                ignored_request_fields=list(ignored_request_fields),
             )

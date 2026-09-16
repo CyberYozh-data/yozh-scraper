@@ -20,7 +20,8 @@ from __future__ import annotations
 
 import pytest
 
-from src.extract.extractor import _parse_price
+from src.extract.extractor import _parse_price, extract_fields
+from src.extract.models import ExtractRule, FieldRule, PostProcess
 
 
 class TestLabelledPrices:
@@ -46,13 +47,30 @@ class TestSpaceThousandsSeparatorStillWorks:
         assert _parse_price("1 234.56") == 1234.56
 
     def test_space_grouped_thousands_eu(self):
-        assert _parse_price("1 234,56", "eu") == 1234.56
+        assert _parse_price("1 234,56") == 1234.56
 
     def test_space_grouped_millions(self):
         assert _parse_price("12 345 678.90") == 12345678.90
 
     def test_label_and_space_grouping_together(self):
-        assert _parse_price("Now 1 234,56 €", "eu") == 1234.56
+        assert _parse_price("Now 1 234,56 €") == 1234.56
+
+    @pytest.mark.parametrize(
+        "value,expected",
+        [
+            ("55\u2009119\u2009₽", 55119.0),  # Ozon: U+2009 thin spaces, measured 2026-09-06
+            ("1\u00a0234,56 €", 1234.56),  # U+00A0 as served, before `_text` ever collapses it
+            ("1\u202f234,56 €", 1234.56),  # French narrow no-break space
+            ("1\u2009234\u2009567 ₽", 1234567.0),
+        ],
+    )
+    def test_every_grouping_space_spelling_groups(self, value, expected):
+        """The html path hands the parser the page's own spaces; "55 119 ₽" with
+        a thin space parsed as 55.0 -- a price 1000x low under a full fill-rate."""
+        assert _parse_price(value) == expected
+
+    def test_a_newline_between_digit_runs_is_not_grouping(self):
+        assert _parse_price("199\n500") == 199.0
 
 
 class TestBehaviourNotRegressed:
@@ -81,7 +99,7 @@ class TestBehaviourNotRegressed:
         assert _parse_price(value) == expected
 
     def test_eu_locale_comma_decimal(self):
-        assert _parse_price("899,00 €", "eu") == 899.0
+        assert _parse_price("899,00 €") == 899.0
 
     def test_leading_minus_is_still_a_sign_not_a_separator(self):
         assert _parse_price("Now -$5.00") == -5.0
@@ -110,7 +128,7 @@ class TestSignMustBeAdjacent:
 
     @pytest.mark.parametrize("value", ["-$5.00", "Now -$5.00", "-5.00", "-€5,00"])
     def test_adjacent_minus_is_still_a_minus(self, value):
-        assert _parse_price(value, "eu" if "€" in value else "us") == -5.0
+        assert _parse_price(value) == -5.0
 
 
 class TestLeadingSeparator:
@@ -119,18 +137,18 @@ class TestLeadingSeparator:
     digit moved the match onto the fraction and multiplied the value by 100."""
 
     @pytest.mark.parametrize(
-        "value,locale,expected",
+        "value,expected",
         [
-            (".99", "us", 0.99),
-            ("$.99", "us", 0.99),
-            ("$.99 each", "us", 0.99),
-            (".5", "us", 0.5),
-            (",99", "eu", 0.99),
-            ("-.5", "us", -0.5),
+            (".99", 0.99),
+            ("$.99", 0.99),
+            ("$.99 each", 0.99),
+            (".5", 0.5),
+            (",99", 0.99),
+            ("-.5", -0.5),
         ],
     )
-    def test_leading_separator_keeps_the_magnitude(self, value, locale, expected):
-        assert _parse_price(value, locale) == expected
+    def test_leading_separator_keeps_the_magnitude(self, value, expected):
+        assert _parse_price(value) == expected
 
 
 class TestTextOverridesLocaleHint:
@@ -143,53 +161,54 @@ class TestTextOverridesLocaleHint:
     the browser announced `en-DE` and Amazon served an English dot-decimal
     page, so `price_raw="€32.99"` parsed as 3299.0 -- numeric, positive, euro
     sign intact in `price_raw` -- passing every shipped check. The mirror,
-    `_parse_price("32,99€", "us")`, produces the same 3299.0 the other way.
+    `_parse_price("32,99€")`, produces the same 3299.0 the other way.
 
     A lone separator followed by exactly two digits is unambiguous from the
     TEXT alone: no locale groups its thousands two digits at a time, so that
     shape can only be a decimal point, regardless of `locale`. A 3-or-more
     digit tail, and a repeated separator of one kind, are likewise
     hint-INVARIANT the other way -- always a thousands grouping. Measured,
-    not assumed: `_parse_price("1.399", "us") == _parse_price("1.399", "eu")
-    == 1399.0`. The four "must keep working" cases below pin exactly that:
-    they do not exercise `locale` at all, and would keep passing even if the
-    `elif locale ==` branches in `_parse_price` were deleted outright.
+    not assumed: `_parse_price("1.399") == _parse_price("1.399")
+    == 1399.0`. The four "must keep working" cases below pin exactly that.
 
-    `locale`'s entire remaining vote is pinned separately, in
-    `test_one_digit_tail_is_the_only_shape_the_hint_still_decides` below: a
-    lone separator with a 1-digit tail, which really is ambiguous.
+    Since 2026-09-05 a 1-digit tail is read from the text too (a thousands
+    group is three digits in every locale), so no hint reaches the parser at
+    all: the op accepts its locale arg and ignores it, pinned below.
     """
 
     @pytest.mark.parametrize(
-        "text,locale,expected",
+        "text,expected",
         [
             # The audit's live failure: Amazon served a dot-decimal page
             # because the browser announced en-DE, while the preset's hint
             # said eu.
-            ("€32.99", "eu", 32.99),
+            ("€32.99", 32.99),
             # The mirror, which the same branch of the code produces.
-            ("32,99€", "us", 32.99),
+            ("32,99€", 32.99),
             # Hint-INVARIANT, not hint-decided: a 3-digit tail is always a
             # thousands grouping and both-separators-present is always
             # last-position-wins, under any locale. Kept as regression
             # coverage that the 2-digit fix does not creep into these
-            # shapes -- see the class docstring for the measurement, and
-            # the test below for the one shape the hint actually decides.
-            ("1.399,00 €", "eu", 1399.00),
-            ("1,399.00", "us", 1399.00),
-            ("€1.399", "eu", 1399.0),
-            ("$1,399", "us", 1399.0),
+            # shapes -- see the class docstring for the measurement.
+            ("1.399,00 €", 1399.00),
+            ("1,399.00", 1399.00),
+            ("€1.399", 1399.0),
+            ("$1,399", 1399.0),
         ],
     )
-    def test_parse_price_trusts_the_text_over_the_locale_hint(self, text, locale, expected):
-        assert _parse_price(text, locale) == pytest.approx(expected)
+    def test_parse_price_trusts_the_text(self, text, expected):
+        assert _parse_price(text) == pytest.approx(expected)
 
-    def test_one_digit_tail_is_the_only_shape_the_hint_still_decides(self):
-        # `locale`'s entire remaining authority. Deleting the `elif locale
-        # ==` branches in `_parse_price` collapses "1.3"/"us" to 13.0 and
-        # "1,3"/"eu" to 13.0, which is what makes this go red on that
-        # deletion -- unlike every case above, which would not notice.
-        assert _parse_price("1.3", "us") == 1.3
-        assert _parse_price("1.3", "eu") == 13.0
-        assert _parse_price("1,3", "eu") == 1.3
-        assert _parse_price("1,3", "us") == 13.0
+    @pytest.mark.parametrize("text", ["1.3", "1,3", "4,2", "4.2"])
+    def test_a_one_digit_tail_is_a_decimal(self, text):
+        # A thousands group is three digits in every locale, so a lone separator
+        # followed by ONE digit cannot be grouping any more than two can.
+        assert _parse_price(text) == pytest.approx(float(text.replace(",", ".")))
+
+    @pytest.mark.parametrize("args", [[], ["us"], ["eu"]])
+    def test_the_ops_locale_arg_is_accepted_and_ignored(self, args):
+        rule = ExtractRule(type="css", fields={
+            "n": FieldRule(selector="i", post_process=[PostProcess(op="parse_price", args=args)]),
+        })
+        data, _ = extract_fields("<i>4,2</i>", rule)
+        assert data["n"] == pytest.approx(4.2), args

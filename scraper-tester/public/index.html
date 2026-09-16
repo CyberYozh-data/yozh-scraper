@@ -61,10 +61,13 @@
 
         <div class="field-row">
           <div class="field">
-            <label>Device</label>
+            <label>Device
+              <span class="hint" title="desktop / mobile are the ordinary identities. Legacy WAP claims a 2004 feature phone and suppresses Client Hints entirely, because some sites serve a JavaScript-free layout to legacy User-Agents — Google's /wml/search returns real /url?q= links to it instead of the opaque /goto?url= stubs its JS results page ships. Pair it with Render JS = off. Not supported on camoufox. meta.applied_user_agent shows what was actually sent.">?</span>
+            </label>
             <select id="s-device">
               <option value="desktop">Desktop</option>
               <option value="mobile">Mobile</option>
+              <option value="legacy_wap">Legacy WAP (feature phone, no Client Hints)</option>
             </select>
           </div>
           <div class="field">
@@ -300,6 +303,14 @@
             </select>
           </div>
         </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Container <span style="color:var(--text-tertiary);font-weight:400">— row selector, optional</span>
+              <span class="hint" title="Row selector. Set it and every field below is matched INSIDE each row, one value per row (null where a row has no match) — so titles[i], links[i] and prices[i] describe the same card. Leave empty to match across the whole page. With it every field must be "all". XPath must stay inside the row: start with .// and no .. or ancestor/following axes. CSS: no + or ~ combinators.">?</span>
+            </label>
+            <input type="text" id="s-extract-container" placeholder="e.g. #rso div.tF2Cxc — one value per row" />
+          </div>
+        </div>
         <div id="extract-fields-wrapper">
           <div id="extract-fields"></div>
           <button class="btn-secondary btn-sm" id="btnAddField">+ Add Field</button>
@@ -311,22 +322,20 @@
             i
             <div class="info-tooltip">
               <div>Extra HTTP headers sent with the request.</div>
-              <div><b>Presets</b> fill a common Chrome/Firefox/Safari/Mobile/RU/anti-bot fingerprint in one click. Picking a mobile preset also flips the <b>Device</b> selector to mobile so viewport + UA stay consistent.</div>
+              <div><b>Presets</b> fill locale, privacy or navigation headers in one click. They no longer carry <code>User-Agent</code> or <code>sec-ch-ua*</code>: the engine states the only identity its transport can back, so the API drops those from <code>headers</code> and answers with <code>ignored_request_field</code> in <code>warnings</code>. Choose the identity with <b>Engine</b> + <b>Device</b>, and read <code>meta.applied_user_agent</code> for what actually went out.</div>
               <div><b>Interaction with proxy geo</b>: when <code>proxy_geo.country_code</code> is set, the scraper automatically picks a matching <code>Accept-Language</code> (e.g. <code>es-ES,es;q=0.9</code> for Spain). Your custom headers are merged on top — any header you set here <b>wins</b>, including <code>Accept-Language</code> if you override it. Locale and timezone still follow the proxy geo.</div>
-              <div><b>Common additions</b>: <code>Referer</code>, <code>Cookie</code> (prefer the Cookies section), <code>Authorization</code>, site-specific headers. Avoid setting <code>User-Agent</code> in both a preset and manually.</div>
+              <div><b>Common additions</b>: <code>Referer</code>, <code>Cookie</code> (prefer the Cookies section), <code>Authorization</code>, site-specific headers.</div>
             </div>
           </span>
         </div>
         <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.5rem;align-items:center">
           <select id="header-preset" style="flex:1;min-width:160px">
             <option value="">— headers preset —</option>
-            <option value="chrome_win">Chrome / Windows</option>
-            <option value="chrome_mac">Chrome / macOS</option>
-            <option value="firefox_win">Firefox / Windows</option>
-            <option value="mobile_chrome">Mobile Chrome (Android)</option>
-            <option value="safari_ios">Safari / iPhone</option>
-            <option value="ru_locale">RU locale</option>
-            <option value="antibot">Anti-bot pack</option>
+            <option value="en_us">Locale: en-US</option>
+            <option value="ru_locale">Locale: ru-RU</option>
+            <option value="de_locale">Locale: de-DE</option>
+            <option value="privacy">Privacy signals (DNT, Sec-GPC)</option>
+            <option value="navigation">Navigation (Sec-Fetch, upgrade-insecure)</option>
           </select>
           <button class="btn-secondary btn-sm" id="btnApplyPreset">Apply</button>
           <button class="btn-secondary btn-sm" id="btnClearHeaders">Clear</button>
@@ -388,6 +397,7 @@
             <select id="b-device">
               <option value="desktop">Desktop</option>
               <option value="mobile">Mobile</option>
+              <option value="legacy_wap">Legacy WAP (feature phone, no Client Hints)</option>
             </select>
           </div>
           <div class="field">
@@ -547,6 +557,14 @@
             </select>
           </div>
         </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Container <span style="color:var(--text-tertiary);font-weight:400">— row selector, optional</span>
+              <span class="hint" title="Row selector. Set it and every field below is matched INSIDE each row, one value per row (null where a row has no match) — so titles[i], links[i] and prices[i] describe the same card. Leave empty to match across the whole page. With it every field must be "all". XPath must stay inside the row: start with .// and no .. or ancestor/following axes. CSS: no + or ~ combinators.">?</span>
+            </label>
+            <input type="text" id="b-extract-container" placeholder="e.g. #rso div.tF2Cxc — one value per row" />
+          </div>
+        </div>
         <div id="b-extract-fields-wrapper">
           <div id="b-extract-fields"></div>
           <button class="btn-secondary btn-sm" id="btnAddFieldBatch">+ Add Field</button>
@@ -566,13 +584,11 @@
         <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.5rem;align-items:center">
           <select id="b-header-preset" style="flex:1;min-width:160px">
             <option value="">— headers preset —</option>
-            <option value="chrome_win">Chrome / Windows</option>
-            <option value="chrome_mac">Chrome / macOS</option>
-            <option value="firefox_win">Firefox / Windows</option>
-            <option value="mobile_chrome">Mobile Chrome (Android)</option>
-            <option value="safari_ios">Safari / iPhone</option>
-            <option value="ru_locale">RU locale</option>
-            <option value="antibot">Anti-bot pack</option>
+            <option value="en_us">Locale: en-US</option>
+            <option value="ru_locale">Locale: ru-RU</option>
+            <option value="de_locale">Locale: de-DE</option>
+            <option value="privacy">Privacy signals (DNT, Sec-GPC)</option>
+            <option value="navigation">Navigation (Sec-Fetch, upgrade-insecure)</option>
           </select>
           <button class="btn-secondary btn-sm" id="btnApplyPresetBatch">Apply</button>
           <button class="btn-secondary btn-sm" id="btnClearHeadersBatch">Clear</button>
@@ -702,6 +718,7 @@
               <select id="c-device">
                 <option value="desktop">Desktop</option>
                 <option value="mobile">Mobile</option>
+                <option value="legacy_wap">Legacy WAP (feature phone, no Client Hints)</option>
               </select>
             </div>
             <div class="field">
@@ -775,6 +792,14 @@
               </select>
             </div>
           </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Container <span style="color:var(--text-tertiary);font-weight:400">— row selector, optional</span>
+              <span class="hint" title="Row selector. Set it and every field below is matched INSIDE each row, one value per row (null where a row has no match) — so titles[i], links[i] and prices[i] describe the same card. Leave empty to match across the whole page. With it every field must be "all". XPath must stay inside the row: start with .// and no .. or ancestor/following axes. CSS: no + or ~ combinators.">?</span>
+            </label>
+            <input type="text" id="c-extract-container" placeholder="e.g. #rso div.tF2Cxc — one value per row" />
+          </div>
+        </div>
           <div id="c-extract-fields-wrapper">
             <div id="c-extract-fields"></div>
             <button class="btn-secondary btn-sm" id="btnAddFieldCrawler">+ Add Field</button>
@@ -784,13 +809,11 @@
           <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.5rem;align-items:center">
             <select id="c-header-preset" style="flex:1;min-width:160px">
               <option value="">— headers preset —</option>
-              <option value="chrome_win">Chrome / Windows</option>
-              <option value="chrome_mac">Chrome / macOS</option>
-              <option value="firefox_win">Firefox / Windows</option>
-              <option value="mobile_chrome">Mobile Chrome (Android)</option>
-              <option value="safari_ios">Safari / iPhone</option>
-              <option value="ru_locale">RU locale</option>
-              <option value="antibot">Anti-bot pack</option>
+              <option value="en_us">Locale: en-US</option>
+              <option value="ru_locale">Locale: ru-RU</option>
+              <option value="de_locale">Locale: de-DE</option>
+              <option value="privacy">Privacy signals (DNT, Sec-GPC)</option>
+              <option value="navigation">Navigation (Sec-Fetch, upgrade-insecure)</option>
             </select>
             <button class="btn-secondary btn-sm" id="btnApplyPresetCrawler">Apply</button>
             <button class="btn-secondary btn-sm" id="btnClearHeadersCrawler">Clear</button>
@@ -919,6 +942,8 @@
         <div class="field-row">
           <div class="field">
             <label>Device</label>
+            <!-- No Legacy WAP here: a session's device pins its LOGIN, which
+                 runs JavaScript, so the API refuses the pairing outright. -->
             <select id="sess-device">
               <option value="desktop">Desktop</option>
               <option value="mobile">Mobile</option>
@@ -1261,6 +1286,7 @@
               <select id="pw-device">
                 <option value="desktop">Desktop</option>
                 <option value="mobile">Mobile</option>
+                <option value="legacy_wap">Legacy WAP (feature phone, no Client Hints)</option>
               </select>
             </div>
             <div class="field">
@@ -1383,6 +1409,10 @@
               <option value="css">CSS</option>
               <option value="xpath">XPath</option>
             </select>
+          </div>
+          <div class="field">
+            <label>Container <span style="color:var(--text-tertiary);font-weight:400">— row selector, optional</span></label>
+            <input type="text" id="pw-extract-container" placeholder="e.g. #rso div.tF2Cxc — one value per row" />
           </div>
           <div id="pw-fields"></div>
           <button class="btn-secondary btn-sm" id="pw-add-field">+ Add Field</button>

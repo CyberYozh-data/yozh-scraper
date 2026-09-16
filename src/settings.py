@@ -105,6 +105,28 @@ class Settings(BaseSettings):
             "when geoip resolved an address, so it is a fingerprint defence too."
         ),
     )
+    camoufox_disable_ubo: bool = Field(
+        default=False,
+        alias="CAMOUFOX_DISABLE_UBO",
+        description=(
+            "Launch Camoufox WITHOUT uBlock Origin. Off by default, because uBO "
+            "is one of the things that makes Camoufox look like a real user's "
+            "browser and removing it is a fingerprint cost. It exists because "
+            "uBO is not inert on the pages we scrape: it ships default-enabled "
+            "filters that REWRITE them. Measured 2026-09-04 on a live Bing SERP "
+            "-- `bing.com##+js(href-sanitizer, a[href*=\"bing.com/ck/a\"], ?u "
+            "/^a1(.*)$/ -base64)` in uBO's Privacy list rewrote all 10 organic "
+            "anchors from Bing's `ck/a?...u=a1<base64>` wrapper to the decoded "
+            "destination, so `bing_search_camoufox`'s titles/links selector, "
+            "which keys on `u=a1`, matched 0 of 10 with uBO on and 10 of 10 "
+            "with it off. uBO also rewrites Google's instrumentation "
+            "(`www.google.*##+js(set, rwt, noopFunc)`, `||google.com/gen_204?`), "
+            "which is why this switch is worth having while google_search_"
+            "camoufox is blocked 48/48. Note uBO is downloaded at first browser "
+            "LAUNCH, not at image build, so its filter lists change under a "
+            "container recreate with nothing in this repo recording it."
+        ),
+    )
     camoufox_fingerprint_profile: str = Field(
         default="windows_on_host",
         alias="CAMOUFOX_FINGERPRINT_PROFILE",

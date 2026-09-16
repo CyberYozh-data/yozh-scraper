@@ -475,3 +475,203 @@ class TestTheHealOnlyContributesSelectors:
 
         assert result.mode != "self_healed"
         assert result.healed_instructions is None
+
+
+class TestSelfHealCannotBreakRowScoping:
+    """`model_copy` does not re-run validators, and this is the one place a
+    rule is assembled programmatically.
+
+    `llm/selector_gen.py` never tells the model about `container`, so a heal
+    always comes back document-scoped; the merge then re-attaches the
+    original's container. Measured before the fix: `//h3` under a container
+    returned the first row's value repeated once per row, with no warning, and
+    for a user preset that was PERSISTED. A heal that cannot stay inside the
+    row is refused, which keeps the working recipe.
+    """
+
+    ORIGINAL = ParsingInstructions(
+        type="xpath", container="//div[@class='row']",
+        fields={"t": {"selector": ".//h3", "all": True}},
+    )
+
+    def test_a_document_scoped_heal_is_refused(self):
+        healed = ParsingInstructions(
+            type="xpath", fields={"t": {"selector": "//h3", "all": True}},
+        )
+        assert pp._under_original_contract(self.ORIGINAL, healed) == (None, "escapes_container")
+
+    def test_a_row_safe_heal_is_accepted_and_keeps_the_container(self):
+        healed = ParsingInstructions(
+            type="xpath", fields={"t": {"selector": ".//h2", "all": True}},
+        )
+        merged, refusal = pp._under_original_contract(self.ORIGINAL, healed)
+        assert refusal is None and merged is not None
+        assert merged.container == "//div[@class='row']"
+        assert merged.fields["t"].selector == ".//h2"
+
+    def test_an_unscoped_recipe_is_unaffected(self):
+        original = ParsingInstructions(
+            type="xpath", fields={"t": {"selector": "//h3", "all": True}},
+        )
+        healed = ParsingInstructions(
+            type="xpath", fields={"t": {"selector": "//h2", "all": True}},
+        )
+        merged, refusal = pp._under_original_contract(original, healed)
+        assert refusal is None
+        assert merged is not None and merged.fields["t"].selector == "//h2"
+
+    @pytest.mark.asyncio
+    async def test_a_heal_that_escapes_the_row_is_not_run_for_this_request_either(
+        self, mocker
+    ):
+        """Refusing to PERSIST it was not enough.
+
+        `run()` falls back to executing the bare heal when the merge returns no
+        plan, which drops the container and answers with unscoped columns --
+        labelled `self_healed`, i.e. the misalignment the container exists to
+        prevent, wearing a badge that says it is fixed.
+        """
+        rows = (
+            '<div class="row"><h3>One</h3></div>'
+            '<div class="row"><h3>Two</h3></div>'
+        )
+        original = ParsingInstructions(
+            type="xpath", container="//div[@class='row']",
+            fields={"t": {"selector": ".//span", "all": True, "required": True}},
+        )
+        healed = ParsingInstructions(
+            type="xpath", fields={"t": {"selector": "//h3", "all": True}},
+        )
+        mocker.patch.object(
+            pp, "generate_selectors", new=mocker.AsyncMock(return_value=healed)
+        )
+        result = await pp.run(
+            f"<html><body>{rows}</body></html>",
+            instructions=original,
+            self_heal=True,
+            llm_model="openai/gpt-5.4-mini",
+            output_schema=None,
+            llm_extract_prompt=None,
+        )
+        assert result.mode == "deterministic", result.mode
+        assert result.healed_instructions is None
+        assert any("self_heal_refused" in w for w in result.warnings), result.warnings
+
+    @pytest.mark.asyncio
+    async def test_a_refused_heal_still_reaches_the_ai_only_tier(self, mocker):
+        """The AI-only tier uses no selectors, so it cannot escape a container.
+
+        An early return skipped it, which meant a recipe adopting `container`
+        lost BOTH repair mechanisms at once -- and self-heal is refused every
+        time for such a recipe unless the generator is told about the row.
+        """
+        original = ParsingInstructions(
+            type="xpath", container="//div[@class='row']",
+            fields={"t": {"selector": ".//span", "all": True, "required": True}},
+        )
+        healed = ParsingInstructions(
+            type="xpath", fields={"t": {"selector": "//h3", "all": True}},
+        )
+        mocker.patch.object(
+            pp, "generate_selectors", new=mocker.AsyncMock(return_value=healed)
+        )
+        extracted = mocker.patch.object(
+            pp, "llm_extract", new=mocker.AsyncMock(return_value={"t": ["One"]})
+        )
+        result = await pp.run(
+            '<html><body><div class="row"><h3>One</h3></div></body></html>',
+            instructions=original,
+            self_heal=True,
+            llm_model="openai/gpt-5.4-mini",
+            output_schema={"t": "list"},
+            llm_extract_prompt=None,
+        )
+        extracted.assert_awaited_once()
+        assert result.mode == "llm_extracted", result.mode
+        # PRE-EXISTING, verified identical on origin/main: the AI-only tier
+        # returns `warnings=["llm_extracted"]`, a hard-coded list that discards
+        # everything accumulated before it -- `self_heal_did_not_recover` is
+        # lost on this path today for the same reason. Pinned here so the next
+        # reader does not assume the refusal note survives; fixing it changes
+        # an existing path's warnings and belongs in its own change.
+        assert result.warnings == ["llm_extracted"]
+
+    @pytest.mark.asyncio
+    async def test_the_generator_is_told_about_the_row(self, mocker):
+        """Without this every heal of a row-scoped recipe comes back
+        document-scoped and is refused -- self-heal traded away silently by
+        the act of adopting `container`."""
+        original = ParsingInstructions(
+            type="xpath", container="//div[@class='row']",
+            fields={"t": {"selector": ".//span", "all": True, "required": True}},
+        )
+        gen = mocker.patch.object(
+            pp, "generate_selectors",
+            new=mocker.AsyncMock(return_value=ParsingInstructions(
+                type="xpath", container="//div[@class='row']",
+                fields={"t": {"selector": ".//h3", "all": True}},
+            )),
+        )
+        await pp.run(
+            '<html><body><div class="row"><h3>One</h3></div></body></html>',
+            instructions=original, self_heal=True,
+            llm_model="openai/gpt-5.4-mini", output_schema=None,
+            llm_extract_prompt=None,
+        )
+        assert gen.await_args.kwargs["container"] == "//div[@class='row']"
+
+    def test_an_incomplete_heal_cannot_run_unscoped_either(self):
+        """The same bypass through the other door.
+
+        `incomplete` returned before the container was ever considered, and
+        `run()` executes an incomplete plan bare for the current request --
+        which for a scoped recipe means dropping the container and answering
+        with unscoped columns labelled `self_healed`. Re-scoping it is not an
+        option: the fields are columns of one row set, so a heal covering only
+        some of them says nothing about keeping the rest aligned.
+        """
+        original = ParsingInstructions(
+            type="xpath", container="//div[@class='row']",
+            fields={
+                "titles": {"selector": ".//h3", "all": True, "required": True},
+                "snippets": {"selector": ".//p", "all": True},
+            },
+        )
+        healed = ParsingInstructions(  # covers only the required field
+            type="xpath", fields={"titles": {"selector": "//h3", "all": True}},
+        )
+        assert pp._under_original_contract(original, healed) == (
+            None, "escapes_container"
+        )
+
+    def test_an_incomplete_heal_is_still_usable_when_there_is_no_container(self):
+        """Unscoped recipes keep the existing behaviour: usable for this
+        request, never persisted."""
+        original = ParsingInstructions(
+            type="xpath",
+            fields={
+                "titles": {"selector": "//h3", "all": True, "required": True},
+                "snippets": {"selector": "//p", "all": True},
+            },
+        )
+        healed = ParsingInstructions(
+            type="xpath", fields={"titles": {"selector": "//h2", "all": True}},
+        )
+        assert pp._under_original_contract(original, healed) == (None, "incomplete")
+
+    def test_the_container_keeps_its_own_language_when_the_heal_changes_type(self):
+        """The container comes from the original, so it speaks the original's
+        dialect. Taking the rule `type` from the heal handed an XPath
+        container to cssselect and returned empty columns from a heal that
+        otherwise worked."""
+        original = ParsingInstructions(
+            type="xpath", container="//div[@class='row']",
+            fields={"t": {"selector": ".//h3", "all": True}},
+        )
+        healed = ParsingInstructions(
+            type="css", fields={"t": {"selector": "h2", "all": True}},
+        )
+        merged, refusal = pp._under_original_contract(original, healed)
+        assert refusal is None and merged is not None
+        assert merged.type == "xpath", "the container's language must survive"
+        assert merged.fields["t"].type == "css", "the field's dialect travels with it"

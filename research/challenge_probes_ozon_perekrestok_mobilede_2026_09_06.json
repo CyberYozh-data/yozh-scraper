@@ -1,0 +1,312 @@
+{
+ "date": "2026-09-06",
+ "host": "k12 dev, tree = #112-#119 stack tip + #120",
+ "request": "POST /api/v1/scrape/page, raw_html=true, block_assets=false, wait_until=load, proxy prem_res_rotating with the site's country (RU / DE) unless proxy_type says otherwise; timeout_ms 34000-60000; chromium = real Chrome headful, camoufox = fingerprint_profile windows_on_host",
+ "note": "one fetch per row, sequential unless stated; outcomes read from the returned page (title, size, markers); exit addresses not recorded; the four humanize rows ran AFTER the as-shipped audits (preset_audit_new_bases_2026_09_06.json, …_seq_…), by which point mobile.de passed about 1 attempt in 4 on either engine",
+ "probes": [
+  {
+   "site": "ozon.ru",
+   "page": "search",
+   "engine": "chromium",
+   "stealth": false,
+   "warmup": null,
+   "outcome": "Antibot Challenge Page, HTTP 403, 8.4 KB (__rr=1)"
+  },
+  {
+   "site": "ozon.ru",
+   "page": "search",
+   "engine": "camoufox",
+   "stealth": null,
+   "warmup": null,
+   "outcome": "Antibot Challenge Page, HTTP 403, 8.4 KB (__rr=2)"
+  },
+  {
+   "site": "ozon.ru",
+   "page": "search",
+   "engine": "chromium",
+   "stealth": false,
+   "warmup": null,
+   "wait_for_selector": true,
+   "outcome": "'Похоже, нет соединения' error page after the challenge's reloads, HTTP 403, 5 KB"
+  },
+  {
+   "site": "ozon.ru",
+   "page": "search",
+   "engine": "camoufox",
+   "stealth": null,
+   "warmup": null,
+   "wait_for_selector": true,
+   "outcome": "challenge passed inside the wait (initial 403 kept), category page 863 KB, 24 tiles"
+  },
+  {
+   "site": "ozon.ru",
+   "page": "search",
+   "engine": "camoufox",
+   "stealth": null,
+   "warmup": "homepage 10 s",
+   "outcome": "HTTP 200, category page 706 KB, 8 tiles"
+  },
+  {
+   "site": "ozon.ru",
+   "page": "product (id form)",
+   "engine": "camoufox",
+   "stealth": null,
+   "warmup": "homepage 10 s",
+   "outcome": "HTTP 200, 733 KB product page"
+  },
+  {
+   "site": "ozon.ru",
+   "page": "product (slug form)",
+   "engine": "camoufox",
+   "stealth": null,
+   "warmup": "homepage 10 s",
+   "outcome": "HTTP 200, 1.1 MB product page"
+  },
+  {
+   "site": "perekrestok.ru",
+   "page": "search",
+   "engine": "chromium",
+   "stealth": false,
+   "warmup": null,
+   "outcome": "ServicePipe interstitial 1.8 KB, meta refresh to the challenge"
+  },
+  {
+   "site": "perekrestok.ru",
+   "page": "search",
+   "engine": "camoufox",
+   "stealth": null,
+   "warmup": null,
+   "outcome": "ServicePipe interstitial 1.9 KB"
+  },
+  {
+   "site": "perekrestok.ru",
+   "page": "search",
+   "engine": "chromium",
+   "stealth": false,
+   "warmup": null,
+   "wait_for_selector": true,
+   "outcome": "slider captcha (/xpvnsulc/, 'Разверните картинку горизонтально'), 16 KB"
+  },
+  {
+   "site": "perekrestok.ru",
+   "page": "search",
+   "engine": "camoufox",
+   "stealth": null,
+   "warmup": null,
+   "wait_for_selector": true,
+   "outcome": "slider captcha (/xpvnsulc/), 16 KB"
+  },
+  {
+   "site": "perekrestok.ru",
+   "page": "search",
+   "engine": "camoufox",
+   "stealth": null,
+   "warmup": "homepage 10 s",
+   "outcome": "'Проверка браузера...' + 'Я не робот' checkbox page, 9.9 KB"
+  },
+  {
+   "site": "perekrestok.ru",
+   "page": "search",
+   "engine": "chromium",
+   "stealth": false,
+   "warmup": "homepage 10 s",
+   "outcome": "slider captcha, 16 KB"
+  },
+  {
+   "site": "perekrestok.ru",
+   "page": "search",
+   "engine": "chromium",
+   "stealth": true,
+   "proxy_type": "prem_res_rotating",
+   "warmup": "homepage 20 s + humanize",
+   "outcome": "slider captcha, 16 KB"
+  },
+  {
+   "site": "perekrestok.ru",
+   "page": "search",
+   "engine": "chromium",
+   "stealth": false,
+   "proxy_type": "res_rotating",
+   "warmup": "homepage 20 s + humanize",
+   "outcome": "slider captcha, 16 KB"
+  },
+  {
+   "site": "perekrestok.ru",
+   "page": "search",
+   "engine": "chromium",
+   "stealth": true,
+   "proxy_type": "res_rotating",
+   "warmup": "homepage 20 s + humanize",
+   "outcome": "slider captcha, 16 KB"
+  },
+  {
+   "site": "perekrestok.ru",
+   "page": "search",
+   "engine": "chromium",
+   "stealth": false,
+   "proxy_type": "mobile",
+   "warmup": "homepage 20 s + humanize",
+   "outcome": "no_more_proxies: category=lte, total=0 (no mobile exits on the account)"
+  },
+  {
+   "site": "perekrestok.ru",
+   "page": "search",
+   "engine": "chromium",
+   "stealth": true,
+   "proxy_type": "mobile",
+   "warmup": "homepage 20 s + humanize",
+   "outcome": "no_more_proxies: category=lte, total=0"
+  },
+  {
+   "site": "perekrestok.ru",
+   "page": "search",
+   "engine": "chromium",
+   "stealth": false,
+   "proxy_type": "mobile_shared",
+   "warmup": "homepage 20 s + humanize",
+   "outcome": "no_more_proxies: category=lte, total=0"
+  },
+  {
+   "site": "mobile.de",
+   "page": "search",
+   "engine": "chromium",
+   "stealth": false,
+   "warmup": null,
+   "outcome": "Akamai sensor shell 2.7 KB, HTTP 200"
+  },
+  {
+   "site": "mobile.de",
+   "page": "search",
+   "engine": "camoufox",
+   "stealth": null,
+   "warmup": null,
+   "outcome": "Akamai sensor shell 2.7 KB"
+  },
+  {
+   "site": "mobile.de",
+   "page": "search",
+   "engine": "chromium",
+   "stealth": false,
+   "warmup": null,
+   "wait_for_selector": true,
+   "outcome": "Akamai sensor shell 227 B"
+  },
+  {
+   "site": "mobile.de",
+   "page": "search",
+   "engine": "camoufox",
+   "stealth": null,
+   "warmup": null,
+   "wait_for_selector": true,
+   "outcome": "Akamai sensor shell 2.7 KB"
+  },
+  {
+   "site": "mobile.de",
+   "page": "search",
+   "engine": "chromium",
+   "stealth": false,
+   "warmup": "homepage (suchen.mobile.de) 10 s",
+   "outcome": "results page 1.34 MB, 24 listings (on attempt 2 of 3)"
+  },
+  {
+   "site": "mobile.de",
+   "page": "search",
+   "engine": "chromium",
+   "stealth": true,
+   "warmup": "homepage (suchen.mobile.de) 10 s",
+   "outcome": "Akamai sensor shell 227 B"
+  },
+  {
+   "site": "mobile.de",
+   "page": "search",
+   "engine": "camoufox",
+   "stealth": null,
+   "warmup": "homepage (suchen.mobile.de) 10 s",
+   "outcome": "Akamai sensor shell 2.7 KB"
+  },
+  {
+   "site": "mobile.de",
+   "page": "search",
+   "engine": "chromium",
+   "stealth": true,
+   "warmup": "custom https://www.mobile.de/ 10 s",
+   "outcome": "results page 1.34 MB, 24 listings"
+  },
+  {
+   "site": "mobile.de",
+   "page": "search",
+   "engine": "chromium",
+   "stealth": false,
+   "warmup": "custom https://www.mobile.de/ 10 s",
+   "outcome": "Akamai sensor shell 227 B"
+  },
+  {
+   "site": "mobile.de",
+   "page": "ad",
+   "engine": "chromium",
+   "stealth": false,
+   "warmup": "homepage (suchen.mobile.de) 10 s",
+   "outcome": "Akamai sensor shell 227 B"
+  },
+  {
+   "site": "mobile.de",
+   "page": "ad",
+   "engine": "chromium",
+   "stealth": true,
+   "warmup": "homepage (suchen.mobile.de) 10 s",
+   "outcome": "Akamai sensor shell 227 B"
+  },
+  {
+   "site": "mobile.de",
+   "page": "ad",
+   "engine": "chromium",
+   "stealth": false,
+   "warmup": "custom https://www.mobile.de/ 10 s",
+   "outcome": "ad page 728 KB"
+  },
+  {
+   "site": "mobile.de",
+   "page": "ad",
+   "engine": "chromium",
+   "stealth": true,
+   "warmup": "custom https://www.mobile.de/ 10 s",
+   "outcome": "ad page 728 KB"
+  },
+  {
+   "site": "mobile.de",
+   "page": "search",
+   "engine": "camoufox",
+   "stealth": null,
+   "humanize": true,
+   "warmup": "custom https://www.mobile.de/ 10 s",
+   "outcome": "Akamai sensor shell 227 B (after the as-shipped audit runs)"
+  },
+  {
+   "site": "mobile.de",
+   "page": "ad",
+   "engine": "camoufox",
+   "stealth": null,
+   "humanize": true,
+   "warmup": "custom https://www.mobile.de/ 10 s",
+   "outcome": "Akamai sensor shell 227 B"
+  },
+  {
+   "site": "mobile.de",
+   "page": "search",
+   "engine": "camoufox",
+   "stealth": null,
+   "humanize": true,
+   "warmup": "custom https://www.mobile.de/ 10 s",
+   "outcome": "Akamai sensor shell 2.7 KB"
+  },
+  {
+   "site": "mobile.de",
+   "page": "ad",
+   "engine": "camoufox",
+   "stealth": null,
+   "humanize": true,
+   "warmup": "custom https://www.mobile.de/ 10 s",
+   "outcome": "Akamai sensor shell 2.7 KB"
+  }
+ ]
+}

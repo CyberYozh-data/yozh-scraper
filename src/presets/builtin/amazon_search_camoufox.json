@@ -85,13 +85,6 @@
             ]
           },
           {
-            "op": "replace",
-            "args": [
-              ",",
-              "."
-            ]
-          },
-          {
             "op": "parse_float"
           }
         ]
@@ -147,7 +140,10 @@
       "sponsored": {
         "type": "array",
         "items": {
-          "type": "string"
+          "type": [
+            "string",
+            "null"
+          ]
         }
       }
     }
@@ -155,6 +151,6 @@
   "self_heal": true,
   "prompt_schema": null,
   "llm_extract_prompt": null,
-  "version": 6,
-  "updated_at": 1787875200.0
+  "version": 7,
+  "updated_at": 1788566400
 }

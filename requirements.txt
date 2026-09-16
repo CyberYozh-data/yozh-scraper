@@ -7,7 +7,7 @@ pydantic-settings>=2.2
 httpx>=0.26
 playwright==1.57
 playwright-stealth>=2.0.2
-camoufox[geoip]==0.4.11
+camoufox[geoip]==0.5.5
 lxml>=5.2
 cssselect>=1.2
 html2text>=2024.2.26

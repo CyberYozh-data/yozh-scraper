@@ -18,6 +18,8 @@ import logging
 from dataclasses import dataclass, field
 from typing import Any, Literal
 
+from pydantic import ValidationError
+
 from src.extract.extractor import extract_fields
 from src.presets.llm.client import LLMError
 from src.presets.llm.extract import llm_extract
@@ -92,29 +94,69 @@ def _under_original_contract(
     coerced numbers belongs. The heal contributes a selector (and the dialect
     that selector is written in); the preset keeps the rest.
 
-    Returns None when the healed plan does not cover every original field —
+    Returns `(plan, None)`, or `(None, reason)`. The reason matters: an
+    INCOMPLETE plan is still usable for this one request, while one that
+    escapes the recipe's container is not usable at all — running it would
+    answer with unscoped columns and label them `self_healed`.
+
+    Returns no plan when the healed plan does not cover every original field —
     persisting that would truncate the preset permanently, and a version bump
     makes it look deliberate. Fields the model invented are dropped: fine to
     extract for one request, but nobody agreed to add them to a preset.
     """
     if not set(original.fields) <= set(healed.fields):
-        return None
-    return healed.model_copy(
+        if original.container is not None:
+            # An incomplete plan is normally still usable for this one
+            # request, run bare. For a SCOPED recipe that means running it
+            # without the container -- the same unscoped answer under the
+            # `self_healed` label that the escape branch below refuses, just
+            # reached through the other door. And it cannot simply be
+            # re-scoped: the fields are columns of one row set, so a heal that
+            # covers only some of them says nothing about keeping the rest
+            # aligned. The AI-only tier is still available.
+            return None, "escapes_container"
+        return None, "incomplete"
+    merged = healed.model_copy(
         update={
+            "container": original.container,
+            # The container is the ORIGINAL's, so it speaks the original's
+            # language. Taking the rule `type` from the heal would hand an
+            # XPath container to cssselect and quietly return empty columns;
+            # the per-field dialects below still travel with their selectors.
+            "type": original.type if original.container else healed.type,
             "fields": {
                 name: rule.model_copy(
                     update={
                         "selector": healed.fields[name].selector,
                         # The per-field dialect travels WITH the selector: an
                         # xpath expression under the preset's `css` would match
-                        # nothing at all.
-                        "type": healed.fields[name].type,
+                        # nothing at all. Resolved to the heal's EFFECTIVE
+                        # dialect rather than copied: the model usually states
+                        # the language once on the rule, and the rule type here
+                        # belongs to the original's container, so an unstated
+                        # field dialect would silently become the container's.
+                        "type": healed.fields[name].type or healed.type,
                     }
                 )
                 for name, rule in original.fields.items()
             }
         }
     )
+    # `model_copy` does NOT re-run validators, and this is the one place a rule
+    # is assembled programmatically. The generator is never told about
+    # `container` (see `llm/selector_gen.py`), so a heal always returns a
+    # document-scoped selector, which the merge then re-attaches to the
+    # original's container: measured, `//h3` under a container yields the first
+    # row's value repeated once per row, with no warning, and for a user preset
+    # that gets PERSISTED. Refusing the heal keeps the working recipe.
+    try:
+        return ParsingInstructions.model_validate(merged.model_dump()), None
+    except ValidationError:
+        log.warning(
+            "self-heal rejected: the healed selectors do not stay inside the "
+            "recipe's container"
+        )
+        return None, "escapes_container"
 
 
 async def run(  # pylint: disable=too-many-return-statements
@@ -154,6 +196,7 @@ async def run(  # pylint: disable=too-many-return-statements
                     page_html,
                     output_schema or _schema_from(instructions),
                     llm_model,
+                    container=instructions.container,
                 )
             except LLMError as exc:
                 log.warning("self-heal generation failed: %s", exc)
@@ -168,33 +211,51 @@ async def run(  # pylint: disable=too-many-return-statements
             # filled because the raw label is a non-empty string, while under
             # the preset's parse_price — the coercion that actually ships — it
             # is None, and the heal has recovered nothing.
-            persistable = _under_original_contract(instructions, healed)
-            plan_for_this_request = persistable if persistable is not None else healed
-            healed_data, healed_warnings = extract_fields(page_html, plan_for_this_request)
-            # Graded against the ORIGINAL instructions, not the healed ones.
-            # `healed` arrives from the model with its own `required` flags, so
-            # judging it by those let it grade its own homework: a plan that
-            # marks nothing required trivially "recovers", gets labelled
-            # self_healed, and — for a user preset — is then written over the
-            # selectors that were working. The preset's contract is the only one
-            # the caller ever agreed to.
-            if not _missing_required(instructions, healed_data):
-                notes = [*warnings, *healed_warnings, "self_healed"]
-                if persistable is None:
-                    # Usable for THIS request, never written to the preset: a
-                    # plan missing fields would truncate it for every later
-                    # scrape, and the caller asked for a repair, not a rewrite.
-                    notes.append(
-                        "self_heal_not_persisted: the healed plan does not cover "
-                        + ", ".join(sorted(set(instructions.fields) - set(healed.fields)))
+            persistable, refusal = _under_original_contract(instructions, healed)
+            if refusal == "escapes_container":
+                # Not merely unpersistable: running the bare heal would drop
+                # the container and answer with unscoped columns under the
+                # `self_healed` label, which is the misalignment the container
+                # exists to prevent, now wearing a badge that says it is fixed.
+                #
+                # Falls THROUGH rather than returning, matching the sibling
+                # `self_heal_did_not_recover` path 15 lines below. An early
+                # return also skipped the AI-only tier, which uses no selectors
+                # at all and therefore cannot escape a container -- so a
+                # recipe that adopted `container` would have lost both repair
+                # mechanisms at once.
+                warnings = [
+                    *warnings,
+                    "self_heal_refused: the healed selectors leave the "
+                    "recipe's row scope",
+                ]
+            else:
+                plan_for_this_request = persistable if persistable is not None else healed
+                healed_data, healed_warnings = extract_fields(page_html, plan_for_this_request)
+                # Graded against the ORIGINAL instructions, not the healed ones.
+                # `healed` arrives from the model with its own `required` flags, so
+                # judging it by those let it grade its own homework: a plan that
+                # marks nothing required trivially "recovers", gets labelled
+                # self_healed, and — for a user preset — is then written over the
+                # selectors that were working. The preset's contract is the only one
+                # the caller ever agreed to.
+                if not _missing_required(instructions, healed_data):
+                    notes = [*warnings, *healed_warnings, "self_healed"]
+                    if persistable is None:
+                        # Usable for THIS request, never written to the preset: a
+                        # plan missing fields would truncate it for every later
+                        # scrape, and the caller asked for a repair, not a rewrite.
+                        notes.append(
+                            "self_heal_not_persisted: the healed plan does not cover "
+                            + ", ".join(sorted(set(instructions.fields) - set(healed.fields)))
+                        )
+                    return ParserResult(
+                        data=healed_data,
+                        warnings=notes,
+                        mode="self_healed",
+                        healed_instructions=persistable,
                     )
-                return ParserResult(
-                    data=healed_data,
-                    warnings=notes,
-                    mode="self_healed",
-                    healed_instructions=persistable,
-                )
-            warnings = [*warnings, "self_heal_did_not_recover"]
+                warnings = [*warnings, "self_heal_did_not_recover"]
 
         # Deterministic parser ran (some required fields may be empty). Only
         # fall through to AI-only if it's actually configured; otherwise this

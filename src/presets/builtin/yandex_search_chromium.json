@@ -1,7 +1,7 @@
 {
   "name": "yandex_search_chromium",
   "source": "yandex",
-  "description": "Yandex SERP results. Returns title/link/snippet/result_block arrays with one slot per result. Every field is anchored on the SAME organic block (li.serp-item .Organic) and digs its value out of that block's html, so a result missing its snippet yields null in its own slot instead of shifting every later row. The list item is NOT the row unit: a serp-item can carry no organic block (a widget such as 'Люди ищут') or two (a grouped result), measured live at 13 items/12 results (kz) and 13 items/14 results (am). ADS ARE INCLUDED: a paid block carries the same .Organic markup and is emitted as a row whose link is a yabs.yandex.ru/count/... tracker — filter on the link if you need organic-only. wait_until is 'load' because Yandex streams results in: at domcontentloaded one live run returned 2 of 18 results with no error. Links are unescaped after the html capture (lxml re-serialises '&' as '&amp;'); snippets read the whole OrganicText subtree, so a leading date span is concatenated onto the body rather than replacing it. Selectors verified against live ru/am/kz captures 2026-07-26: 18/18/18/18, 14/14/14/14, 12/12/12/12, zero nulls. Every 2026-07-26 number above — those captures, the 13-items/12-results and 13-items/14-results counts, and the domcontentloaded run that returned 2 of 18 — was measured on Camoufox, this preset's only engine before the 2026-08-27 split. ENGINE: Chromium (Playwright), stealth off. chromium_webgl_identity()'s host-aligned WebGL claim (an AMD Radeon 780M string under a Windows UA) does NOT apply here: it runs only inside stealth_config(), which src/browser/runner.py:194 reaches only when stealth is on, so this preset ships the browser's raw headless WebGL identity instead. No fingerprint_profile, which the Chromium runner would accept and ignore. MEASURED 2026-08-27 (n=2 per locale, 4 runs per engine, research/preset_audit_dual_engine_2026_08_27.json): NO RUN ENDED BLOCKED. The split predicted SmartCaptcha would take this variant; that did not happen — 4/4 runs ended HTTP 200 with fetch_ok true, the captcha/block heuristic silent, and data returned every time. It returned FEWER ROWS than its twin: 21 and 23 on moscow and 12 and 12 on ru, against 27 and 27 and 13 and 15 for yandex_search_camoufox — more rows in all four matched cells. Prefer yandex_search_camoufox for coverage on that basis alone, at n=2 per locale; nothing here shows this variant failing. It did spend 3 proxy retries, and WHY is not in this record: the runner rotates the exit on a block, a selector miss or a proxy failure alike, and only the reported attempt leaves warnings, so an earlier attempt could have been challenged without saying so. One of the three followed a logged warmup TimeoutError, and the yandex_search pair is the only preset in this set that sets a wait_for_selector (li.serp-item), whose miss spends a retry too. Read the falsification as 'these runs were not ENDED by a captcha', not as 'this variant was never challenged'. Both engines sell ads as organic: on moscow 14 of 21 and 14 of 23 rows here (11 and 12 of 27 on the twin) were yabs.yandex.ru/count/… trackers, against 0 on ru — filter on the link. MEASURED 2026-08-28 (retest of the same twenty presets through the same harness after the five audit fixes; n=2 per locale, 92 runs, research/preset_audit_dual_engine_2026_08_28.json): 4/4 runs returned data, 23/22/18/18 rows against 08-27's 23/21/12/12 -- the ru locale collected more rows this round, but at n=2 per locale that is Yandex's own variance and not a change this branch made. No captcha, no block on any of the four, where the Camoufox twin lost one moscow run to yandex.ru/showcaptcha. ru-RU on all four. Control preset: none of the five fixes touched it.",
+  "description": "UPDATE 2026-09-05: timeout_ms 45000 -> 34000 (per-phase; see test_builtin_timeout_fits_the_first_attempt). The 45000 figures below are the 2026-08-28 state. Yandex SERP results. Returns title/link/snippet/result_block arrays with one slot per result. Every field is anchored on the SAME organic block (li.serp-item .Organic) and digs its value out of that block's html, so a result missing its snippet yields null in its own slot instead of shifting every later row. The list item is NOT the row unit: a serp-item can carry no organic block (a widget such as 'Люди ищут') or two (a grouped result), measured live at 13 items/12 results (kz) and 13 items/14 results (am). ADS ARE INCLUDED: a paid block carries the same .Organic markup and is emitted as a row whose link is a yabs.yandex.ru/count/... tracker — filter on the link if you need organic-only. wait_until is 'load' because Yandex streams results in: at domcontentloaded one live run returned 2 of 18 results with no error. Links are unescaped after the html capture (lxml re-serialises '&' as '&amp;'); snippets read the whole OrganicText subtree, so a leading date span is concatenated onto the body rather than replacing it. Selectors verified against live ru/am/kz captures 2026-07-26: 18/18/18/18, 14/14/14/14, 12/12/12/12, zero nulls. Every 2026-07-26 number above — those captures, the 13-items/12-results and 13-items/14-results counts, and the domcontentloaded run that returned 2 of 18 — was measured on Camoufox, this preset's only engine before the 2026-08-27 split. ENGINE: Chromium (Playwright), stealth off. chromium_webgl_identity()'s host-aligned WebGL claim (an AMD Radeon 780M string under a Windows UA) does NOT apply here: it runs only inside stealth_config(), which src/browser/runner.py:194 reaches only when stealth is on, so this preset ships the browser's raw headless WebGL identity instead. No fingerprint_profile, which the Chromium runner would accept and ignore. MEASURED 2026-08-27 (n=2 per locale, 4 runs per engine, research/preset_audit_dual_engine_2026_08_27.json): NO RUN ENDED BLOCKED. The split predicted SmartCaptcha would take this variant; that did not happen — 4/4 runs ended HTTP 200 with fetch_ok true, the captcha/block heuristic silent, and data returned every time. It returned FEWER ROWS than its twin: 21 and 23 on moscow and 12 and 12 on ru, against 27 and 27 and 13 and 15 for yandex_search_camoufox — more rows in all four matched cells. Prefer yandex_search_camoufox for coverage on that basis alone, at n=2 per locale; nothing here shows this variant failing. It did spend 3 proxy retries, and WHY is not in this record: the runner rotates the exit on a block, a selector miss or a proxy failure alike, and only the reported attempt leaves warnings, so an earlier attempt could have been challenged without saying so. One of the three followed a logged warmup TimeoutError, and the yandex_search pair is the only preset in this set that sets a wait_for_selector (li.serp-item), whose miss spends a retry too. Read the falsification as 'these runs were not ENDED by a captcha', not as 'this variant was never challenged'. Both engines sell ads as organic: on moscow 14 of 21 and 14 of 23 rows here (11 and 12 of 27 on the twin) were yabs.yandex.ru/count/… trackers, against 0 on ru — filter on the link. MEASURED 2026-08-28 (retest of the same twenty presets through the same harness after the five audit fixes; n=2 per locale, 92 runs, research/preset_audit_dual_engine_2026_08_28.json): 4/4 runs returned data, 23/22/18/18 rows against 08-27's 23/21/12/12 -- the ru locale collected more rows this round, but at n=2 per locale that is Yandex's own variance and not a change this branch made. No captcha, no block on any of the four, where the Camoufox twin lost one moscow run to yandex.ru/showcaptcha. ru-RU on all four. Control preset: none of the five fixes touched it.",
   "kind": "builtin",
   "url_template": "https://yandex.ru/search/?text={query}&lr={lr}",
   "request_defaults": {
@@ -16,7 +16,7 @@
     "browser_engine": "chromium",
     "wait_until": "load",
     "wait_for_selector": "li.serp-item",
-    "timeout_ms": 45000,
+    "timeout_ms": 34000,
     "block_assets": false,
     "stealth": false
   },
@@ -206,19 +206,28 @@
       "titles": {
         "type": "array",
         "items": {
-          "type": "string"
+          "type": [
+            "string",
+            "null"
+          ]
         }
       },
       "links": {
         "type": "array",
         "items": {
-          "type": "string"
+          "type": [
+            "string",
+            "null"
+          ]
         }
       },
       "snippets": {
         "type": "array",
         "items": {
-          "type": "string"
+          "type": [
+            "string",
+            "null"
+          ]
         }
       }
     }
@@ -226,6 +235,6 @@
   "self_heal": true,
   "prompt_schema": null,
   "llm_extract_prompt": null,
-  "version": 3,
-  "updated_at": 1785024000.0
+  "version": 4,
+  "updated_at": 1788566400
 }

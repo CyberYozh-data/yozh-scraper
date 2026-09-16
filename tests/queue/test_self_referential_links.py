@@ -586,3 +586,17 @@ async def test_the_queue_stays_silent_on_marketplace_shaped_results():
     assert not any(
         "all_extracted_links_self_referential" in w for w in out.result.warnings
     ), out.result.warnings
+
+
+def test_the_mobile_de_listing_shape_fires_which_is_why_the_preset_declares_links_stay_on_site():
+    """mobile.de's search (2026-09-06): 24 of 24 listings are the site's own
+    `/fahrzeuge/details.html?id=<ad id>&…` -- one path, only the query
+    differing, exactly the wrapper shape this guard looks for. The guard is
+    right to fire on the URL alone; the preset carries `links_stay_on_site`
+    so the worker does not ask it (tests/queue/test_resolve_redirects_wiring.py)."""
+    data = {"urls": [
+        f"https://suchen.mobile.de/fahrzeuge/details.html?id={391420794 + n}" for n in range(24)
+    ]}
+    out = warn(data, "https://suchen.mobile.de/fahrzeuge/search.html?isSearchRequest=true")
+    assert out is not None
+    assert "suchen.mobile.de" in out

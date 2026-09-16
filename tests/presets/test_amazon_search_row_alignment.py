@@ -156,14 +156,16 @@ class TestAmazonSearchSelectors:
         so a false non-nullable claim steers a heal toward exactly the
         per-row selector shape this preset forbids. `urls`/`titles` stay
         plain `string` (they no longer null by design at all); `sponsored`
-        stays plain `string` too (fix-round-2 finding 5: always matches, so
-        it never nulls either)."""
+        is `string | null` since 2026-09-05 -- its regex has always matched
+        on the pages measured (fix-round-2 finding 5), but a regex CAN null a
+        row, and the schema now says so for every such column (see
+        test_recipe_nullable_columns_declare_null)."""
         props = self.preset.output_schema["properties"]
         assert props["prices"]["items"]["type"] == ["number", "null"]
         assert props["ratings"]["items"]["type"] == ["number", "null"]
         assert props["urls"]["items"]["type"] == "string"
         assert props["titles"]["items"]["type"] == "string"
-        assert props["sponsored"]["items"]["type"] == "string"
+        assert props["sponsored"]["items"]["type"] == ["string", "null"]
 
     def test_prices_anchored_to_container_but_read_from_a_offscreen(self):
         # The container anchor is what guarantees the slot; the a-offscreen
@@ -182,11 +184,10 @@ class TestAmazonSearchSelectors:
         ]
 
     def test_prices_locale_left_empty_for_materializer(self):
-        # MUST stay empty: src/presets/materializer.py injects us/eu per
-        # locale. _parse_price now reads a 2-digit tail straight from the
-        # text regardless of locale, so hardcoding "us" here no longer
-        # breaks a price like "899,00 €" -- but it would still break a
-        # 1-digit-tail DE price ("12,3 €" -> 123.0 instead of 12.3).
+        # MUST stay empty: the materializer injects the market's tag per
+        # request and a self-heal strips it back (strip_materializer_injected);
+        # the value no longer changes any parse, the separator is read from
+        # the text.
         assert self.fields["prices"].post_process[-1].args == []
 
     def test_ratings_anchored_to_faceout_container_via_html(self):
@@ -198,7 +199,6 @@ class TestAmazonSearchSelectors:
         assert rule.all is True
         assert _ops(rule) == [
             ("regex", ["a-icon-alt[^>]*>(?:\\s|<[a-zA-Z][^>]*>)*(\\d[.,]\\d)"]),
-            ("replace", [",", "."]),
             ("parse_float", []),
         ]
 
@@ -211,8 +211,10 @@ class TestAmazonSearchSelectors:
         assert "[\\d.,]+" not in pattern
 
     def test_ratings_keeps_parse_float_not_parse_price(self):
-        # parse_float + replace ,->. is the pair that fixes the amazon.de
-        # all-4.0 bug; parse_price would re-introduce separator ambiguity.
+        # parse_float reads "4,7" as 4.7 since 2026-09-05 (a one-digit tail is
+        # a decimal in every locale), so the replace ,->. step that used to fix
+        # the amazon.de all-4.0 bug is gone; parse_price would re-introduce
+        # the labelled-price parsing this field does not need.
         ops = _ops(self.fields["ratings"])
         assert ("parse_float", []) in ops
         assert not any(op == "parse_price" for op, _ in ops)

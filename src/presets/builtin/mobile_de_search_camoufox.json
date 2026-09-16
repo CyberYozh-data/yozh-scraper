@@ -1,0 +1,158 @@
+{
+  "name": "mobile_de_search_camoufox",
+  "source": "mobile_de",
+  "description": "EXPECT THE RATE TO MOVE: mobile.de sits behind Akamai Bot Manager, and how often it admits us is a property of exit reputation on the day, not of this recipe. Measured through the presets as shipped: 1 of 4 attempts on 2026-09-06, then 7 of 8 on 2026-09-11 (chromium 4/4, camoufox 3/4; medians 56 s and 28 s end to end). Do not read either number as the rate -- re-measure before building anything that needs a first-attempt success. A refused run ends on an Akamai page at HTTP 200 with empty columns; that is the site refusing the exit, not a broken recipe, and whenever the page arrives every column fills. mobile.de car listings (Germany) for a make/model pair, by mobile.de's own numeric ids (`make_id`, `model_id` -- e.g. 3500/20 = BMW 525; the ids are the ones its filter form submits as makeModelVariant1.makeId/modelId). Returns one flat array per field across result cards; consumers zip them by index. ROW-ALIGNMENT INVARIANT: each field matches exactly one node per card, so every optional value is dug out of the per-card container's html by regex and a card without it yields null in its slot instead of shrinking the column and shifting every row after it. mobile.de's class names are build hashes (_NzmyG, _CoixB ...); every selector anchors on the `data-testid` hooks (listing-title-card-view, main-price-label, listing-details-attributes, sponsored-badge) inside the per-listing card, which is the `<a href=…/fahrzeuge/details.html?id=…>` wrapping the whole listing (title, price and attributes all sit inside it, measured 24 of 24 cards); `urls` keep the ad id and drop the per-session `searchId`/`refId`/`ref=srp` tail. Every listing is the site's own query-addressed page on one path, so the preset declares `links_stay_on_site` and the worker's self-referential-links guard, which counts distinct paths, does not report a healthy page as an unwrapped redirect. `prices` read \"3.750 €\" (dot-grouped) as 3750.0; `details` is the attribute line as printed (\"EZ 01/2008 • 256.000 km • 160 kW (218 PS) • Benzin\"); `sponsored` is an always-present marker (\"sponsored-badge\" on a Gesponsert card, \"\" otherwise; 4 of 24 marked on the capture). The site sits behind Akamai Bot Manager: a first navigation gets a 227-byte sensor shell (HTTP 200, `location.reload` after the sensor runs). What lets the page through is a warmup of https://www.mobile.de/ (the target origin suchen.mobile.de seeds nothing); through the presets as shipped both twins passed about 1 attempt in 4 (see ENGINE below). Both twins carry the warmup because without it nothing passed. ENGINE: Camoufox, fingerprint_profile=windows_on_host. MEASURED 2026-09-06 through the preset as shipped, LOW: 1 of 6 runs returned the results page (24 listings, every column full); the other five ended on the Akamai shell. Camoufox with humanize on top (2 more one-at-a-time probes) got the shell both times, and the three raw probes before the preset existed got it 3 of 3 -- the same per-attempt lottery as the Chromium twin, with no engine ahead (research/preset_audit_new_bases_2026_09_06.json + …_seq_…). timeout_ms 31000 (per-phase, with the 10 s warmup dwell; see test_builtin_timeout_fits_the_first_attempt). SCOPE FIX (review 2026-09-08): the card anchor was matched anywhere on the document, so a 'similar vehicles' block or a footer link to an ad would have added rows -- polluting the result set, and misaligning it outright for any such link that carries no title node. Every column is now scoped to `[data-testid='result-list']`. On the 2026-09-06 capture this changes nothing (all 24 anchors already sit inside the list), which is the point: it is a guard, not a repair. RE-MEASURED 2026-09-11 through the preset as shipped: 7 of 8 across both twins (chromium 4/4, camoufox 3/4 -- the one failure was NS_BINDING_ABORTED on navigation, not the Akamai page). Five days after the 09-06 run and on the same pool, which is the evidence that the rate tracks exit reputation.",
+  "kind": "builtin",
+  "url_template": "https://suchen.mobile.de/fahrzeuge/search.html?isSearchRequest=true&makeModelVariant1.makeId={make_id}&makeModelVariant1.modelId={model_id}",
+  "request_defaults": {
+    "device": "desktop",
+    "proxy_type": "prem_res_rotating",
+    "warmup": {
+      "type": "custom",
+      "url": "https://www.mobile.de/",
+      "dwell_ms": 10000
+    },
+    "wait_until": "load",
+    "wait_for_selector": "[data-testid='listing-title-card-view']",
+    "timeout_ms": 31000,
+    "block_assets": false,
+    "browser_engine": "camoufox",
+    "fingerprint_profile": "windows_on_host"
+  },
+  "locales": {
+    "de": {
+      "domain": "de",
+      "country": "DE"
+    }
+  },
+  "default_locale": "de",
+  "parsing_instructions": {
+    "type": "css",
+    "fields": {
+      "titles": {
+        "selector": "[data-testid='result-list'] a[href*='/fahrzeuge/details.html'] [data-testid='listing-title-card-view']",
+        "all": true,
+        "required": true,
+        "post_process": [
+          {
+            "op": "strip"
+          }
+        ]
+      },
+      "urls": {
+        "selector": "[data-testid='result-list'] a[href*='/fahrzeuge/details.html']",
+        "attr": "href",
+        "all": true,
+        "post_process": [
+          {
+            "op": "regex",
+            "args": [
+              "^([^?]+\\?id=\\d+)"
+            ]
+          }
+        ]
+      },
+      "prices": {
+        "selector": "[data-testid='result-list'] a[href*='/fahrzeuge/details.html']",
+        "attr": "html",
+        "all": true,
+        "post_process": [
+          {
+            "op": "regex",
+            "args": [
+              "(?s)main-price-label.*?(\\d[\\d.,]*)\\s*€"
+            ]
+          },
+          {
+            "op": "parse_price"
+          }
+        ]
+      },
+      "details": {
+        "selector": "[data-testid='result-list'] a[href*='/fahrzeuge/details.html']",
+        "attr": "html",
+        "all": true,
+        "post_process": [
+          {
+            "op": "regex",
+            "args": [
+              "(?s)listing-details-attributes[^>]*>(.*?)</div>"
+            ]
+          },
+          {
+            "op": "strip_tags"
+          },
+          {
+            "op": "strip"
+          }
+        ]
+      },
+      "sponsored": {
+        "selector": "[data-testid='result-list'] a[href*='/fahrzeuge/details.html']",
+        "attr": "html",
+        "all": true,
+        "post_process": [
+          {
+            "op": "regex",
+            "args": [
+              "sponsored-badge|\\Z"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "titles": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "urls": {
+        "type": "array",
+        "items": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "prices": {
+        "type": "array",
+        "items": {
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      },
+      "details": {
+        "type": "array",
+        "items": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "sponsored": {
+        "type": "array",
+        "items": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    }
+  },
+  "self_heal": true,
+  "links_stay_on_site": true,
+  "prompt_schema": null,
+  "llm_extract_prompt": null,
+  "version": 2,
+  "updated_at": 1788652800
+}

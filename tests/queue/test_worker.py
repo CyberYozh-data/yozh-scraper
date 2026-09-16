@@ -81,3 +81,21 @@ async def test_tick_noop_when_browser_not_started(monkeypatch):
     state.runners["chromium"]._started = False
     await worker_mod._lifecycle_tick(state)
     assert state.runners["chromium"].stop_calls == 0
+
+
+@pytest.mark.asyncio
+async def test_startup_probes_the_preset_store(monkeypatch):
+    """The worker startup hook runs the preset-store writability probe once."""
+    calls: list[str] = []
+    monkeypatch.setattr(worker_mod, "setup_logging", lambda *_a, **_k: None)
+    monkeypatch.setattr(worker_mod, "init_job_store", lambda: None)
+    monkeypatch.setattr(worker_mod, "get_job_store", lambda: SimpleNamespace(client=None))
+    monkeypatch.setattr(worker_mod, "init_session_store", lambda _client: None)
+    monkeypatch.setattr(worker_mod, "_new_runner", lambda engine: engine)
+    monkeypatch.setattr(worker_mod.FilePresetStore, "warn_if_not_writable", lambda self: calls.append("probe"))
+    state = SimpleNamespace()
+
+    await worker_mod.on_worker_startup(state)
+    state.lifecycle_task.cancel()
+
+    assert calls == ["probe"]

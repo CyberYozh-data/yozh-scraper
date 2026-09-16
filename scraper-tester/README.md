@@ -91,8 +91,11 @@ they render as empty dropdowns with a silent console rather than an error.
 
 ## Conveniences
 
-- **Header presets** — Chrome / Firefox / Safari / Mobile / RU / anti-bot
-  fingerprints. Mobile presets also flip the Device selector to `mobile`.
+- **Header presets** — `en_us` / `ru_locale` / `de_locale` / `privacy` /
+  `navigation`: `Accept-Language`, `DNT`/`Sec-GPC` and navigation headers. No
+  identity presets and no form-factor flip — the engine states the UA and the
+  `Sec-CH-UA*` family, and the API drops them from `headers` on every engine,
+  so a preset offering them would have been a control that does nothing.
 - **Custom selects** — every native `<select>` is transparently wrapped in a
   styled dropdown (white popup, `shadow-level-4`, checkmark on the selected
   option). The underlying `<select>` stays in the DOM, so all tab-switch

@@ -1,3 +1,23 @@
+# Hardening (audit H-06): our four services forbid privilege escalation, drop
+# every capability and cap their process count. Chrome runs `--no-sandbox`
+# under uid 0 and needs no capability for that. With CAP_DAC_OVERRIDE gone,
+# root inside a container obeys file modes: a bind-mounted `data/presets`
+# must be writable by uid 0 (a directory Docker creates is; one owned by the
+# host user needs `chmod o+rwx`). Redis is left alone: its entrypoint chowns
+# /data and drops to the `redis` user itself, which needs CHOWN/SETUID/SETGID.
+# Turning Chrome's sandbox on takes more than a non-root user: the SUID helper
+# is blocked by no-new-privileges and the namespace sandbox by Docker's default
+# seccomp profile (no unprivileged user namespaces), so that step also brings a
+# seccomp profile or daemon-level userns-remap, and drops `--no-sandbox`.
+# Per-host override files must not repeat `security_opt`: Compose appends the
+# lists across files and then rejects the duplicate. `cap_add: [SYS_PTRACE]`
+# in an override brings py-spy/strace back for a debugging session.
+x-hardened: &hardened
+  security_opt:
+    - no-new-privileges:true
+  cap_drop:
+    - ALL
+
 services:
   web-scraper:
     build: .
@@ -19,6 +39,8 @@ services:
       - ./data/presets:/app/data/presets
     # No shm_size / browsers here anymore — the API only enqueues jobs and
     # reads Redis. Browsers live in the scraper-worker containers below.
+    <<: *hardened
+    pids_limit: 512
     depends_on:
       redis:
         condition: service_healthy
@@ -45,6 +67,20 @@ services:
       - REDIS_URL=${REDIS_URL:-redis://redis:6379/0}
     shm_size: "1gb"
     stop_grace_period: 120s
+    # Same store as web-scraper: self-heal persists from the worker
+    # (src/presets/worker_parse.py). Stopgap for audit M-10 -- the target shape
+    # returns the healed plan in the job result and persists from the API,
+    # which needs no store on the worker at all.
+    volumes:
+      - ./data/presets:/app/data/presets
+    <<: *hardened
+    # pids_limit counts threads. Measured on real Chrome 152 headful: base ~35,
+    # a warm Chrome ~110-150, a Camoufox ~205-245; a worker process can hold
+    # both at once (warm Chromium plus a Camoufox launch), ~315 each. Sized
+    # for WORKERS<=4 (~1300 busy); bump per host when raising WORKERS. When
+    # the limit binds, clone() fails with EAGAIN and the browser reports a
+    # crash -- check /sys/fs/cgroup/pids.events inside the container.
+    pids_limit: 2048
     depends_on:
       redis:
         condition: service_healthy
@@ -62,6 +98,8 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
       - REDIS_URL=${REDIS_URL:-redis://redis:6379/0}
+    <<: *hardened
+    pids_limit: 128
     depends_on:
       redis:
         condition: service_healthy
@@ -83,6 +121,8 @@ services:
       # token has to be interpolated in explicitly or /map proxy resolution 401s
       # and silently degrades to direct. Sourced from the same host .env.
       - SERVICE_TOKEN=${SERVICE_TOKEN:-}
+    <<: *hardened
+    pids_limit: 256
     depends_on:
       - web-scraper
 

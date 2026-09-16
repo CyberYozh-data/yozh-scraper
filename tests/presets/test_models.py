@@ -165,3 +165,7 @@ class TestPresetMeta:
         )
         assert meta.name == "amazon_product"
         assert meta.version == 3
+
+    def test_a_stored_meta_from_before_the_query_field_still_validates(self):
+        """Stored page dicts cross deploy boundaries; an older one has no `query`."""
+        assert PresetMeta(name="n", source="s", locale=None, version=3).query is None

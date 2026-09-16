@@ -1,0 +1,416 @@
+[
+ {
+  "preset": "bing_search_camoufox",
+  "locale": "de",
+  "run": 0,
+  "params": {
+   "query": "best laptop 2026"
+  },
+  "job_id": "req_475e1bf00cfcad4eda7cc780",
+  "status": "done",
+  "meta": {
+   "fetch_ok": true,
+   "status_code": 200,
+   "final_url": "https://www.bing.com/search?q=best+laptop+2026&cc=de&setlang=de",
+   "retries": 0,
+   "proxy_type": "prem_res_rotating",
+   "applied_locale": "de-DE",
+   "applied_timezone": "UTC",
+   "error": null
+  },
+  "took_ms": 12224,
+  "job_error": null,
+  "warnings": [],
+  "data": {
+   "titles": [
+    "The Best Laptops We've Tested (September 2026) | PCMag",
+    "Notebook-Test.2026: Allround-Laptops auf dem Prüfstand - CHIP",
+    "Laptop-Test 2026: Die besten Notebooks aller Klassen im Vergleich",
+    "Laptop Testsieger 2026 | Stiftung Warentest - Produkte im Test",
+    "Laptops in Tests: Aktueller Vergleich 2026 - MediaMarkt",
+    "Das beste Laptop | Vergleich 09/2026 | F.A.Z. Kaufkompass",
+    "Laptops Tests 2026 - Alle Bestenlisten im Überblick! - COMPUTER BILD",
+    "Die besten Laptops | Test 08/2026 – Testberichte.de",
+    "Best Laptops 2026: Our benchmarked picks for productivity, …",
+    "Best laptops 2026: Premium, budget, gaming, 2-in-1, and more"
+   ],
+   "links": [
+    "https://www.pcmag.com/picks/the-best-laptops",
+    "https://www.chip.de/artikel/Laptop-Vergleich-Das-sind-die-Notebook-Testsieger_119941475.html",
+    "https://www.pcwelt.de/article/2215385/die-besten-laptops-test.html",
+    "https://produkte-im-test.de/laptops-im-test-stiftung-warentest/",
+    "https://www.mediamarkt.de/de/content/it-informatik/notebooks/beste-laptops-in-tests?msockid=1cdaece1681068ac258afb2b69246943",
+    "https://www.faz.net/kaufkompass/vergleich/das-beste-laptop-fuer-die-meisten/",
+    "https://www.computerbild.de/bestenlisten/notebooks/",
+    "https://www.testberichte.de/computer-hardware/2573/notebooks.html",
+    "https://www.tomshardware.com/laptops/best-laptops",
+    "https://www.pcworld.com/article/436674/best-pc-laptops.html"
+   ],
+   "snippets": [
+    "Vor 3 Tagen · Whether you want a simple budget PC, a productivity workhorse, or a screamer of a gaming notebook, our experts …",
+    "19. Juli 2026 · Alle Test & Kaufberatung. Aktuelle Testberichte. Bestenlisten. Alle Bestenlisten. Smartphones. In-Ear-Kopfhörer. …",
+    "Unser Notebook-Testvergleich 2026 bietet Ihnen einen kompakten Überblick und hilft, den besten Laptop für Ihre Bedürfnisse zu finden.",
+    "24. Aug. 2026 · Im Folgenden stellen wir sowohl die aktualisierten Empfehlungen als auch die bisherigen Testsieger 2026 von …",
+    "29. Apr. 2026 · Entdecke die besten Laptops für Gaming, Arbeit, Streaming & Co. Jetzt die Top-Modelle in Laptop-Tests bei …",
+    "8. Juli 2026 · Wir haben uns 77 Laptops angesehen. Unser Favorit: das Lenovo Thinkpad X9 15 Aura Edition. Es läuft lang, hat ein …",
+    "Egal ob performanter Gaming-Laptop, günstiges Chrome-Book, oder stylischer MacBook Pro: Um da als Käufer das richtige …",
+    "Im Vergleich zu den teureren ThinkPads haben sie es häufiger schwerer, sich gegen Mitbewerber durchzusetzen – schneiden aber …",
+    "Go beyond the headlines with Tom’s Hardware Premium. Access Bench, Roadmaps, deep analysis and other exclusive tools. …",
+    "Vor 2 Tagen · To find the best laptops, we employ thorough hands-on, testing-based evaluations of laptop PCs from all the top brands."
+   ],
+   "result_blocks__slimmed_rows": 10
+  },
+  "fill": {
+   "titles": 1.0,
+   "links": 1.0
+  },
+  "entries": 10,
+  "has_data": true,
+  "elapsed_s": 15.0
+ },
+ {
+  "preset": "bing_search_camoufox",
+  "locale": "de",
+  "run": 1,
+  "params": {
+   "query": "best laptop 2026"
+  },
+  "job_id": "req_4ed1e99cd12ee82fd61080bc",
+  "status": "done",
+  "meta": {
+   "fetch_ok": true,
+   "status_code": 200,
+   "final_url": "https://www.bing.com/search?q=best+laptop+2026&cc=de&setlang=de",
+   "retries": 0,
+   "proxy_type": "prem_res_rotating",
+   "applied_locale": "de-DE",
+   "applied_timezone": "UTC",
+   "error": null
+  },
+  "took_ms": 9146,
+  "job_error": null,
+  "warnings": [],
+  "data": {
+   "titles": [
+    "The Best Laptops We've Tested (September 2026) | PCMag",
+    "Notebook-Test.2026: Allround-Laptops auf dem Prüfstand - CHIP",
+    "Laptop-Test 2026: Die besten Notebooks aller Klassen im Vergleich",
+    "Laptop Testsieger 2026 | Stiftung Warentest - Produkte im Test",
+    "Laptops in Tests: Aktueller Vergleich 2026 - MediaMarkt",
+    "Das beste Laptop | Vergleich 09/2026 | F.A.Z. Kaufkompass",
+    "Laptops Tests 2026 - Alle Bestenlisten im Überblick! - COMPUTER BILD",
+    "Die besten Laptops | Test 08/2026 – Testberichte.de",
+    "Best Laptops 2026: Our benchmarked picks for productivity, …",
+    "Best laptops 2026: Premium, budget, gaming, 2-in-1, and more"
+   ],
+   "links": [
+    "https://www.pcmag.com/picks/the-best-laptops",
+    "https://www.chip.de/artikel/Laptop-Vergleich-Das-sind-die-Notebook-Testsieger_119941475.html",
+    "https://www.pcwelt.de/article/2215385/die-besten-laptops-test.html",
+    "https://produkte-im-test.de/laptops-im-test-stiftung-warentest/",
+    "https://www.mediamarkt.de/de/content/it-informatik/notebooks/beste-laptops-in-tests?msockid=067db7d7d488625f2a11a01dd5c263ac",
+    "https://www.faz.net/kaufkompass/vergleich/das-beste-laptop-fuer-die-meisten/",
+    "https://www.computerbild.de/bestenlisten/notebooks/",
+    "https://www.testberichte.de/computer-hardware/2573/notebooks.html",
+    "https://www.tomshardware.com/laptops/best-laptops",
+    "https://www.pcworld.com/article/436674/best-pc-laptops.html"
+   ],
+   "snippets": [
+    "Vor 3 Tagen · Whether you want a simple budget PC, a productivity workhorse, or a screamer of a gaming notebook, our experts …",
+    "19. Juli 2026 · Alle Test & Kaufberatung. Aktuelle Testberichte. Bestenlisten. Alle Bestenlisten. Smartphones. In-Ear-Kopfhörer. …",
+    "Unser Notebook-Testvergleich 2026 bietet Ihnen einen kompakten Überblick und hilft, den besten Laptop für Ihre Bedürfnisse zu finden.",
+    "24. Aug. 2026 · Im Folgenden stellen wir sowohl die aktualisierten Empfehlungen als auch die bisherigen Testsieger 2026 von …",
+    "29. Apr. 2026 · Entdecke die besten Laptops für Gaming, Arbeit, Streaming & Co. Jetzt die Top-Modelle in Laptop-Tests bei …",
+    "8. Juli 2026 · Wir haben uns 77 Laptops angesehen. Unser Favorit: das Lenovo Thinkpad X9 15 Aura Edition. Es läuft lang, hat ein …",
+    "Egal ob performanter Gaming-Laptop, günstiges Chrome-Book, oder stylischer MacBook Pro: Um da als Käufer das richtige …",
+    "Im Vergleich zu den teureren ThinkPads haben sie es häufiger schwerer, sich gegen Mitbewerber durchzusetzen – schneiden aber …",
+    "Go beyond the headlines with Tom’s Hardware Premium. Access Bench, Roadmaps, deep analysis and other exclusive tools. …",
+    "Vor 2 Tagen · To find the best laptops, we employ thorough hands-on, testing-based evaluations of laptop PCs from all the top brands."
+   ],
+   "result_blocks__slimmed_rows": 10
+  },
+  "fill": {
+   "titles": 1.0,
+   "links": 1.0
+  },
+  "entries": 10,
+  "has_data": true,
+  "elapsed_s": 12.0
+ },
+ {
+  "preset": "bing_search_camoufox",
+  "locale": "ru",
+  "run": 0,
+  "params": {
+   "query": "best laptop 2026"
+  },
+  "job_id": "req_3afeda04cd3945f0d0c0a84b",
+  "status": "done",
+  "meta": {
+   "fetch_ok": true,
+   "status_code": 200,
+   "final_url": "https://www.bing.com/search?q=best+laptop+2026&cc=ru&setlang=ru",
+   "retries": 0,
+   "proxy_type": "prem_res_rotating",
+   "applied_locale": "ru-RU",
+   "applied_timezone": "UTC",
+   "error": null
+  },
+  "took_ms": 16168,
+  "job_error": null,
+  "warnings": [],
+  "data": {
+   "titles": [
+    "Перевод BEST с английского на русский: Cambridge Dictionary",
+    "Домашняя страница - ЛУЧШИЕ В РОССИИ – КОМПАНИИ И …",
+    "Best - перевод, транскрипция, произношение, примеры",
+    "BEST | English meaning - Cambridge Dictionary",
+    "BEST Definition & Meaning - Merriam-Webster",
+    "Best Buy | Official Online Store | Shop Now & Save",
+    "Best – интернет-магазин на Ozon: каталог товаров",
+    "Best - definition of best by The Free Dictionary",
+    "best - WordReference.com Dictionary of English",
+    "best - Wiktionary, the free dictionary"
+   ],
+   "links": [
+    "https://dictionary.cambridge.org/ru/%D1%81%D0%BB%D0%BE%D0%B2%D0%B0%D1%80%D1%8C/%D0%B0%D0%BD%D0%B3%D0%BB%D0%BE-%D1%80%D1%83%D1%81%D1%81%D0%BA%D0%B8%D0%B9/best",
+    "https://best.ru/",
+    "https://wooordhunt.ru/word/best",
+    "https://dictionary.cambridge.org/dictionary/english/best",
+    "https://www.merriam-webster.com/dictionary/best",
+    "https://www.bestbuy.com/",
+    "https://www.ozon.ru/seller/best-2148609/",
+    "https://www.thefreedictionary.com/best",
+    "https://www.wordreference.com/definition/best",
+    "https://en.wiktionary.org/wiki/best"
+   ],
+   "snippets": [
+    "She's one of our best students. Give her my best wishes. Susie's my best friend (= the friend I like more than any other). What's the …",
+    "Платформа, посвящённая признанию лучших компаний и персон года в России.",
+    "Перевод Best - лучший, больший, лучше всего, больше всего, провести, перехитрить. Транскрипция - |best|. Примеры - at …",
+    "best adjective, adverb (HIGHEST QUALITY) of the highest quality, to the greatest degree, in the most effective way, or being the …",
+    "27 авг. 2026 г. · In the best of all possible worlds, no one would be without food and clean water. I have a wonderful family and a …",
+    "Shop Best Buy for electronics, computers, appliances, cell phones, video games & more new tech. Store pickup & free 2-day …",
+    "Каталог товаров интернет-магазина Best, большой ассортимент товаров в наличии, быстрая доставка, бонусы, скидки и …",
+    "1. In a most excellent way; most creditably or advantageously. 2. To the greatest degree or extent; most: \"He was certainly the best …",
+    "Idioms (all) for the best, producing good as the final result: It turned out to be all for the best when I didn't get that job. Idioms as best …",
+    "27 авг. 2026 г. · Although it is sometimes considered an adverb, best is virtually synonymous with should in \" We best be going, \" and …"
+   ],
+   "result_blocks__slimmed_rows": 10
+  },
+  "fill": {
+   "titles": 1.0,
+   "links": 1.0
+  },
+  "entries": 10,
+  "has_data": true,
+  "elapsed_s": 18.0
+ },
+ {
+  "preset": "bing_search_camoufox",
+  "locale": "ru",
+  "run": 1,
+  "params": {
+   "query": "best laptop 2026"
+  },
+  "job_id": "req_2e30fe92d257a39c6eccaf84",
+  "status": "done",
+  "meta": {
+   "fetch_ok": true,
+   "status_code": 200,
+   "final_url": "https://www.bing.com/search?q=best+laptop+2026&cc=ru&setlang=ru",
+   "retries": 0,
+   "proxy_type": "prem_res_rotating",
+   "applied_locale": "ru-RU",
+   "applied_timezone": "UTC",
+   "error": null
+  },
+  "took_ms": 17686,
+  "job_error": null,
+  "warnings": [],
+  "data": {
+   "titles": [
+    "Перевод BEST с английского на русский: Cambridge Dictionary",
+    "Домашняя страница - ЛУЧШИЕ В РОССИИ – КОМПАНИИ И …",
+    "Best - перевод, транскрипция, произношение, примеры",
+    "BEST | English meaning - Cambridge Dictionary",
+    "BEST Definition & Meaning - Merriam-Webster",
+    "Best Buy | Official Online Store | Shop Now & Save",
+    "Best – интернет-магазин на Ozon: каталог товаров",
+    "Best - definition of best by The Free Dictionary",
+    "best - WordReference.com Dictionary of English",
+    "best - Wiktionary, the free dictionary"
+   ],
+   "links": [
+    "https://dictionary.cambridge.org/ru/%D1%81%D0%BB%D0%BE%D0%B2%D0%B0%D1%80%D1%8C/%D0%B0%D0%BD%D0%B3%D0%BB%D0%BE-%D1%80%D1%83%D1%81%D1%81%D0%BA%D0%B8%D0%B9/best",
+    "https://best.ru/",
+    "https://wooordhunt.ru/word/best",
+    "https://dictionary.cambridge.org/dictionary/english/best",
+    "https://www.merriam-webster.com/dictionary/best",
+    "https://www.bestbuy.com/",
+    "https://www.ozon.ru/seller/best-2148609/",
+    "https://www.thefreedictionary.com/best",
+    "https://www.wordreference.com/definition/best",
+    "https://en.wiktionary.org/wiki/best"
+   ],
+   "snippets": [
+    "She's one of our best students. Give her my best wishes. Susie's my best friend (= the friend I like more than any other). What's the …",
+    "Платформа, посвящённая признанию лучших компаний и персон года в России.",
+    "Перевод Best - лучший, больший, лучше всего, больше всего, провести, перехитрить. Транскрипция - |best|. Примеры - at …",
+    "best adjective, adverb (HIGHEST QUALITY) of the highest quality, to the greatest degree, in the most effective way, or being the …",
+    "27 авг. 2026 г. · In the best of all possible worlds, no one would be without food and clean water. I have a wonderful family and a …",
+    "Shop Best Buy for electronics, computers, appliances, cell phones, video games & more new tech. Store pickup & free 2-day …",
+    "Каталог товаров интернет-магазина Best, большой ассортимент товаров в наличии, быстрая доставка, бонусы, скидки и …",
+    "1. In a most excellent way; most creditably or advantageously. 2. To the greatest degree or extent; most: \"He was certainly the best …",
+    "Idioms (all) for the best, producing good as the final result: It turned out to be all for the best when I didn't get that job. Idioms as best …",
+    "27 авг. 2026 г. · Although it is sometimes considered an adverb, best is virtually synonymous with should in \" We best be going, \" and …"
+   ],
+   "result_blocks__slimmed_rows": 10
+  },
+  "fill": {
+   "titles": 1.0,
+   "links": 1.0
+  },
+  "entries": 10,
+  "has_data": true,
+  "elapsed_s": 18.0
+ },
+ {
+  "preset": "bing_search_camoufox",
+  "locale": "us",
+  "run": 0,
+  "params": {
+   "query": "best laptop 2026"
+  },
+  "job_id": "req_1fb5648de55408ad6aca5a0c",
+  "status": "done",
+  "meta": {
+   "fetch_ok": true,
+   "status_code": 200,
+   "final_url": "https://www.bing.com/search?q=best+laptop+2026&cc=us&setlang=en",
+   "retries": 0,
+   "proxy_type": "prem_res_rotating",
+   "applied_locale": "en-US",
+   "applied_timezone": "UTC",
+   "error": null
+  },
+  "took_ms": 13368,
+  "job_error": null,
+  "warnings": [],
+  "data": {
+   "titles": [
+    "The Best Laptops We've Tested (September 2026) | PCMag",
+    "Best Laptops of 2026: Top Picks Tested by CNET",
+    "The 15 Best Laptops of 2026 | Reviews by Wirecutter",
+    "Best Laptops 2026 - Forbes Vetted",
+    "Best Laptops (2026): My Top Recommendations After Testing Hundreds | WIRED",
+    "Best laptops 2026: Premium, budget, gaming, 2-in-1, and more",
+    "Best Laptops 2026: Our benchmarked picks for productivity, …",
+    "The best laptops in 2026 — tested, reviewed, and worth your money",
+    "The Best Laptops for 2026 - PCMag UK",
+    "Best Laptop 2026: Top picks, rated and ranked - Trusted Reviews"
+   ],
+   "links": [
+    "https://www.pcmag.com/picks/the-best-laptops",
+    "https://www.cnet.com/tech/computing/best-laptop/",
+    "https://www.nytimes.com/wirecutter/reviews/best-laptops/",
+    "https://www.forbes.com/sites/forbes-personal-shopper/article/best-laptop/",
+    "https://www.wired.com/story/best-laptops/",
+    "https://www.pcworld.com/article/436674/best-pc-laptops.html",
+    "https://www.tomshardware.com/laptops/best-laptops",
+    "https://www.tomsguide.com/computing/laptops/best-laptops",
+    "https://uk.pcmag.com/laptops/158/the-best-laptops",
+    "https://www.trustedreviews.com/best/best-laptops-3431966"
+   ],
+   "snippets": [
+    "3 days ago · Whether you want a simple budget PC, a productivity workhorse, or a screamer of a gaming notebook, our experts have …",
+    "Aug 11, 2026 · Tech> Computing> Laptops Best Laptops of 2026: Top Picks Tested by CNET I have a new favorite Windows laptop, …",
+    "4 days ago · From budget-friendly options to thin-and-light ultrabooks to powerful gaming laptops, we’ve spent hundreds of hours …",
+    "Jun 15, 2026 · Here are the best laptops you can buy today, for different types of consumers and use cases. We tested over 20 …",
+    "Aug 28, 2026 · I’ve been reviewing laptops for over a decade, and this is my advice on how to find the right laptop for you.",
+    "2 days ago · To find the best laptops, we employ thorough hands-on, testing-based evaluations of laptop PCs from all the top brands.",
+    "Prime portable PCs for work, play, and general use.",
+    "Here are the best laptops my team and I recommend based on our lab testing and hands-on reviews",
+    "3 days ago · Our current best laptop for most people is the 14-inch HP OmniBook 5, a stellar-value OLED notebook with incredible 34 …",
+    "Aug 10, 2026 · Our experts have tested hundreds of laptops to sort the wheat from the chaff, and their top picks have been rounded …"
+   ],
+   "result_blocks__slimmed_rows": 10
+  },
+  "fill": {
+   "titles": 1.0,
+   "links": 1.0
+  },
+  "entries": 10,
+  "has_data": true,
+  "elapsed_s": 15.0
+ },
+ {
+  "preset": "bing_search_camoufox",
+  "locale": "us",
+  "run": 1,
+  "params": {
+   "query": "best laptop 2026"
+  },
+  "job_id": "req_3dc4120ae1eee149db511dce",
+  "status": "done",
+  "meta": {
+   "fetch_ok": true,
+   "status_code": 200,
+   "final_url": "https://www.bing.com/search?q=best+laptop+2026&cc=us&setlang=en",
+   "retries": 0,
+   "proxy_type": "prem_res_rotating",
+   "applied_locale": "en-US",
+   "applied_timezone": "UTC",
+   "error": null
+  },
+  "took_ms": 18831,
+  "job_error": null,
+  "warnings": [],
+  "data": {
+   "titles": [
+    "The Best Laptops We've Tested (September 2026) | PCMag",
+    "The 15 Best Laptops of 2026 | Reviews by Wirecutter",
+    "Best Laptops of 2026: Top Picks Tested by CNET",
+    "Best Laptops (2026): My Top Recommendations After Testing Hundreds | WIRED",
+    "Best laptops 2026: Premium, budget, gaming, 2-in-1, and more",
+    "Best Laptops 2026 - Forbes Vetted",
+    "The best laptops in 2026 — tested, reviewed, and worth your money",
+    "Best Laptops 2026: Our benchmarked picks for productivity, …",
+    "The Best Laptops for 2026 - PCMag UK",
+    "Best Laptop 2026: Top picks, rated and ranked - Trusted Reviews"
+   ],
+   "links": [
+    "https://www.pcmag.com/picks/the-best-laptops",
+    "https://www.nytimes.com/wirecutter/reviews/best-laptops/",
+    "https://www.cnet.com/tech/computing/best-laptop/",
+    "https://www.wired.com/story/best-laptops/",
+    "https://www.pcworld.com/article/436674/best-pc-laptops.html",
+    "https://www.forbes.com/sites/forbes-personal-shopper/article/best-laptop/",
+    "https://www.tomsguide.com/computing/laptops/best-laptops",
+    "https://www.tomshardware.com/laptops/best-laptops",
+    "https://uk.pcmag.com/laptops/158/the-best-laptops",
+    "https://www.trustedreviews.com/best/best-laptops-3431966"
+   ],
+   "snippets": [
+    "3 days ago · Whether you want a simple budget PC, a productivity workhorse, or a screamer of a gaming notebook, our experts have …",
+    "4 days ago · From budget-friendly options to thin-and-light ultrabooks to powerful gaming laptops, we’ve spent hundreds of hours …",
+    "Aug 11, 2026 · Tech> Computing> Laptops Best Laptops of 2026: Top Picks Tested by CNET I have a new favorite Windows laptop, …",
+    "Aug 28, 2026 · I’ve been reviewing laptops for over a decade, and this is my advice on how to find the right laptop for you.",
+    "2 days ago · To find the best laptops, we employ thorough hands-on, testing-based evaluations of laptop PCs from all the top brands.",
+    "Jun 15, 2026 · Here are the best laptops you can buy today, for different types of consumers and use cases. We tested over 20 …",
+    "Here are the best laptops my team and I recommend based on our lab testing and hands-on reviews",
+    "Prime portable PCs for work, play, and general use.",
+    "3 days ago · Our current best laptop for most people is the 14-inch HP OmniBook 5, a stellar-value OLED notebook with incredible 34 …",
+    "Aug 10, 2026 · Our experts have tested hundreds of laptops to sort the wheat from the chaff, and their top picks have been rounded …"
+   ],
+   "result_blocks__slimmed_rows": 10
+  },
+  "fill": {
+   "titles": 1.0,
+   "links": 1.0
+  },
+  "entries": 10,
+  "has_data": true,
+  "elapsed_s": 21.0
+ }
+]

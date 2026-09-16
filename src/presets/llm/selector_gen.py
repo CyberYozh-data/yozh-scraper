@@ -28,15 +28,34 @@ _SYSTEM = (
 )
 
 
+_ROW_SCOPED = (
+    "Every selector you return is evaluated RELATIVE TO A ROW, not to the "
+    "document: the row is `{container}`. Write each selector as if the row "
+    "were the document root. Start XPath with './/' (or '.' for the row "
+    "itself); never with '/' or '//', never use '..' or the ancestor, parent, "
+    "preceding, following or following-sibling axes, and no '|' unions. For "
+    "CSS do not use the sibling combinators '+' or '~'. A selector that "
+    "leaves its row will be rejected."
+)
+
+
 async def generate_selectors(
     page_html: str,
     schema: dict[str, Any],
     model: str,
     *,
     max_tokens: int | None = None,
+    container: str | None = None,
 ) -> ParsingInstructions:
+    system = _SYSTEM
+    if container:
+        # Without this the model has no way to know, and every heal of a
+        # row-scoped recipe comes back document-scoped and is refused -- which
+        # would have quietly traded self-heal away for any recipe that adopts
+        # `container`.
+        system = f"{_SYSTEM} {_ROW_SCOPED.format(container=container)}"
     messages = [
-        {"role": "system", "content": _SYSTEM},
+        {"role": "system", "content": system},
         {
             "role": "user",
             "content": (

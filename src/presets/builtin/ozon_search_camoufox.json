@@ -1,0 +1,162 @@
+{
+  "name": "ozon_search_camoufox",
+  "source": "ozon",
+  "description": "Ozon.ru search results page (Russia). Returns one flat array per field across result cards; consumers zip them by index. ROW-ALIGNMENT INVARIANT: each field matches exactly one node per card, so every optional value is dug out of the per-card container's html by regex and a card without it yields null in its slot instead of shrinking the column and shifting every row after it. Ozon's class names are build hashes (g3p_21, ag5_12_6-a0 ...) that rotate between releases, so every selector anchors on what survives a release: the `data-widget=\"tileGridDesktop\"` grid, the `tile-root` card class, the `tile-clickable-element` anchor class and the typography classes (tsBody500Medium = title, tsHeadline500Medium = current price, tsBodyControl300XSmall = rating and review count); self_heal is on for the day one of those moves. `urls` reads the anchor that wraps the TITLE (each card carries two anchors to the same product, one around the image), drops Ozon's `?at=` attribution token and resolves absolute. Prices carry U+2009 thin spaces as thousands separators (\"55 119 ₽\"); parse_price reads them as grouping since 2026-09-06 (they used to parse as 55.0). Ozon may answer a generic query with a category page (\"category_was_predicted\") instead of /search/; the tile grid is the same widget on both. At `load` the grid holds the first server-rendered batch (8 tiles measured; 24 on a run that settled longer) -- Ozon appends the rest on scroll, which a preset does not do. The antibot challenge (\"Antibot Challenge Page\", HTTP 403, JS proof + reload) is passed by the homepage warmup: without it both engines got the challenge page on every probe (2026-09-06). ENGINE: Camoufox, fingerprint_profile=windows_on_host. MEASURED 2026-09-06 through the preset as shipped (research/preset_audit_new_bases_2026_09_06.json): 2 of 2 runs returned the grid, 8 rows each, every column full, urls absolute, retries 0, took_ms 24-28 s; the probes earlier that day: 2 of 2 with the homepage warmup (706 KB and 863 KB pages). timeout_ms 31000 (per-phase, with the 10 s warmup dwell; see test_builtin_timeout_fits_the_first_attempt). ROW-ALIGNMENT FIX (review 2026-09-08): `titles` and `urls` require the title span, but `prices`/`ratings`/`review_counts` selected every `.tile-root`. A card rendered without a title (Ozon does this for some promo tiles) shortened the first two columns while the last three kept their slot, so every later row paired with the previous card's price -- reproduced: titles 2, prices 3, and the third title zipped against the second card's price. All five columns now select from the same card set: a tile that carries a title.",
+  "kind": "builtin",
+  "url_template": "https://www.ozon.ru/search/?text={query}",
+  "request_defaults": {
+    "device": "desktop",
+    "proxy_type": "prem_res_rotating",
+    "warmup": {
+      "type": "homepage",
+      "dwell_ms": 10000
+    },
+    "wait_until": "load",
+    "wait_for_selector": "[data-widget='tileGridDesktop'] .tile-root",
+    "timeout_ms": 31000,
+    "block_assets": false,
+    "browser_engine": "camoufox",
+    "fingerprint_profile": "windows_on_host"
+  },
+  "locales": {
+    "ru": {
+      "domain": "ru",
+      "country": "RU"
+    }
+  },
+  "default_locale": "ru",
+  "parsing_instructions": {
+    "type": "css",
+    "fields": {
+      "titles": {
+        "selector": "[data-widget='tileGridDesktop'] .tile-root span.tsBody500Medium",
+        "all": true,
+        "required": true,
+        "post_process": [
+          {
+            "op": "strip"
+          }
+        ]
+      },
+      "urls": {
+        "selector": "//div[@data-widget='tileGridDesktop']//div[contains(@class,'tile-root')]//a[contains(@class,'tile-clickable-element')][.//span[contains(@class,'tsBody500Medium')]]/@href",
+        "type": "xpath",
+        "all": true,
+        "post_process": [
+          {
+            "op": "regex",
+            "args": [
+              "^([^?#]+)"
+            ]
+          },
+          {
+            "op": "urljoin"
+          }
+        ]
+      },
+      "prices": {
+        "selector": "//div[@data-widget='tileGridDesktop']//div[contains(concat(' ', normalize-space(@class), ' '), ' tile-root ')][.//span[contains(concat(' ', normalize-space(@class), ' '), ' tsBody500Medium ')]]",
+        "attr": "html",
+        "all": true,
+        "post_process": [
+          {
+            "op": "regex",
+            "args": [
+              "tsHeadline500Medium[^>]*>([^<]*?)\\s*₽"
+            ]
+          },
+          {
+            "op": "parse_price"
+          }
+        ],
+        "type": "xpath"
+      },
+      "ratings": {
+        "selector": "//div[@data-widget='tileGridDesktop']//div[contains(concat(' ', normalize-space(@class), ' '), ' tile-root ')][.//span[contains(concat(' ', normalize-space(@class), ' '), ' tsBody500Medium ')]]",
+        "attr": "html",
+        "all": true,
+        "post_process": [
+          {
+            "op": "regex",
+            "args": [
+              "tsBodyControl300XSmall[^>]*>(\\d[.,]\\d)<"
+            ]
+          },
+          {
+            "op": "parse_float"
+          }
+        ],
+        "type": "xpath"
+      },
+      "review_counts": {
+        "selector": "//div[@data-widget='tileGridDesktop']//div[contains(concat(' ', normalize-space(@class), ' '), ' tile-root ')][.//span[contains(concat(' ', normalize-space(@class), ' '), ' tsBody500Medium ')]]",
+        "attr": "html",
+        "all": true,
+        "post_process": [
+          {
+            "op": "regex",
+            "args": [
+              "tsBodyControl300XSmall[^>]*>(\\d[\\d\\s]*?)\\s*отзыв"
+            ]
+          },
+          {
+            "op": "parse_int"
+          }
+        ],
+        "type": "xpath"
+      }
+    }
+  },
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "titles": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "urls": {
+        "type": "array",
+        "items": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "prices": {
+        "type": "array",
+        "items": {
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      },
+      "ratings": {
+        "type": "array",
+        "items": {
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      },
+      "review_counts": {
+        "type": "array",
+        "items": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        }
+      }
+    }
+  },
+  "self_heal": true,
+  "prompt_schema": null,
+  "llm_extract_prompt": null,
+  "version": 2,
+  "updated_at": 1788652800
+}

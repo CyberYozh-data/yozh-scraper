@@ -1,0 +1,347 @@
+[
+ {
+  "preset": "mobile_de_search_camoufox",
+  "locale": "de",
+  "run": 0,
+  "params": {
+   "make_id": "3500",
+   "model_id": "20"
+  },
+  "job_id": "req_78c22573451ef9dbb457fd45",
+  "status": "done",
+  "meta": {
+   "fetch_ok": false,
+   "status_code": 200,
+   "final_url": "https://suchen.mobile.de/fahrzeuge/search.html?isSearchRequest=true&makeModelVariant1.makeId=3500&makeModelVariant1.modelId=20&s=Car&vc=Car",
+   "retries": 3,
+   "proxy_type": "prem_res_rotating",
+   "applied_locale": "de-DE",
+   "applied_timezone": "Europe/Berlin",
+   "error": null
+  },
+  "took_ms": 108889,
+  "job_error": null,
+  "warnings": [
+   "selector_not_found: [data-testid='listing-title-card-view']",
+   "status_code=200",
+   "attempt 2/3 shortened to 17253ms of the requested 31000ms to fit the page-task ceiling",
+   "attempt 3/3 shortened to 6181ms of the requested 31000ms to fit the page-task ceiling",
+   "field 'titles': required selector not found"
+  ],
+  "data": {
+   "titles": [],
+   "urls": [],
+   "prices": [],
+   "details": [],
+   "sponsored": []
+  },
+  "fill": {
+   "titles": 0.0,
+   "urls": 0.0,
+   "prices": 0.0
+  },
+  "entries": 0,
+  "has_data": false,
+  "elapsed_s": 111.1
+ },
+ {
+  "preset": "mobile_de_search_camoufox",
+  "locale": "de",
+  "run": 1,
+  "params": {
+   "make_id": "3500",
+   "model_id": "20"
+  },
+  "job_id": "req_b8a8e09d60d0ec97cf3f320e",
+  "status": "done",
+  "meta": {
+   "fetch_ok": false,
+   "status_code": 200,
+   "final_url": "https://suchen.mobile.de/fahrzeuge/search.html?isSearchRequest=true&makeModelVariant1.makeId=3500&makeModelVariant1.modelId=20&s=Car&vc=Car",
+   "retries": 1,
+   "proxy_type": "prem_res_rotating",
+   "applied_locale": "de-DE",
+   "applied_timezone": "Europe/Berlin",
+   "error": null
+  },
+  "took_ms": 67899,
+  "job_error": null,
+  "warnings": [
+   "selector_not_found: [data-testid='listing-title-card-view']",
+   "status_code=200",
+   "last attempt: Error: Page.goto: NS_BINDING_ABORTED; maybe frame was detached?",
+   "attempt 2/3 shortened to 17173ms of the requested 31000ms to fit the page-task ceiling",
+   "field 'titles': required selector not found"
+  ],
+  "data": {
+   "titles": [],
+   "urls": [],
+   "prices": [],
+   "details": [],
+   "sponsored": []
+  },
+  "fill": {
+   "titles": 0.0,
+   "urls": 0.0,
+   "prices": 0.0
+  },
+  "entries": 0,
+  "has_data": false,
+  "elapsed_s": 69.1
+ },
+ {
+  "preset": "mobile_de_search_chromium",
+  "locale": "de",
+  "run": 0,
+  "params": {
+   "make_id": "3500",
+   "model_id": "20"
+  },
+  "job_id": "req_5459ae7f107768a6ff71bb85",
+  "status": "done",
+  "meta": {
+   "fetch_ok": false,
+   "status_code": null,
+   "final_url": "https://suchen.mobile.de/fahrzeuge/search.html?isSearchRequest=true&makeModelVariant1.makeId=3500&makeModelVariant1.modelId=20",
+   "retries": 3,
+   "proxy_type": "prem_res_rotating",
+   "applied_locale": "de-DE",
+   "applied_timezone": "Europe/Berlin",
+   "error": null
+  },
+  "took_ms": 103713,
+  "job_error": null,
+  "warnings": [
+   "selector_not_found: [data-testid='listing-title-card-view']",
+   "attempt 2/3 shortened to 18426ms of the requested 31000ms to fit the page-task ceiling",
+   "attempt 3/3 shortened to 7183ms of the requested 31000ms to fit the page-task ceiling",
+   "field 'titles': required selector not found"
+  ],
+  "data": {
+   "titles": [],
+   "urls": [],
+   "prices": [],
+   "details": [],
+   "sponsored": []
+  },
+  "fill": {
+   "titles": 0.0,
+   "urls": 0.0,
+   "prices": 0.0
+  },
+  "entries": 0,
+  "has_data": false,
+  "elapsed_s": 105.1
+ },
+ {
+  "preset": "mobile_de_search_chromium",
+  "locale": "de",
+  "run": 1,
+  "params": {
+   "make_id": "3500",
+   "model_id": "20"
+  },
+  "job_id": "req_f797e1a4410cd3b9924c08b5",
+  "status": "done",
+  "meta": {
+   "fetch_ok": false,
+   "status_code": 200,
+   "final_url": "https://suchen.mobile.de/fahrzeuge/search.html?isSearchRequest=true&makeModelVariant1.makeId=3500&makeModelVariant1.modelId=20",
+   "retries": 3,
+   "proxy_type": "prem_res_rotating",
+   "applied_locale": "de-DE",
+   "applied_timezone": "Europe/Berlin",
+   "error": null
+  },
+  "took_ms": 107084,
+  "job_error": null,
+  "warnings": [
+   "selector_not_found: [data-testid='listing-title-card-view']",
+   "status_code=200",
+   "attempt 2/3 shortened to 18550ms of the requested 31000ms to fit the page-task ceiling",
+   "attempt 3/3 shortened to 5964ms of the requested 31000ms to fit the page-task ceiling",
+   "field 'titles': required selector not found"
+  ],
+  "data": {
+   "titles": [],
+   "urls": [],
+   "prices": [],
+   "details": [],
+   "sponsored": []
+  },
+  "fill": {
+   "titles": 0.0,
+   "urls": 0.0,
+   "prices": 0.0
+  },
+  "entries": 0,
+  "has_data": false,
+  "elapsed_s": 108.1
+ },
+ {
+  "preset": "ozon_search_camoufox",
+  "locale": "ru",
+  "run": 0,
+  "params": {
+   "query": "ноутбук"
+  },
+  "job_id": "req_eb013bcbb460b53c72bd3d3d",
+  "status": "done",
+  "meta": {
+   "fetch_ok": true,
+   "status_code": 200,
+   "final_url": "https://www.ozon.ru/category/noutbuki-planshety-i-elektronnye-knigi-8730/?category_was_predicted=true&deny_category_prediction=true&text=%D0%BD%D0%BE%D1%83%D1%82%D0%B1%D1%83%D0%BA",
+   "retries": 0,
+   "proxy_type": "prem_res_rotating",
+   "applied_locale": "ru-RU",
+   "applied_timezone": "Europe/Moscow",
+   "error": null
+  },
+  "took_ms": 23317,
+  "job_error": null,
+  "warnings": [],
+  "data": {
+   "titles": [
+    "Lunnen Ground 14, Яндекс Фабрика, Ноутбук 14\", AMD Ryzen 7 7730U, RAM 16 ГБ, SSD 512 ГБ, AMD Radeon Graphics, Windows Home, (LL4FAWG02), светло-серый, Русская раскладка",
+    "Lunnen Ноутбук 16\", AMD Ryzen 7 7840HS, RAM 32 ГБ, SSD 1000 ГБ, AMD Radeon 780M, Windows Home, бежевый, Русская раскладка",
+    "Lunnen Ground 14, Яндекс Фабрика, Ноутбук 14\", AMD Ryzen 7 7730U, RAM 16 ГБ, SSD 512 ГБ, AMD Radeon Graphics, Windows Home, (LL4FAWL02), голубой, Русская раскладка",
+    "Lunnen Ноутбук 16\", AMD Ryzen 7 7840HS, RAM 32 ГБ, SSD 1000 ГБ, AMD Radeon 780M, Windows Home, синий, Русская раскладка",
+    "Ноутбук 15.6\", Intel Pentium Gold 6500Y, RAM 16 ГБ, SSD 256 ГБ, Intel UHD Graphics, Windows Home, серый металлик, Русская раскладка",
+    "Ноутбук 15.6\", AMD Ryzen 5 2500U, RAM 32 ГБ, SSD 1024 ГБ, AMD Radeon Vega 8, Windows Pro, серебристый, Русская раскладка",
+    "CBR Ноутбук 15.6\", Intel Celeron N5095, RAM 8 ГБ, SSD 256 ГБ, Intel UHD Graphics, Windows Pro, (LP-SMCR-1503), черный, Русская раскладка",
+    "Compolis для учебы и работы Ноутбук 15.6\", Intel Pentium N4200, RAM 12 ГБ, SSD 256 ГБ, Intel HD Graphics 505, Windows Pro, серый, Русская раскладка"
+   ],
+   "urls": [
+    "https://www.ozon.ru/product/lunnen-ground-14-yandeks-fabrika-noutbuk-14-amd-ryzen-7-7730u-ram-16-gb-ssd-512-gb-amd-radeon-2134295466/",
+    "https://www.ozon.ru/product/lunnen-noutbuk-16-amd-ryzen-7-7840hs-ram-32-gb-ssd-1000-gb-amd-radeon-780m-windows-home-bezhevyy-3291963293/",
+    "https://www.ozon.ru/product/lunnen-ground-14-yandeks-fabrika-noutbuk-14-amd-ryzen-7-7730u-ram-16-gb-ssd-512-gb-amd-2134295608/",
+    "https://www.ozon.ru/product/lunnen-noutbuk-16-amd-ryzen-7-7840hs-ram-32-gb-ssd-1000-gb-amd-radeon-780m-windows-home-siniy-3291964163/",
+    "https://www.ozon.ru/product/noutbuk-15-6-intel-pentium-gold-6500y-ram-16-gb-ssd-256-gb-intel-uhd-graphics-windows-home-4598573932/",
+    "https://www.ozon.ru/product/noutbuk-15-6-amd-ryzen-5-2500u-ram-32-gb-ssd-1024-gb-amd-radeon-vega-8-windows-pro-serebristyy-3603805656/",
+    "https://www.ozon.ru/product/cbr-noutbuk-15-6-intel-celeron-n5095-ram-8-gb-ssd-256-gb-intel-uhd-graphics-windows-pro-lp-smcr-2395809065/",
+    "https://www.ozon.ru/product/compolis-dlya-ucheby-i-raboty-noutbuk-15-6-intel-pentium-n4200-ram-12-gb-ssd-256-gb-intel-4736827320/"
+   ],
+   "prices": [
+    52990.0,
+    100394.0,
+    70000.0,
+    109186.0,
+    32435.0,
+    37187.0,
+    30250.0,
+    35405.0
+   ],
+   "ratings": [
+    4.7,
+    4.7,
+    4.7,
+    4.7,
+    4.8,
+    4.8,
+    4.8,
+    4.9
+   ],
+   "review_counts": [
+    193,
+    187,
+    193,
+    187,
+    4465,
+    332,
+    305,
+    5877
+   ]
+  },
+  "fill": {
+   "titles": 1.0,
+   "urls": 1.0,
+   "prices": 1.0
+  },
+  "entries": 8,
+  "has_data": true,
+  "elapsed_s": 24.0
+ },
+ {
+  "preset": "ozon_search_camoufox",
+  "locale": "ru",
+  "run": 1,
+  "params": {
+   "query": "ноутбук"
+  },
+  "job_id": "req_2349401c547f6b9016a5a4ba",
+  "status": "done",
+  "meta": {
+   "fetch_ok": true,
+   "status_code": 200,
+   "final_url": "https://www.ozon.ru/category/noutbuki-planshety-i-elektronnye-knigi-8730/?category_was_predicted=true&deny_category_prediction=true&text=%D0%BD%D0%BE%D1%83%D1%82%D0%B1%D1%83%D0%BA",
+   "retries": 0,
+   "proxy_type": "prem_res_rotating",
+   "applied_locale": "ru-RU",
+   "applied_timezone": "Europe/Moscow",
+   "error": null
+  },
+  "took_ms": 24450,
+  "job_error": null,
+  "warnings": [],
+  "data": {
+   "titles": [
+    "Lunnen Ground 14, Яндекс Фабрика, Ноутбук 14\", AMD Ryzen 7 7730U, RAM 16 ГБ, SSD 512 ГБ, AMD Radeon Graphics, Windows Home, (LL4FAWG02), светло-серый, Русская раскладка",
+    "Lunnen Ноутбук 16\", AMD Ryzen 7 7840HS, RAM 32 ГБ, SSD 1000 ГБ, AMD Radeon 780M, Windows Home, бежевый, Русская раскладка",
+    "Lunnen Ground 14, Яндекс Фабрика, Ноутбук 14\", AMD Ryzen 7 7730U, RAM 16 ГБ, SSD 512 ГБ, AMD Radeon Graphics, Windows Home, (LL4FAWL02), голубой, Русская раскладка",
+    "Lunnen Ноутбук 16\", AMD Ryzen 7 7840HS, RAM 32 ГБ, SSD 1000 ГБ, AMD Radeon 780M, Windows Home, синий, Русская раскладка",
+    "Ноутбук 15.6\", Intel Pentium Gold 6500Y, RAM 16 ГБ, SSD 256 ГБ, Intel UHD Graphics, Windows Home, серый металлик, Русская раскладка",
+    "Ноутбук 15.6\", AMD Ryzen 5 2500U, RAM 32 ГБ, SSD 1024 ГБ, AMD Radeon Vega 8, Windows Pro, серебристый, Русская раскладка",
+    "CBR Ноутбук 15.6\", Intel Celeron N5095, RAM 8 ГБ, SSD 256 ГБ, Intel UHD Graphics, Windows Pro, (LP-SMCR-1503), черный, Русская раскладка",
+    "Ноутбук 15.6\", Intel Pentium Gold 6500Y, RAM 16 ГБ, SSD 512 ГБ, Windows Home, серый металлик, Русская раскладка"
+   ],
+   "urls": [
+    "https://www.ozon.ru/product/lunnen-ground-14-yandeks-fabrika-noutbuk-14-amd-ryzen-7-7730u-ram-16-gb-ssd-512-gb-amd-radeon-2134295466/",
+    "https://www.ozon.ru/product/lunnen-noutbuk-16-amd-ryzen-7-7840hs-ram-32-gb-ssd-1000-gb-amd-radeon-780m-windows-home-bezhevyy-3291963293/",
+    "https://www.ozon.ru/product/lunnen-ground-14-yandeks-fabrika-noutbuk-14-amd-ryzen-7-7730u-ram-16-gb-ssd-512-gb-amd-2134295608/",
+    "https://www.ozon.ru/product/lunnen-noutbuk-16-amd-ryzen-7-7840hs-ram-32-gb-ssd-1000-gb-amd-radeon-780m-windows-home-siniy-3291964163/",
+    "https://www.ozon.ru/product/noutbuk-15-6-intel-pentium-gold-6500y-ram-16-gb-ssd-256-gb-intel-uhd-graphics-windows-home-4598573932/",
+    "https://www.ozon.ru/product/noutbuk-15-6-amd-ryzen-5-2500u-ram-32-gb-ssd-1024-gb-amd-radeon-vega-8-windows-pro-serebristyy-3603805656/",
+    "https://www.ozon.ru/product/cbr-noutbuk-15-6-intel-celeron-n5095-ram-8-gb-ssd-256-gb-intel-uhd-graphics-windows-pro-lp-smcr-2395809065/",
+    "https://www.ozon.ru/product/noutbuk-15-6-intel-pentium-gold-6500y-ram-16-gb-ssd-512-gb-windows-home-seryy-metallik-3890785230/"
+   ],
+   "prices": [
+    52990.0,
+    100394.0,
+    70000.0,
+    109186.0,
+    32435.0,
+    37187.0,
+    30250.0,
+    35118.0
+   ],
+   "ratings": [
+    4.7,
+    4.7,
+    4.7,
+    4.7,
+    4.8,
+    4.8,
+    4.8,
+    4.8
+   ],
+   "review_counts": [
+    193,
+    187,
+    193,
+    187,
+    4465,
+    332,
+    305,
+    4465
+   ]
+  },
+  "fill": {
+   "titles": 1.0,
+   "urls": 1.0,
+   "prices": 1.0
+  },
+  "entries": 8,
+  "has_data": true,
+  "elapsed_s": 27.0
+ }
+]

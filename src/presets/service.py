@@ -25,10 +25,12 @@ from src.presets.requests import (
     PresetPreviewRequest,
     PresetTestRequest,
 )
+from src.schemas import ProxyGeo, ScrapeRequest
 from src.presets.store import (
     USER_PREFIX,
     PresetAlreadyExists,
     PresetNameInvalid,
+    PresetNotFound,
     PresetStore,
 )
 from src.security.egress import EGRESS_BLOCKED_ERROR, EgressBlocked, assert_navigable
@@ -112,9 +114,24 @@ class PresetService:
         return store.get(name)
 
     def create(self, preset: Preset, store: PresetStore) -> Preset:
+        _validate_request_defaults(preset)
         return store.create(preset)
 
     def update(self, name: str, preset: Preset, store: PresetStore) -> Preset:
+        # Existence first, so a missing target still answers 404 rather than
+        # 422: the name is about the target, the profile is about the payload,
+        # and a caller testing for existence by status code should not have to
+        # read the body. (`create` validates first -- there the name error and
+        # the profile error are both about the payload it just sent.)
+        #
+        # `exists`, never `get`: `get` deserialises, and `_read_preset_file`
+        # returns None for a file whose JSON is broken or whose shape an older
+        # version wrote -- so reading it here would answer 404 for a preset that
+        # is sitting right there, and PUT is exactly how such a file gets
+        # repaired.
+        if not store.builtin.exists(name) and not store.user.exists(name):
+            raise PresetNotFound(name)
+        _validate_request_defaults(preset)
         return store.update(name, preset)
 
     def delete(self, name: str, store: PresetStore) -> None:
@@ -140,6 +157,10 @@ class PresetService:
                 preset = Preset.model_validate(req.preset)
             except ValidationError as exc:
                 raise PresetValidationError(str(exc)) from exc
+            # The third write path: this one stores a caller-supplied preset
+            # whole, so without the guard an impossible profile refused by
+            # `POST /presets` walks in through here.
+            _validate_request_defaults(preset)
             return store.create(preset)
 
         if not req.source:
@@ -293,3 +314,95 @@ class PresetService:
 
 
 preset_service = PresetService()
+
+
+# A url is required to build the request and is never used: only the request
+# profile is under test. `.invalid` is reserved by RFC 2606, so the string
+# cannot collide with a real target even if it reached a log.
+_DEFAULTS_PROBE_URL = "https://preset-defaults.invalid/"
+
+# `materialize()` passes these to `ScrapeRequest` as explicit keyword arguments
+# (materializer.py), so the same key in `request_defaults` is a TypeError there
+# -- not a MaterializeError, so not a 400 either, but a 500 on every scrape off
+# the preset. `proxy_geo` is deliberately absent: it reaches the request through
+# the merged dict, and a preset may legitimately pin it.
+_MATERIALIZER_OWNED_KEYS = ("url", "extract", "preset_meta", "parser_plan")
+
+
+def _validate_request_defaults(preset: Preset) -> None:
+    """Refuse a saved preset the scraper could never run.
+
+    `request_defaults` is a free `dict[str, Any]` and went to the store
+    unexamined, while `ScrapeRequest`'s cross-field rules only run when
+    `materializer.py` builds the request at scrape time. So an impossible
+    profile -- `device='mobile'` with `browser_engine='firefox'`, a
+    camoufox-only knob on chromium, conflicting `spoof_os` -- saved cleanly and
+    then failed EVERY run off that preset, which is the worst place to learn it:
+    the recipe looks wrong while the profile is what is broken. The
+    materializer's own check compares key NAMES against
+    `ScrapeRequest.model_fields` and never the values.
+
+    A dry construction rather than a full `materialize()`: materialising needs a
+    locale and whatever params the `url_template` wants, so it would refuse
+    legitimate presets. Unknown keys stay the materializer's business -- pydantic
+    ignores them here, so this adds no new refusal for them. One profile IS newly
+    unsaveable: `spoof_os` together with a conflicting `fingerprint_profile`,
+    which `/search` can still make work by overriding one of the two. It is
+    broken for every `/scrape/preset` call that does not override, so refusing it
+    is the lesser surprise.
+
+    Here rather than on the `Preset` model itself, because `_read_preset_file`
+    drops a preset whose model refuses to validate: a model-level rule would
+    make an already-stored bad preset vanish from `GET /presets` -- unfixable
+    instead of correctable -- and could fail the self-heal write in
+    `worker_parse.py`, which must never be blocked by a legacy profile.
+    """
+    defaults = dict(preset.request_defaults)
+    owned = [key for key in _MATERIALIZER_OWNED_KEYS if key in defaults]
+    if owned:
+        log.warning("preset %r refused: request_defaults sets %s", preset.name, owned)
+        raise PresetValidationError(
+            f"preset {preset.name!r} request_defaults may not set "
+            f"{owned}: the scraper supplies those per request"
+        )
+    # `model_validate` of a dict, not `ScrapeRequest(url=..., **defaults)`: the
+    # kwargs form raises TypeError (not ValidationError) on a duplicate key, and
+    # a TypeError here is a 500 on a save that used to succeed.
+    try:
+        ScrapeRequest.model_validate({**defaults, "url": _DEFAULTS_PROBE_URL})
+    except ValidationError as exc:
+        log.warning(
+            "preset %r refused: request_defaults invalid (%s)",
+            preset.name, _summarise(exc),
+        )
+        raise PresetValidationError(
+            f"preset {preset.name!r} request_defaults would not build a valid "
+            f"scrape request: {_summarise(exc)}"
+        ) from exc
+
+    # `LocaleProfile.country` is a free string and the materializer derives
+    # `proxy_geo.country_code` from it, where ProxyGeo demands two letters. A
+    # three-letter country saved cleanly and then killed every scrape.
+    for name, locale in preset.locales.items():
+        try:
+            ProxyGeo(country_code=locale.country)
+        except ValidationError as exc:
+            raise PresetValidationError(
+                f"preset {preset.name!r} locale {name!r} country "
+                f"{locale.country!r} is not usable as proxy_geo.country_code: "
+                f"{_summarise(exc)}"
+            ) from exc
+
+
+def _summarise(exc: ValidationError) -> str:
+    """Field and reason, never the value.
+
+    pydantic's `str(exc)` carries `input_value=`, which here is the caller's own
+    `request_defaults` -- proxy pool ids, headers and cookies included. The
+    policy this repo settled on after a name-based denylist failed open
+    (`utils/redaction.py`) is to mask the values and keep the names.
+    """
+    return "; ".join(
+        f"{'.'.join(str(part) for part in error['loc']) or '(root)'}: {error['msg']}"
+        for error in exc.errors()
+    )

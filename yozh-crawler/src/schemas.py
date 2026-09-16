@@ -1,17 +1,31 @@
 from __future__ import annotations
 
+import re
+
 from datetime import date
 from typing import Any, Literal
-from pydantic import BaseModel, Field, HttpUrl
+from pydantic import BaseModel, Field, HttpUrl, field_validator, model_validator
 
 
 ScrapeProxyType = Literal[
     "none", "mobile_shared", "mobile", "res_static", "res_rotating", "dc_static",
     "prem_res_rotating",
 ]
-Device = Literal["desktop", "mobile"]
+# Mirrored from the scraper, which is the only side that reads it: the
+# crawler forwards `device` verbatim, so a value the scraper accepts and
+# this literal has not heard of is refused here -- a 422 about a field the
+# crawler does not use. `legacy_wap` was exactly that.
+Device = Literal["desktop", "mobile", "legacy_wap"]
 WaitUntil = Literal["domcontentloaded", "load", "networkidle"]
 ExtractType = Literal["css", "xpath"]
+# The scraper's post-process vocabulary, mirrored so an unknown op is a 422 at
+# `POST /crawl` rather than a per-page failure 500 pages in. `tests/
+# test_crawler_schema_parity.py` (scraper side) fails if the two lists drift.
+PostProcessOp = Literal[
+    "regex", "strip", "strip_tags", "parse_int", "parse_float", "parse_price",
+    "lowercase", "uppercase", "replace", "base64_decode", "urljoin",
+    "null_if_regex", "unwrap_param",
+]
 ScopeMode = Literal["same-domain", "subdomains", "all", "regex"]
 CrawlJobStatus = Literal["queued", "running", "done", "failed", "cancelled"]
 
@@ -47,15 +61,34 @@ class Cookie(BaseModel):
     sameSite: Literal["Strict", "Lax", "None"] | None = None
 
 
+class PostProcess(BaseModel):
+    op: PostProcessOp
+    args: list[Any] = Field(default_factory=list)
+
+
 class FieldRule(BaseModel):
     selector: str
+    # `type` and `post_process` for the same reason `container` is here: the
+    # crawler reads neither, and `extra="ignore"` threw both away. A crawl
+    # asking for a per-field XPath got the rule's CSS instead, and one asking
+    # for `parse_price` got the raw string -- both silently, in the response's
+    # own data, where a reader has nothing to tell them the recipe was not run.
+    type: ExtractType | None = None
     attr: str = "text"
     all: bool = False
     required: bool = False
+    post_process: list[PostProcess] = Field(default_factory=list)
 
 
 class ExtractRule(BaseModel):
     type: ExtractType
+    # Mirrored verbatim, not because the crawler reads it but because it does
+    # not: pydantic's default `extra="ignore"` dropped it, and `fetcher.py`
+    # forwards what survives. A crawl asking for row scoping then got
+    # document-scoped extraction with every field `all: true` and no warning
+    # at all -- the exact misalignment the scraper added `container` to
+    # remove, reintroduced at the one boundary that does not validate.
+    container: str | None = None
     fields: dict[str, FieldRule]
 
 
@@ -81,15 +114,43 @@ class ScrapeOptions(BaseModel):
 
     session_id: str | None = None
 
+    @model_validator(mode="after")
+    def _legacy_wap_needs_no_render(self) -> "ScrapeOptions":
+        # Mirrored like `container` and the `Device` literal, and for the same
+        # reason: the crawler forwards these two and reads neither, so without
+        # the rule a crawl asking for `legacy_wap` is refused by the scraper on
+        # EVERY page -- a non-retryable 422 per fetch that also charges the
+        # proxy session an error apiece -- instead of once at `POST /crawl`.
+        if self.device == "legacy_wap" and self.render:
+            raise ValueError(
+                "device='legacy_wap' requires render=false: the identity claims "
+                "a phone that predates JavaScript, and the no-JS layout it "
+                "exists for needs no rendering"
+            )
+        return self
+
 
 class CrawlScope(BaseModel):
     mode: ScopeMode = "same-domain"
     include_patterns: list[str] = Field(default_factory=list)
     exclude_patterns: list[str] = Field(default_factory=list)
+
     max_depth: int = 3
     max_pages: int = 500
     per_domain_rps: float = 1.0
     per_domain_concurrency: int = 1
+
+    @field_validator("include_patterns", "exclude_patterns")
+    @classmethod
+    def _patterns_compile(cls, patterns: list[str]) -> list[str]:
+        # Rejected at the boundary; the scope filter compiles them again inside
+        # the worker task, where `re.error` is far more expensive (audit H-15).
+        for pattern in patterns:
+            try:
+                re.compile(pattern)
+            except re.error as exc:
+                raise ValueError(f"invalid regex {pattern!r}: {exc}") from exc
+        return patterns
 
 
 class CrawlRequest(BaseModel):
@@ -120,6 +181,8 @@ class CrawlStats(BaseModel):
     failed: int = 0
     dedup_skipped: int = 0
     out_of_scope: int = 0
+    # Hrefs the link step could not canonicalise or dedup (skipped one by one).
+    links_dropped: int = 0
     retries_total: int = 0
     started_at: float | None = None
     finished_at: float | None = None

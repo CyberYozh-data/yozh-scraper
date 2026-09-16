@@ -12,7 +12,7 @@ import base64
 import logging
 import time
 from dataclasses import dataclass
-from typing import Any, Awaitable, Callable
+from typing import Any, Awaitable, Callable, TypeGuard
 from urllib.parse import parse_qs, urlparse
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -80,10 +80,14 @@ ENGINES: dict[str, EngineProfile] = {
 RunJob = Callable[[list[ScrapeRequest]], Awaitable[list[ScrapeResponse | None]]]
 
 
+def _is_http_url(value: object) -> TypeGuard[str]:
+    return isinstance(value, str) and value.startswith(("http://", "https://"))
+
+
 def _first_http_link(el) -> str | None:
     for anchor in el.iter("a"):
         href = (anchor.get("href") or "").strip()
-        if href.startswith(("http://", "https://")):
+        if _is_http_url(href):
             return href
     return None
 
@@ -144,15 +148,32 @@ def _unwrap_redirect(url: str) -> str:
 def _parse_results(data: dict[str, Any], profile: EngineProfile) -> list[SearchResult]:
     """Turn the preset's per-result HTML blocks into clean (url, title, snippet).
 
-    We parse `result_blocks` (one HTML fragment per organic result) rather than
-    the preset's flat `titles`/`links`/`snippets` arrays: the link selector
-    matches several anchors per result, so those arrays are misaligned and can't
-    be zipped reliably. Parsing per block keeps title/url/snippet together and
-    lets us drop non-organic blocks (no title element) and duplicate URLs.
+    We parse `result_blocks` (one HTML fragment per organic result) so
+    title/url/snippet stay together per result and non-organic blocks (no title
+    element) and duplicate URLs can be dropped.
+
+    When the preset's `links` column is aligned 1:1 with `result_blocks`, that
+    column is AUTHORITATIVE for the URL — a None is a row the preset excluded
+    (bing nulls anything still on bing.com), a non-absolute value is a stub
+    nothing resolved, and both drop the row. Falling back to the block's own
+    anchor for such a row would resurrect exactly what the preset refused:
+    measured, bing's `/ck/a` wrapper re-decoded and shipped as a result its
+    author had nulled. Only a preset with no aligned column at all is parsed
+    from the block, first http anchor and all.
+
+    This is what makes Google work: since 2026-08 every organic href in a Google
+    block is a relative `/goto?url=` stub, so the block carries no http anchor
+    except an occasional `translate.google.com` link, and `_first_http_link`
+    either dropped the result or returned the translate link as its destination.
+    The google_search presets resolve the stubs into `links`
+    (`resolve_redirects`), and this reads the resolved value.
     """
     out: list[SearchResult] = []
     seen: set[str] = set()
-    for block_html in data.get("result_blocks") or []:
+    blocks = data.get("result_blocks") or []
+    links = data.get("links")
+    aligned = links if isinstance(links, list) and len(links) == len(blocks) else None
+    for block_html, link in zip(blocks, aligned if aligned is not None else [None] * len(blocks)):
         if not block_html:
             continue
         try:
@@ -162,8 +183,8 @@ def _parse_results(data: dict[str, Any], profile: EngineProfile) -> list[SearchR
         title_els = el.cssselect(profile.title_sel)
         if not title_els:
             continue
-        url = _first_http_link(el)
-        if not url:
+        url = link if aligned is not None else _first_http_link(el)
+        if not _is_http_url(url):
             continue
         url = _unwrap_redirect(url)
         if url in seen:

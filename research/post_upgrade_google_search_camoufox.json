@@ -1,0 +1,224 @@
+[
+ {
+  "preset": "google_search_camoufox",
+  "locale": "de",
+  "run": 0,
+  "params": {
+   "query": "best laptop 2026"
+  },
+  "job_id": "req_b9b55682206898ad0703a93e",
+  "status": "done",
+  "meta": {
+   "fetch_ok": false,
+   "status_code": 200,
+   "final_url": "https://www.google.com/sorry/index?continue=https://www.google.de/search%3Fq%3Dbest%2Blaptop%2B2026%26gl%3Dde%26hl%3Dde%26sei%3D5c2Zaq3iIqH97_UPrZqS0Ac&hl=de&q=EgRUuXwzGOab59QGIjA4usbANTdfWQDyjqo4OjPi",
+   "retries": 3,
+   "proxy_type": "prem_res_rotating",
+   "applied_locale": "de-DE",
+   "applied_timezone": "Europe/Berlin",
+   "error": null
+  },
+  "took_ms": 36496,
+  "job_error": null,
+  "warnings": [
+   "Captcha/block detected by heuristic",
+   "status_code=200",
+   "attempt 1/3 shortened to 35365ms of the requested 45000ms to fit the page-task ceiling",
+   "attempt 2/3 shortened to 31934ms of the requested 45000ms to fit the page-task ceiling",
+   "attempt 3/3 shortened to 28864ms of the requested 45000ms to fit the page-task ceiling"
+  ],
+  "data": null,
+  "fill": {
+   "titles": 0.0,
+   "links": 0.0
+  },
+  "entries": 0,
+  "has_data": false,
+  "elapsed_s": 39.0
+ },
+ {
+  "preset": "google_search_camoufox",
+  "locale": "de",
+  "run": 1,
+  "params": {
+   "query": "best laptop 2026"
+  },
+  "job_id": "req_8a05a560cc551f28ffcc3adf",
+  "status": "done",
+  "meta": {
+   "fetch_ok": false,
+   "status_code": 200,
+   "final_url": "https://www.google.com/sorry/index?continue=https://www.google.de/search%3Fq%3Dbest%2Blaptop%2B2026%26gl%3Dde%26hl%3Dde%26sei%3D5s2ZasioFY-Vxc8Ptr-8wAE&hl=de&q=EgRd7zVyGOab59QGIjDjQml93cz6F84fLyPBwFgt",
+   "retries": 3,
+   "proxy_type": "prem_res_rotating",
+   "applied_locale": "de-DE",
+   "applied_timezone": "Europe/Berlin",
+   "error": null
+  },
+  "took_ms": 34298,
+  "job_error": null,
+  "warnings": [
+   "Captcha/block detected by heuristic",
+   "status_code=200",
+   "attempt 1/3 shortened to 35887ms of the requested 45000ms to fit the page-task ceiling",
+   "attempt 2/3 shortened to 32352ms of the requested 45000ms to fit the page-task ceiling",
+   "attempt 3/3 shortened to 29069ms of the requested 45000ms to fit the page-task ceiling"
+  ],
+  "data": null,
+  "fill": {
+   "titles": 0.0,
+   "links": 0.0
+  },
+  "entries": 0,
+  "has_data": false,
+  "elapsed_s": 36.0
+ },
+ {
+  "preset": "google_search_camoufox",
+  "locale": "uk",
+  "run": 0,
+  "params": {
+   "query": "best laptop 2026"
+  },
+  "job_id": "req_97bbb97b90b80327a660facb",
+  "status": "done",
+  "meta": {
+   "fetch_ok": false,
+   "status_code": 200,
+   "final_url": "https://www.google.com/sorry/index?continue=https://www.google.co.uk/search%3Fq%3Dbest%2Blaptop%2B2026%26gl%3Dgb%26hl%3Den%26sei%3Dwc2ZaprDKfKm9u8PrLC2sQ8&hl=en&q=EgRQBgzmGMKb59QGIjDrm6qBJxx6ewGevJo5o",
+   "retries": 3,
+   "proxy_type": "prem_res_rotating",
+   "applied_locale": "en-GB",
+   "applied_timezone": "Europe/London",
+   "error": null
+  },
+  "took_ms": 33993,
+  "job_error": null,
+  "warnings": [
+   "Captcha/block detected by heuristic",
+   "status_code=200",
+   "attempt 1/3 shortened to 35863ms of the requested 45000ms to fit the page-task ceiling",
+   "attempt 2/3 shortened to 32375ms of the requested 45000ms to fit the page-task ceiling",
+   "attempt 3/3 shortened to 29442ms of the requested 45000ms to fit the page-task ceiling"
+  ],
+  "data": null,
+  "fill": {
+   "titles": 0.0,
+   "links": 0.0
+  },
+  "entries": 0,
+  "has_data": false,
+  "elapsed_s": 36.1
+ },
+ {
+  "preset": "google_search_camoufox",
+  "locale": "uk",
+  "run": 1,
+  "params": {
+   "query": "best laptop 2026"
+  },
+  "job_id": "req_dea2f0d93bc3a248e14d8262",
+  "status": "done",
+  "meta": {
+   "fetch_ok": false,
+   "status_code": 200,
+   "final_url": "https://www.google.com/sorry/index?continue=https://www.google.co.uk/search%3Fq%3Dbest%2Blaptop%2B2026%26gl%3Dgb%26hl%3Den%26sei%3DwM2ZapjQE-2F9u8Px5Wu8AM&hl=en&q=EgRSJWnFGMCb59QGIjCac4CeJTprAk4g8w30u",
+   "retries": 3,
+   "proxy_type": "prem_res_rotating",
+   "applied_locale": "en-GB",
+   "applied_timezone": "Europe/London",
+   "error": null
+  },
+  "took_ms": 32480,
+  "job_error": null,
+  "warnings": [
+   "Captcha/block detected by heuristic",
+   "status_code=200",
+   "attempt 1/3 shortened to 36265ms of the requested 45000ms to fit the page-task ceiling",
+   "attempt 2/3 shortened to 32776ms of the requested 45000ms to fit the page-task ceiling",
+   "attempt 3/3 shortened to 29721ms of the requested 45000ms to fit the page-task ceiling"
+  ],
+  "data": null,
+  "fill": {
+   "titles": 0.0,
+   "links": 0.0
+  },
+  "entries": 0,
+  "has_data": false,
+  "elapsed_s": 33.0
+ },
+ {
+  "preset": "google_search_camoufox",
+  "locale": "us",
+  "run": 0,
+  "params": {
+   "query": "best laptop 2026"
+  },
+  "job_id": "req_8f636dfd8bd87c9bafcf603b",
+  "status": "done",
+  "meta": {
+   "fetch_ok": false,
+   "status_code": 200,
+   "final_url": "https://www.google.com/sorry/index?continue=https://www.google.com/search%3Fq%3Dbest%2Blaptop%2B2026%26gl%3Dus%26hl%3Den%26sei%3DC86ZauDFGcajkdUPscyioA4&hl=en&q=EgSw-GguGIuc59QGIjB03AlLgCar9LTOI-9DWqz",
+   "retries": 3,
+   "proxy_type": "prem_res_rotating",
+   "applied_locale": "en-GB",
+   "applied_timezone": "Europe/London",
+   "error": null
+  },
+  "took_ms": 110149,
+  "job_error": null,
+  "warnings": [
+   "Captcha/block detected by heuristic",
+   "status_code=200",
+   "attempt 1/3 shortened to 35977ms of the requested 45000ms to fit the page-task ceiling",
+   "attempt 2/3 shortened to 11134ms of the requested 45000ms to fit the page-task ceiling",
+   "attempt 3/3 shortened to 4245ms of the requested 45000ms to fit the page-task ceiling"
+  ],
+  "data": null,
+  "fill": {
+   "titles": 0.0,
+   "links": 0.0
+  },
+  "entries": 0,
+  "has_data": false,
+  "elapsed_s": 111.1
+ },
+ {
+  "preset": "google_search_camoufox",
+  "locale": "us",
+  "run": 1,
+  "params": {
+   "query": "best laptop 2026"
+  },
+  "job_id": "req_3349bba28c785e93c29cc624",
+  "status": "done",
+  "meta": {
+   "fetch_ok": false,
+   "status_code": 200,
+   "final_url": "https://www.google.com/sorry/index?continue=https://www.google.com/search%3Fq%3Dbest%2Blaptop%2B2026%26gl%3Dus%26hl%3Den%26sei%3D-c2Zao_bA_SD9u8PjL_N0Qo&hl=en&q=EgRSJykFGPmb59QGIjCr6gU9MYseYt2Qjcq5Ymw",
+   "retries": 3,
+   "proxy_type": "prem_res_rotating",
+   "applied_locale": "en-GB",
+   "applied_timezone": "Europe/London",
+   "error": null
+  },
+  "took_ms": 91663,
+  "job_error": null,
+  "warnings": [
+   "Captcha/block detected by heuristic",
+   "status_code=200",
+   "attempt 1/3 shortened to 35991ms of the requested 45000ms to fit the page-task ceiling",
+   "attempt 2/3 shortened to 13656ms of the requested 45000ms to fit the page-task ceiling",
+   "attempt 3/3 shortened to 10367ms of the requested 45000ms to fit the page-task ceiling"
+  ],
+  "data": null,
+  "fill": {
+   "titles": 0.0,
+   "links": 0.0
+  },
+  "entries": 0,
+  "has_data": false,
+  "elapsed_s": 93.1
+ }
+]

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Literal
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from src.schemas import Device, ProxyGeo, ScrapeProxyType, Viewport
 from src.security.egress import EgressBlocked, assert_http_scheme
@@ -74,6 +74,23 @@ class SessionCreateRequest(BaseModel):
     proxy_pool_id: str | None = None
     proxy_geo: ProxyGeo | None = None
     ttl_seconds: int = Field(default=86400, ge=300, le=7 * 86400)
+
+    @model_validator(mode="after")
+    def _refuse_a_device_the_login_cannot_use(self) -> "SessionCreateRequest":
+        # The device pins the LOGIN as well as every scrape on the session, and
+        # a login runs JavaScript by definition -- forms, challenges, the lot.
+        # `legacy_wap` claims a phone that predates it, so the credentials would
+        # go out under an identity the page can prove is impossible. The scrape
+        # side answers the same pairing with `render=false`; a login has no such
+        # escape, so the device is refused outright here.
+        if self.device == "legacy_wap":
+            raise ValueError(
+                "device='legacy_wap' cannot be pinned to a session: the login "
+                "runs JavaScript, which that identity claims not to have. Use "
+                "desktop or mobile for the session, and legacy_wap on the "
+                "individual scrape that needs the no-JS layout."
+            )
+        return self
 
 
 class SessionLoginRequest(BaseModel):

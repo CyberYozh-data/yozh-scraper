@@ -313,3 +313,11 @@ def test_stream_events_not_found_returns_404():
     assert resp.status_code == 404
     assert resp.json()["detail"] == "job_not_found"
 
+
+
+def test_create_crawl_malformed_scope_regex_returns_422():
+    """Audit H-15 at the HTTP boundary."""
+    client = _make_client(MagicMock(), MagicMock())
+    resp = client.post("/crawl", json={"seed_url": "https://example.com", "scope": {"include_patterns": ["("]}})
+    assert resp.status_code == 422
+    assert "invalid regex" in resp.text

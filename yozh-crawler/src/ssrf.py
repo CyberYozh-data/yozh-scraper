@@ -12,9 +12,11 @@ connection). This blocks the common metadata/internal-service SSRF vectors.
 from __future__ import annotations
 
 import asyncio
+import codecs
 import ipaddress
 import logging
 import socket
+from typing import NamedTuple
 from urllib.parse import urljoin, urlparse
 
 
@@ -80,29 +82,108 @@ async def host_is_public(host: str) -> bool:
     return bool(ips) and all(_ip_is_public(ip) for ip in ips)
 
 
-async def safe_get(client, url: str, *, check_ssrf: bool = True, max_redirects: int = 5):
-    """GET `url`, validating the host (and every redirect hop) is public.
+def usable_charset(declared: str | None) -> str | None:
+    """The declared charset if Python can actually decode with it, else None.
+
+    A header charset is attacker-and-CMS-supplied text, not a promise. Real
+    responses carry `utf8mb4`, a trailing space, or two charsets merged into
+    one header, and every one of those raises `LookupError` -- both in
+    `bytes.decode` and in `etree.XMLParser(encoding=...)`, which is a hard
+    failure where lxml used to sniff the document's own declaration and carry
+    on. Unknown means "we learned nothing": returning None puts us back on
+    that sniffing path and lets `.text` fall back to utf-8. Deliberately NOT
+    clever about a merged `cp1251, utf-8` -- picking one of two declarations
+    is a guess, and the document's own declaration is the better source.
+    """
+    if not declared:
+        return None
+    name = declared.strip().strip('"\'')
+    if not name:
+        return None
+    try:
+        codecs.lookup(name)
+    except (LookupError, ValueError):
+        return None
+    return name
+
+
+class CappedResponse(NamedTuple):
+    """What `safe_get` hands back: the body up to the cap, and whether it was cut."""
+
+    status_code: int
+    url: str
+    body: bytes
+    # The charset the Content-Type header declared, or None: an XML parser
+    # must be able to tell "declared" from "assumed" and fall back to the
+    # document's own declaration/BOM.
+    charset: str | None
+    truncated: bool
+
+    @property
+    def text(self) -> str:
+        return self.body.decode(self.charset or "utf-8", errors="replace")
+
+
+async def _read_capped(resp, max_bytes: int) -> CappedResponse:
+    """Read at most `max_bytes` of the DECODED body and stop.
+
+    httpx decompresses each raw read before it reaches this loop, so the cap
+    bounds what is kept whatever the Content-Encoding; a 204 KB gzip that
+    inflates to 200 MB used to be materialised whole before the caller's
+    `[:cap]` slice (audit 2026-09-03, H-17: +228 MB RSS measured, in a
+    container with a 1 GiB limit). The cap is soft by one decoded chunk: one
+    64 KiB raw read of a gzip bomb inflates to ~64 MiB before the slice, a
+    transient the limit absorbs; and one chunk past the cap is read (and
+    dropped) only to learn that the body went on.
+    """
+    chunks: list[bytes] = []
+    size = 0
+    try:
+        async for chunk in resp.aiter_bytes():
+            chunks.append(chunk[: max_bytes + 1 - size])
+            size += len(chunks[-1])
+            if size > max_bytes:
+                break
+    finally:
+        await resp.aclose()
+    body = b"".join(chunks)
+    return CappedResponse(
+        status_code=resp.status_code,
+        url=str(resp.url),
+        body=body[:max_bytes],
+        charset=usable_charset(resp.charset_encoding),
+        truncated=len(body) > max_bytes,
+    )
+
+
+async def safe_get(client, url: str, *, max_bytes: int, check_ssrf: bool = True,
+                   max_redirects: int = 5) -> CappedResponse:
+    """GET with the SSRF policy, reading the body up to `max_bytes` decoded.
 
     Raises SSRFError on a non-public host or too many redirects. The client
-    must have follow_redirects disabled — redirects are followed here so each
-    hop is checked.
+    must have follow_redirects disabled -- redirects are followed here so each
+    hop is checked; redirect hops are closed unread.
 
     When `check_ssrf` is False (the request egresses through an upstream proxy,
     so the crawler isn't the SSRF vector and local DNS doesn't reflect the
     proxy's resolution), the host check is skipped and the client follows
     redirects itself.
     """
+    async def _open(target: str, *, follow: bool):
+        return await client.send(client.build_request("GET", target), stream=True, follow_redirects=follow)
+
     if not check_ssrf:
-        return await client.get(url, follow_redirects=True)
+        return await _read_capped(await _open(url, follow=True), max_bytes)
     current = url
     for _ in range(max_redirects + 1):
         host = urlparse(current).hostname
         if not host or not await host_is_public(host):
             raise SSRFError(f"blocked non-public host: {host}")
-        resp = await client.get(current, follow_redirects=False)
+        resp = await _open(current, follow=False)
         location = resp.headers.get("location") if resp.headers else None
         if getattr(resp, "is_redirect", False) and location:
+            await resp.aclose()
             current = urljoin(str(resp.url), location)
             continue
-        return resp
+        return await _read_capped(resp, max_bytes)
     raise SSRFError("too many redirects")

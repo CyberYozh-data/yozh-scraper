@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import asyncio
+
 import pytest
 
 from src.jobs import JobStore
@@ -131,3 +133,43 @@ def testto_slim_page_event_passes_through_non_page_events_unchanged():
         {"type": "cancelled"},
     ]:
         assert to_slim_page_event(ev) == ev
+
+
+@pytest.mark.asyncio
+async def test_engine_init_failure_fails_the_job_and_the_worker_lives(monkeypatch):
+    """Audit H-15: the engine's constructor used to run outside the job's try."""
+    from unittest.mock import MagicMock
+
+    from src import jobs as jobs_mod
+    from src.limiter import DomainRateLimiter
+    from src.settings import Settings
+
+    class _Engine:
+        cancelled = False
+
+        def __init__(self, *, request, **_kw):
+            if "bad" in str(request.seed_url):
+                raise RuntimeError("scope exploded")
+
+        async def run(self):
+            return None
+
+    monkeypatch.setattr(jobs_mod, "CrawlEngine", _Engine)
+    store = JobStore()
+    settings = Settings(workers=1)
+    runner = jobs_mod.JobRunner(store, MagicMock(), DomainRateLimiter(default_rps=1000.0), settings)
+    bad = await store.create(CrawlRequest(seed_url="https://bad.example"))
+    good = await store.create(CrawlRequest(seed_url="https://good.example"))
+    await runner.start()
+    try:
+        await runner.submit(bad.job_id)
+        await runner.submit(good.job_id)
+        for _ in range(50):
+            if store.get(good.job_id).status == "done":
+                break
+            await asyncio.sleep(0.05)
+    finally:
+        await runner.stop()
+    assert store.get(bad.job_id).status == "failed"
+    assert "scope exploded" in (store.get(bad.job_id).error or "")
+    assert store.get(good.job_id).status == "done", "the worker survived the bad job"

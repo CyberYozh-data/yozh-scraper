@@ -54,3 +54,14 @@ def test_dedup_contains():
     d.add("https://a.com/p")
     assert "HTTPS://A.COM/p" in d
     assert "https://b.com/" not in d
+
+
+def test_ipv6_literals_keep_their_brackets():
+    """Audit H-16: a bare `::1:8080` netloc raises on the next parse."""
+    assert canonicalize_url("http://[::1]:8080/x") == "http://[::1]:8080/x"
+    assert canonicalize_url("http://[2001:db8::1]/") == "http://[2001:db8::1]/"
+    assert canonicalize_url("HTTP://[2001:DB8::1]:80/") == "http://[2001:db8::1]/"
+    seen = DedupSet()
+    assert seen.add("http://[::1]:8080/x") is True
+    assert seen.add("http://[::1]:8080/x") is False
+    assert fingerprint("http://[2001:db8::1]/a") != fingerprint("http://[2001:db8::2]/a")

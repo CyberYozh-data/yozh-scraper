@@ -1,7 +1,7 @@
 {
   "name": "amazon_product_chromium",
   "source": "amazon",
-  "description": "Amazon product detail page. Pulls title, price, rating, availability, brand, feature bullets. Works across .com / .co.uk / .de / .fr / .co.jp. ENGINE: Chromium (Playwright). WebGL identity follows this host — an AMD Radeon 780M claim under a Windows UA — via chromium_webgl_identity(); no fingerprint_profile, which the Chromium runner would accept and ignore. MEASURED 2026-08-27 (n=2 per locale, 6 runs per engine, research/preset_audit_dual_engine_2026_08_27.json): 6/6 runs returned data on both engines across de/uk/us. Of the NINE declared fields, rating is the only one that ever came back null — on both de runs here and on the one Camoufox de run that was served German — so every declared field filled on 4/6 runs here and 5/6 on the twin. That null is engine-neutral: rating's post-process regex matches only the English 'out of' phrasing, so it fails on any German-language page. PREFER THIS VARIANT. The twin's de run 0 announced locale en-DE, Amazon served the English page, and price came back 3299.0 for price_raw '€32.99' — the price parser takes its decimal convention from the preset's declared country, not from the page — while this variant derives its locale from the proxy country, announced de-DE on both de runs and parsed 32.99. That margin is one Camoufox de run of two — the other drew bar-DE and Amazon still served German — which at n=2 cannot separate a frequent fault from a rare one; uk and us were indistinguishable across engines. MEASURED 2026-08-28 (retest of the same twenty presets through the same harness after the five audit fixes; n=2 per locale, 92 runs, research/preset_audit_dual_engine_2026_08_28.json): 6/6 runs returned data with all NINE declared fields present on every run -- the harness's entries=7 is the length of the LONGEST list in the payload (len(bullets)), not a field count -- de-DE on both de runs, price 32.99 matching price_raw '32,99€' -- unchanged from 08-27, as expected: this variant never had the locale draw that caused the price defect. rating still null on both de runs (2/6) for the English-only 'out of' regex. uk/us full. The retest's value here is the control: 0 of 12 amazon_product runs across both engines now disagree with their own price_raw, where 08-27 had one (the Camoufox en-DE run). SCHEMA (final review): `rating` now declares its item type as [number, null], not number. It measured null on 3 of 12 runs in the 08-27 record and 4 of 12 in the 08-28 one, across both engines -- the English-only 'out of' regex meeting a German page -- and this preset sets self_heal: true, which hands `output_schema` to the LLM as the target contract (parser_pipeline.run -> generate_selectors). A schema claiming a field can never be null therefore steers a heal against the only behaviour this field has ever been measured to have. Same reason amazon_search's prices/ratings are nullable; this documents the null, it does not fix the regex.",
+  "description": "UPDATE 2026-09-05 (version 3): rating's regex is now the locale-free `(\\d[.,]\\d)` amazon_search uses, so '4,2 von 5 Sternen' parses; the 'out of' / English-only failures described below are history. Amazon product detail page. Pulls title, price, rating, availability, brand, feature bullets. Works across .com / .co.uk / .de / .fr / .co.jp. ENGINE: Chromium (Playwright). WebGL identity follows this host — an AMD Radeon 780M claim under a Windows UA — via chromium_webgl_identity(); no fingerprint_profile, which the Chromium runner would accept and ignore. MEASURED 2026-08-27 (n=2 per locale, 6 runs per engine, research/preset_audit_dual_engine_2026_08_27.json): 6/6 runs returned data on both engines across de/uk/us. Of the NINE declared fields, rating is the only one that ever came back null — on both de runs here and on the one Camoufox de run that was served German — so every declared field filled on 4/6 runs here and 5/6 on the twin. That null is engine-neutral: rating's post-process regex matches only the English 'out of' phrasing, so it fails on any German-language page. PREFER THIS VARIANT. The twin's de run 0 announced locale en-DE, Amazon served the English page, and price came back 3299.0 for price_raw '€32.99' — the price parser takes its decimal convention from the preset's declared country, not from the page — while this variant derives its locale from the proxy country, announced de-DE on both de runs and parsed 32.99. That margin is one Camoufox de run of two — the other drew bar-DE and Amazon still served German — which at n=2 cannot separate a frequent fault from a rare one; uk and us were indistinguishable across engines. MEASURED 2026-08-28 (retest of the same twenty presets through the same harness after the five audit fixes; n=2 per locale, 92 runs, research/preset_audit_dual_engine_2026_08_28.json): 6/6 runs returned data with all NINE declared fields present on every run -- the harness's entries=7 is the length of the LONGEST list in the payload (len(bullets)), not a field count -- de-DE on both de runs, price 32.99 matching price_raw '32,99€' -- unchanged from 08-27, as expected: this variant never had the locale draw that caused the price defect. rating still null on both de runs (2/6) for the English-only 'out of' regex. uk/us full. The retest's value here is the control: 0 of 12 amazon_product runs across both engines now disagree with their own price_raw, where 08-27 had one (the Camoufox en-DE run). SCHEMA (final review): `rating` now declares its item type as [number, null], not number. It measured null on 3 of 12 runs in the 08-27 record and 4 of 12 in the 08-28 one, across both engines -- the English-only 'out of' regex meeting a German page -- and this preset sets self_heal: true, which hands `output_schema` to the LLM as the target contract (parser_pipeline.run -> generate_selectors). A schema claiming a field can never be null therefore steers a heal against the only behaviour this field has ever been measured to have. Same reason amazon_search's prices/ratings are nullable; this documents the null, it does not fix the regex.",
   "kind": "builtin",
   "url_template": "https://www.amazon.{domain}/dp/{asin}",
   "request_defaults": {
@@ -15,7 +15,7 @@
     },
     "stealth": true,
     "wait_until": "domcontentloaded",
-    "timeout_ms": 60000,
+    "timeout_ms": 50000,
     "block_assets": true,
     "browser_engine": "chromium"
   },
@@ -71,7 +71,7 @@
           {
             "op": "regex",
             "args": [
-              "([\\d.]+)\\s+out of"
+              "(\\d[.,]\\d)"
             ]
           },
           {
@@ -168,6 +168,6 @@
   "self_heal": true,
   "prompt_schema": null,
   "llm_extract_prompt": null,
-  "version": 2,
-  "updated_at": 1787875200.0
+  "version": 3,
+  "updated_at": 1788566400
 }

@@ -95,8 +95,10 @@ def test_every_builtin_names_its_engine():
     assert unsuffixed == [], f"builtins without an engine suffix: {unsuffixed}"
 
 
-def test_ten_bases():
-    assert len(BASES) == 10, f"expected 10 base presets, found {len(BASES)}: {BASES}"
+def test_fourteen_bases():
+    """Ten shipped with the dual-engine split; ozon_search, ozon_product,
+    mobile_de_search and mobile_de_ad joined on 2026-09-06."""
+    assert len(BASES) == 14, f"expected 14 base presets, found {len(BASES)}: {BASES}"
 
 
 @pytest.mark.parametrize("base", BASES)
@@ -196,6 +198,22 @@ def test_chromium_variant_keeps_deliberate_stealth_off(base):
     )
 
 
+# A twin measured as walled on its engine ships anyway (test_base_has_both_variants
+# forces the pair) with the verdict in its description -- the google_shopping_camoufox
+# precedent, followed by the ozon_* chromium twins on 2026-09-06. The one thing that
+# description must not lose is where the data comes from: the sibling's name.
+@pytest.mark.parametrize("name,preset", sorted(_builtins().items()))
+def test_a_walled_twin_names_the_twin_that_carries_the_data(name, preset):
+    if "WALLED" not in preset["description"]:
+        pytest.skip("not a walled twin")
+    suffix = next(s for s in ENGINE_SUFFIXES if name.endswith(s))
+    base, engine = name[: -len(suffix)], suffix.lstrip("_")
+    sibling = f"{base}_{'camoufox' if engine == 'chromium' else 'chromium'}"
+    assert sibling in preset["description"], (
+        f"{name} is walled on its engine; its description must send callers to {sibling}"
+    )
+
+
 # `description` sits in MAY_DIFFER_TOP_LEVEL, so every other test in this file
 # is blind to what a description actually claims. That matters for one claim in
 # particular: chromium_webgl_identity() runs only inside stealth_config(), which
@@ -257,6 +275,10 @@ TEMPLATE_PARAMS = {
     "username": "williamhgates",
     "product_id": "5689919121",
     "video_id": "dQw4w9WgXcQ",
+    # mobile.de's own numeric make/model ids (3500/20 = BMW 525) and ad id
+    "make_id": "3500",
+    "model_id": "20",
+    "ad_id": "391420794",
 }
 LOCALE_DERIVED_PLACEHOLDERS = frozenset({"domain", "country", "lang", "lr"})
 

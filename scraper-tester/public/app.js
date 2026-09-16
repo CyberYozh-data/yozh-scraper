@@ -172,6 +172,7 @@ if (_sExtractPreset) _sExtractPreset.addEventListener('change', async (e) => {
     return;
   }
   document.getElementById('s-extract-type').value = pi.type || 'css';
+  document.getElementById('s-extract-container').value = pi.container || '';
   const container = document.getElementById('extract-fields');
   container.innerHTML = '';
   let lossy = false;  // post_process or per-field type can't ride the raw row UI
@@ -740,65 +741,100 @@ async function handleScrapeCancelClick(btnId) {
 // results and preserves expand/collapse state across polls.
 const pollJob = pollJobBatch;
 
+// ─── Device compatibility ─────────────────────────────────────────────────────
+// `render` is `java_script_enabled` on the context, so Legacy WAP with it on
+// ships a feature phone that executes modern JS — the API answers 422. Caught
+// here for the same reason as the camoufox pairing below: the four forms that
+// offer both controls can state it before the request instead of after.
+function warnIfDeviceNeedsNoRender(devId, renderId) {
+  const dev = document.getElementById(devId);
+  const render = document.getElementById(renderId);
+  if (!dev || !render) return true;
+  if (dev.value === 'legacy_wap' && render.checked) {
+    alert('device=legacy_wap requires JS Render to be OFF: the identity ' +
+          'claims a phone that predates JavaScript, and the no-JS layout it ' +
+          'exists for needs no rendering. Untick JS Render.');
+    return false;
+  }
+  return true;
+}
+
+// ─── Device / engine compatibility ────────────────────────────────────────────
+// The API refuses `device=legacy_wap` with camoufox, which owns its own
+// fingerprint and would keep a Firefox identity while the request claimed a
+// feature phone. There is no UI guard for the older `mobile` + firefox rule
+// either, so a caller meets both as a 422 — worth saying here first, since
+// this pair is the one people will reach for while testing /wml by hand.
+function warnIfDeviceEngineClash(devId, engId) {
+  const dev = document.getElementById(devId);
+  const eng = document.getElementById(engId);
+  if (!dev || !eng) return true;
+  if (dev.value === 'legacy_wap' && eng.value === 'camoufox') {
+    alert('device=legacy_wap is not supported with browser_engine=camoufox: ' +
+          'Camoufox owns its fingerprint and would keep its Firefox identity ' +
+          'while the request claimed a feature phone. Use chromium, firefox ' +
+          'or webkit.');
+    return false;
+  }
+  return true;
+}
+
+// ─── Row container ────────────────────────────────────────────────────────────
+// `container` is a RULE-level field: set it and every selector below is matched
+// inside each row, one value per row. Read here rather than per field row,
+// because that is the shape the API takes — and because a per-field version
+// would let two columns disagree about what a row is, which is the defect the
+// feature removes.
+function readContainer(inputId, fields) {
+  const el = document.getElementById(inputId);
+  const value = el ? el.value.trim() : '';
+  if (!value) return null;
+  const notAll = Object.entries(fields).filter(([, f]) => !f.all).map(([n]) => n);
+  if (notAll.length) {
+    alert(`Container is set, so every field is a column: tick "all" for ` +
+          `${notAll.join(', ')} — or clear the container.`);
+    return undefined;  // distinct from "not set": abort the submit
+  }
+  return value;
+}
+
 // ─── Header Presets ───────────────────────────────────────────────────────────
+// Identity headers (`User-Agent`, `sec-ch-ua*`) are deliberately absent: the
+// engine states the only identity its transport can back, and the API drops
+// them from `headers` on every engine — measured, a Symbian UA sent this way
+// never reached the wire on chromium and DID reach it on firefox/webkit,
+// over the wrong TLS with no Client Hints. Shipping them here would be a
+// control that does nothing and reports `ignored_request_field` for its
+// trouble. Read `meta.applied_user_agent` for what actually went out; pick
+// the identity with Engine + Device instead.
 const HEADER_PRESETS = {
-  chrome_win: {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+  en_us: {
     'Accept-Language': 'en-US,en;q=0.9',
     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
-    'sec-ch-ua': '"Chromium";v="124", "Google Chrome";v="124", "Not-A.Brand";v="99"',
-    'sec-ch-ua-platform': '"Windows"',
-    'sec-ch-ua-mobile': '?0',
-  },
-  chrome_mac: {
-    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-    'Accept-Language': 'en-US,en;q=0.9',
-    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
-    'sec-ch-ua': '"Chromium";v="124", "Google Chrome";v="124", "Not-A.Brand";v="99"',
-    'sec-ch-ua-platform': '"macOS"',
-    'sec-ch-ua-mobile': '?0',
-  },
-  firefox_win: {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:125.0) Gecko/20100101 Firefox/125.0',
-    'Accept-Language': 'en-US,en;q=0.5',
-    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
-    'DNT': '1',
-  },
-  mobile_chrome: {
-    'User-Agent': 'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.6367.82 Mobile Safari/537.36',
-    'Accept-Language': 'en-US,en;q=0.9',
-    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
-    'sec-ch-ua': '"Chromium";v="124", "Google Chrome";v="124", "Not-A.Brand";v="99"',
-    'sec-ch-ua-platform': '"Android"',
-    'sec-ch-ua-mobile': '?1',
-  },
-  safari_ios: {
-    'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_4_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4.1 Mobile/15E148 Safari/604.1',
-    'Accept-Language': 'en-US,en;q=0.9',
-    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
   },
   ru_locale: {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
     'Accept-Language': 'ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7',
     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
   },
-  antibot: {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-    'Accept-Language': 'en-US,en;q=0.9',
+  de_locale: {
+    'Accept-Language': 'de-DE,de;q=0.9,en;q=0.8',
     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
-    'sec-ch-ua': '"Chromium";v="124", "Google Chrome";v="124", "Not-A.Brand";v="99"',
-    'sec-ch-ua-platform': '"Windows"',
-    'sec-ch-ua-mobile': '?0',
+  },
+  privacy: {
+    'Accept-Language': 'en-US,en;q=0.9',
+    'DNT': '1',
+    'Sec-GPC': '1',
+  },
+  navigation: {
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
     'sec-fetch-dest': 'document',
     'sec-fetch-mode': 'navigate',
     'sec-fetch-site': 'none',
     'sec-fetch-user': '?1',
     'upgrade-insecure-requests': '1',
-    'DNT': '1',
   },
 };
 
-const MOBILE_PRESETS = new Set(['mobile_chrome', 'safari_ios']);
 
 function applyHeaderPreset(presetKey) {
   const headers = HEADER_PRESETS[presetKey];
@@ -812,9 +848,9 @@ function applyHeaderPreset(presetKey) {
     inputs[0].value = k;
     inputs[1].value = v;
   });
-  // Keep device in sync with preset's form factor to avoid UA/viewport mismatch
-  const deviceSel = document.getElementById('s-device');
-  if (deviceSel) deviceSel.value = MOBILE_PRESETS.has(presetKey) ? 'mobile' : 'desktop';
+  // No form-factor flip any more: the presets no longer claim a device, so
+  // forcing the Device selector from a header choice would override a
+  // deliberate one. Device is the control that actually decides the identity.
 }
 
 document.getElementById('btnApplyPreset').addEventListener('click', () => {
@@ -840,8 +876,6 @@ function applyHeaderPresetBatch(presetKey) {
     inputs[0].value = k;
     inputs[1].value = v;
   });
-  const deviceSel = document.getElementById('b-device');
-  if (deviceSel) deviceSel.value = MOBILE_PRESETS.has(presetKey) ? 'mobile' : 'desktop';
 }
 
 document.getElementById('btnApplyPresetBatch').addEventListener('click', () => {
@@ -1079,6 +1113,8 @@ function buildScrapePayload() {
   }
 
   // Extract
+  if (!warnIfDeviceEngineClash('s-device', 's-browser-engine')) return null;
+  if (!warnIfDeviceNeedsNoRender('s-device', 's-render')) return null;
   const extractType = document.getElementById('s-extract-type').value;
   if (extractType) {
     const fieldRows = document.querySelectorAll('#extract-fields .dynamic-row');
@@ -1100,7 +1136,10 @@ function buildScrapePayload() {
       return null;
     }
     if (Object.keys(fields).length) {
+      const rowContainer = readContainer('s-extract-container', fields);
+      if (rowContainer === undefined) return null;
       payload.extract = { type: extractType, fields };
+      if (rowContainer) payload.extract.container = rowContainer;
     }
   }
 
@@ -1372,6 +1411,8 @@ function buildBatchSharedPayload() {
   if (sessionId) payload.session_id = sessionId;
 
   // Shared extract
+  if (!warnIfDeviceEngineClash('b-device', 'b-browser-engine')) return null;
+  if (!warnIfDeviceNeedsNoRender('b-device', 'b-render')) return null;
   const bExtractType = document.getElementById('b-extract-type').value;
   if (bExtractType) {
     const fieldRows = document.querySelectorAll('#b-extract-fields .dynamic-row');
@@ -1393,7 +1434,10 @@ function buildBatchSharedPayload() {
       return null;
     }
     if (Object.keys(fields).length) {
+      const rowContainer = readContainer('b-extract-container', fields);
+      if (rowContainer === undefined) return null;
       payload.extract = { type: bExtractType, fields };
+      if (rowContainer) payload.extract.container = rowContainer;
     }
   }
 
@@ -1479,6 +1523,12 @@ document.getElementById('btnBatch').addEventListener('click', async () => {
   if (!urls.length) { alert('Add at least one URL (one per line)'); return; }
 
   const shared = buildBatchSharedPayload();
+  // A builder that refused (a bad device/engine or device/render pairing, a
+  // container with a field that is not a column) returns null, and spreading
+  // null yields `{url}` alone -- the batch would go out stripped of its proxy,
+  // extraction and cookies instead of not going out at all. The single-page
+  // handler has always checked; this one did not.
+  if (!shared) return;
   const pages = urls.map(url => ({ ...shared, url }));
 
   document.getElementById('batch-result').innerHTML = '';
@@ -2003,6 +2053,7 @@ function renderWarmupComponent(prefix, container) {
           <div>Before fetching your URL, the browser first opens the site's <b>homepage</b> and dwells briefly, then navigates to the target — in the <b>same</b> browser context.</div>
           <div>This seeds cookies/session so anti-bot gates that only block a <i>cold</i> first hit (e.g. Yandex SmartCaptcha) let the warmed request through. Works on every engine and stacks with Max retries.</div>
           <div>Off by default. Dwell time is the server's <code>WARMUP_DWELL_MS</code> (2500ms).</div>
+          <div><b>Reading the result</b>: <code>warnings</code> distinguishes two outcomes. <code>warmup_failed:</code> means the warmup navigation itself errored. <code>warmup_blocked:</code> means it navigated fine and was redirected to a known challenge path (today Google <code>/sorry/</code> and Yandex <code>/showcaptcha</code>) — the exit was already turned away <i>before</i> your URL was requested, so an empty result afterwards is the site refusing you, not a broken selector. Rotate the exit rather than reworking the recipe. <code>meta.applied_warmup</code> says which page was actually visited, and carries <code>blocked</code> as a boolean so you do not have to read the warning text.</div>
         </div>
       </span>
     </div>
@@ -2502,8 +2553,6 @@ function applyHeaderPresetCrawler(presetKey) {
     inputs[0].value = k;
     inputs[1].value = v;
   });
-  const deviceSel = document.getElementById('c-device');
-  if (deviceSel) deviceSel.value = MOBILE_PRESETS.has(presetKey) ? 'mobile' : 'desktop';
 }
 
 document.getElementById('btnApplyPresetCrawler').addEventListener('click', () => {
@@ -2547,6 +2596,7 @@ applyCrawlerScrapingVisibility();
 
 // ─── Build Crawl payload ─────────────────────────────────────────────────────
 function buildCrawlPayload() {
+  if (!warnIfDeviceNeedsNoRender('c-device', 'c-render')) return null;
   const seed = normalizeUrl(document.getElementById('c-seed-url').value);
   if (!seed) { alert('Seed URL is required'); return null; }
 
@@ -2599,7 +2649,12 @@ function buildCrawlPayload() {
       alert('Extraction is enabled but no fields have both a name and a selector set. Please fill them in or disable extraction.');
       return null;
     }
-    if (Object.keys(fields).length) scrape.extract = { type: extractType, fields };
+    if (Object.keys(fields).length) {
+      const rowContainer = readContainer('c-extract-container', fields);
+      if (rowContainer === undefined) return null;
+      scrape.extract = { type: extractType, fields };
+      if (rowContainer) scrape.extract.container = rowContainer;
+    }
   }
 
   const headerRows = getRowValues('c-headers-list');
@@ -3537,10 +3592,13 @@ function pwReadFields() {
     const all = row.querySelector('input[type="checkbox"]').checked;
     if (name && selector) fields[name] = { selector, attr, all };
   });
-  return {
+  const out = {
     type: document.getElementById('pw-extract-type').value,
     fields,
   };
+  const rowContainer = document.getElementById('pw-extract-container').value.trim();
+  if (rowContainer) out.container = rowContainer;
+  return out;
 }
 
 function pwFillFields(instructions) {
@@ -3548,6 +3606,9 @@ function pwFillFields(instructions) {
   container.innerHTML = '';
   if (!instructions || !instructions.fields) return;
   document.getElementById('pw-extract-type').value = instructions.type || 'css';
+  // Round-trips with pwReadFields: a wizard that showed the fields but not the
+  // row they are scoped to would silently rewrite the recipe on save.
+  document.getElementById('pw-extract-container').value = instructions.container || '';
   for (const [fname, fr] of Object.entries(instructions.fields)) {
     addExtractField('pw-fields');
     const row = container.lastElementChild;
@@ -3594,6 +3655,12 @@ document.getElementById('pw-fetch').addEventListener('click', async () => {
   const pasted = document.getElementById('pw-sample-html').value.trim();
   const pwProxy = collectProxy('pw');
   if (pwProxy === false) return;  // invalid (missing pool) — already alerted
+  // Before `scrapeDefaults`, not before the fetch: an impossible pairing saved
+  // into a preset's defaults fails every later scrape that uses the preset,
+  // not just this sample. The crawler and session forms cannot reach it —
+  // neither offers an engine, so both run the default chromium.
+  if (!warnIfDeviceEngineClash('pw-device', 'pw-browser-engine')) return;
+  if (!warnIfDeviceNeedsNoRender('pw-device', 'pw-render')) return;
 
   // Persist scrape settings for Save (everything except concrete pool_id).
   pwState.scrapeDefaults = {

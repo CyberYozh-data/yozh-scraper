@@ -9,6 +9,15 @@ from .scope import strip_www
 _DEFAULT_PORTS = {"http": 80, "https": 443}
 
 
+def _netloc(host: str, port: int | None) -> str:
+    """Rebuild a netloc from `urlparse`'s pieces: `hostname` strips the brackets
+    off an IPv6 literal, and bare `::1:8080` is a netloc whose `.port` raises
+    on the next parse (audit H-16)."""
+    if ":" in host:
+        host = f"[{host}]"
+    return host if port is None else f"{host}:{port}"
+
+
 def canonicalize_url(url: str) -> str:
     """Normalize a URL so equivalent variants share one fingerprint.
 
@@ -23,7 +32,7 @@ def canonicalize_url(url: str) -> str:
         port = None
     # Strip userinfo — we never want to round-trip credentials through the
     # canonical URL into the scraper / logs / fingerprints.
-    netloc = host if port is None else f"{host}:{port}"
+    netloc = _netloc(host, port)
 
     path = p.path or "/"
     query_items = sorted(parse_qsl(p.query, keep_blank_values=True))
@@ -37,8 +46,7 @@ def fingerprint(url: str) -> str:
     either spelling is one page. Only identity is unified — canonicalize_url
     never rewrites the host, so emitted/queued URLs keep their spelling."""
     p = urlparse(canonicalize_url(url))
-    host = strip_www(p.hostname or "")
-    netloc = host if p.port is None else f"{host}:{p.port}"
+    netloc = _netloc(strip_www(p.hostname or ""), p.port)
     dewww = urlunparse((p.scheme, netloc, p.path, p.params, p.query, ""))
     return hashlib.sha1(dewww.encode("utf-8")).hexdigest()
 
