@@ -26,6 +26,10 @@ from src.schemas import ScrapeRequest
 
 log = logging.getLogger(__name__)
 
+# What ScrapeRequest resolves an absent proxy_type to -- read from the schema so
+# the two cannot drift.
+_DEFAULT_PROXY_TYPE = ScrapeRequest.model_fields["proxy_type"].default  # pylint: disable=unsubscriptable-object
+
 _PLACEHOLDER = re.compile(r"\{(\w+)\}")
 
 # Countries that write prices with a comma decimal separator ("12,34").
@@ -357,9 +361,24 @@ def materialize(
     if resolved_sid is not None:
         merged["session_id"] = resolved_sid
 
+    direct = merged.get("proxy_type", _DEFAULT_PROXY_TYPE) == "none"
     if "proxy_geo" not in merged:
+        # `proxy_country` is an EXIT override -- where to leave from when the
+        # market's own range is refused. With no proxy there is no exit to
+        # steer, so on the direct path the market's own country is the pin
+        # (review on #136: `us` with proxy_country GB announced
+        # en-GB/Europe/London over an Armenian address). The pin itself stays:
+        # without one Chromium does not fall back to "the host" but to its
+        # device default, en-US/America/New_York, and a direct preset's other
+        # locales would all collapse onto it.
+        if direct and locale.proxy_country and locale.proxy_country != locale.country:
+            log.info(
+                "preset %r: locale exit override proxy_country=%s does not apply "
+                "on the direct path; pinning the market country %s",
+                preset.name, locale.proxy_country, locale.country,
+            )
         merged["proxy_geo"] = {
-            "country_code": locale.proxy_country or locale.country
+            "country_code": locale.country if direct else (locale.proxy_country or locale.country)
         }
     else:
         # Escape hatch: a preset/request can pin proxy_geo independent of the
@@ -373,10 +392,11 @@ def materialize(
         )
         log.info(
             "preset %r: proxy_geo pinned to %s by request_defaults/override, "
-            "decoupled from locale exit %s (market country %s)",
+            "decoupled from the locale's %s %s (market country %s)",
             preset.name,
             override_cc,
-            locale.proxy_country or locale.country,
+            "market" if direct else "exit",
+            locale.country if direct else (locale.proxy_country or locale.country),
             locale.country,
         )
 

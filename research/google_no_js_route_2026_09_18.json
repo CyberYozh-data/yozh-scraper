@@ -1,0 +1,110 @@
+{
+ "date": "2026-09-18",
+ "host": "k12",
+ "query": "best laptop 2026",
+ "exit": "prem_res_rotating DE, ip_filter=quality-security",
+ "question": "Before building any anti-detection work, two things had to be settled: (1) is there still a server-rendered Google results page, i.e. any route that needs no JavaScript, and (2) does the community evidence support 'session age / persistent cookies' as what gets past the check.",
+ "endpoint_matrix_curl_cffi_chrome150": [
+  {
+   "variant": "plain /search",
+   "http": 200,
+   "size": 91916,
+   "h3": 0,
+   "url_q_links": 0,
+   "verdict": "JS shell, no results in HTML"
+  },
+  {
+   "variant": "/search&gbv=1 (basic HTML mode)",
+   "http": 302,
+   "redirect": "/sorry",
+   "verdict": "refused outright"
+  },
+  {
+   "variant": "/search&gbv=1 with Nokia UA",
+   "http": 302,
+   "redirect": "/sorry",
+   "verdict": "refused outright"
+  },
+  {
+   "variant": "/search&udm=14",
+   "http": 200,
+   "size": 91983,
+   "h3": 0,
+   "url_q_links": 0,
+   "verdict": "JS shell"
+  },
+  {
+   "variant": "/search&num=20&nfpr=1",
+   "http": 200,
+   "size": 92581,
+   "h3": 0,
+   "url_q_links": 0,
+   "verdict": "JS shell"
+  },
+  {
+   "variant": "/m/search",
+   "http": 200,
+   "size": 92814,
+   "h3": 0,
+   "url_q_links": 0,
+   "verdict": "JS shell"
+  },
+  {
+   "variant": "/xhtml",
+   "http": 403,
+   "size": 1620,
+   "verdict": "refused"
+  },
+  {
+   "variant": "/wml/search",
+   "http": 302,
+   "redirect": "/sorry",
+   "verdict": "closed (measured 0/34 on 09-17)"
+  }
+ ],
+ "our_browser_with_javascript_off": [
+  {
+   "country": "DE",
+   "render": false,
+   "http": 200,
+   "final_url_path": "/httpservice/retry/enablejs",
+   "h3": 0,
+   "results": 0
+  },
+  {
+   "country": "GB",
+   "render": false,
+   "http": 200,
+   "final_url_path": "/httpservice/retry/enablejs",
+   "h3": 0,
+   "results": 0
+  }
+ ],
+ "community_evidence_against_the_session_age_hypothesis": [
+  {
+   "source": "searxng/searxng#6359",
+   "date": "2026-07-25",
+   "who": "emirhansrchggl-cmd",
+   "claim": "cookies lifted from a LOGGED-IN Google session used to return search results; as of 2026-07-25 that no longer works"
+  },
+  {
+   "source": "searxng/searxng#6359",
+   "date": "2026-07-25",
+   "who": "willra1n",
+   "claim": "a new header is set on every new search; JavaScript challenges run continuously to verify the page is being rendered by a real browser, not a headless script -- the same applies to a generated SG_SS cookie"
+  },
+  {
+   "source": "searxng/searxng#6359",
+   "date": "2026-07-23",
+   "who": "yeyuchen198",
+   "claim": "outcomes are IP-related: two of his IPs started returning results while some proxy IPs still return none"
+  },
+  {
+   "source": "searxng/searxng#6570",
+   "date": "2026-08-23",
+   "who": "vojkovic (maintainer)",
+   "claim": "Google are doing TLS inspection; the Nokia UA works again only via curl_cffi impersonating chrome99_android -- measured dead from every egress we own on 2026-09-17"
+  }
+ ],
+ "verdict": "No JavaScript-free route to Google results survives: every JS-free shape is refused (/sorry or 403) and every 200 is the application shell with zero results in the HTML. Results require JS, and with JS the per-search challenge rejects our sessions. The 'persistent profile / session age' idea is refuted at its source: real logged-in session cookies stopped working in July because the challenge is re-run per search rather than trusted per session. Do not build anti-detection work on that premise."
+}

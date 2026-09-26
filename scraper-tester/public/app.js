@@ -1273,7 +1273,7 @@ function renderSearchResults(el, data) {
 }
 
 // Fill the Search-tab Locale dropdown from the *selected engine's* preset
-// locales (google_search_chromium / bing_search_chromium /
+// locales (google_search_camoufox / bing_search_chromium /
 // yandex_search_camoufox — the exact variants ENGINES in src/api/search.py
 // resolves each engine to). The list was a hardcoded us/uk/de/fr/ru/jp, so
 // engine-specific locales — notably Yandex's region set (kz, by, ee, ua, …,
@@ -1282,7 +1282,7 @@ function renderSearchResults(el, data) {
 // Mirrors ENGINES in src/api/search.py — keep the two in lockstep; adding or
 // changing an entry on one side without the other silently breaks this.
 const SEARCH_ENGINE_PRESET = {
-  google: 'google_search_chromium',
+  google: 'google_search_camoufox',
   bing: 'bing_search_chromium',
   yandex: 'yandex_search_camoufox',
 };
@@ -2173,7 +2173,7 @@ function collectProxy(prefix) {
 renderProxyComponent('se', document.getElementById('se-proxy-component'));
 renderWarmupComponent('se', document.getElementById('se-warmup-component'));
 // Search tab uses an empty-value sentinel so collectProxy returns null (= no proxy
-// override, letting the google_search_chromium preset decide). Prepend it to the type select
+// override, letting the engine's own preset decide). Prepend it to the type select
 // that renderProxyComponent just created.
 (function() {
   const typeSel = document.getElementById('se-proxy-type');

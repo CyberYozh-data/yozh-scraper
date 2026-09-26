@@ -1,0 +1,124 @@
+{
+  "date": "2026-09-18",
+  "host": "k12",
+  "engine_under_test": "our deployed API on main fae3e44",
+  "why": "google_reopened_2026_09_18 established that camoufox + www.google.com passes on this host's own egress and fails through the DE/GB/US pool. The maintainer asked whether the same recipe works through Armenian pool exits -- i.e. whether the pool failure is about the COUNTRY (DE/GB/US being farmed against Google) or about the pool ADDRESSES themselves.",
+  "headline": "It is the addresses, not the country. The identical request through prem_res_rotating exits passed 2 of 31 times across AM, GE, KZ and DE, while an interleaved direct-egress control passed 5 of 5 in the same minutes. Rare-country exits are refused exactly like DE/GB/US.",
+  "method": "One request body throughout: camoufox, https://www.google.com/search?q=best+laptop+2026&hl=en, block_assets false, wait_until load, homepage warmup, timeout 34 s, max_retries 1, prem_proxy_options.ip_filter quality-security. Only proxy_type / proxy_geo.country_code varied. The final round alternated direct and AM request by request so that time of day cannot explain the gap.",
+  "runs": {
+    "pool_by_country": {
+      "AM": {
+        "passes": 1,
+        "total": 17
+      },
+      "GE": {
+        "passes": 1,
+        "total": 9
+      },
+      "KZ": {
+        "passes": 0,
+        "total": 3
+      },
+      "DE": {
+        "passes": 0,
+        "total": 2
+      },
+      "combined": {
+        "passes": 2,
+        "total": 31
+      }
+    },
+    "paired_interleaved_final_round": {
+      "direct": {
+        "passes": 5,
+        "total": 5,
+        "h3_range": [
+          8,
+          9
+        ],
+        "goto_range": [
+          49,
+          56
+        ],
+        "took_ms_range": [
+          6402,
+          6811
+        ]
+      },
+      "AM_pool": {
+        "passes": 0,
+        "total": 5,
+        "took_ms_range": [
+          15351,
+          24682
+        ]
+      }
+    },
+    "direct_all_rounds_to_date": {
+      "passes": 36,
+      "total": 36
+    }
+  },
+  "observations": {
+    "exits_are_genuinely_in_country": "applied_timezone came back Asia/Yerevan, Asia/Tbilisi and Asia/Almaty for AM, GE and KZ respectively, so the pool did resolve real in-country addresses and the refusal is not a geo-incoherence artefact.",
+    "the_refusal_is_explicit": "Through the pool the final_url path is /sorry/index at HTTP 200 -- Google names the exit and serves its CAPTCHA wall. One AM run answered HTTP 429. The direct arm lands on /search with 8-9 h3 titles and 49-56 /goto links.",
+    "pool_runs_cost_more": "15-25 s per refused pool run versus 6.4-6.8 s per passing direct run, because the wall is reached after the warmup and the full navigation.",
+    "the_first_two_passes_did_not_reproduce": "An opening round scored AM 1/4 and GE 1/3, which looked like a usable 25-33 % per-attempt rate worth retrying against. Extending the same arms to n=8 and n=6 returned 0/8 and 0/6. This is the second time in this investigation that a lone pass evaporated on repetition; the first was the sticky DE session (1 pass, then 0/7)."
+  },
+  "conclusion": "There is no country in the residential pool that buys back Google. The variable that decides the outcome is whether the request leaves from this host's own address. Shipping the google_* presets with proxy_type none is therefore the only configuration that works today, and the cost of that choice is that those presets cannot rotate (a direct session gets a single attempt) and that Google traffic carries this host's address. A follow-up on the same day excluded coupling between runs and exit mixing inside a run (see coupling_between_runs_excluded): fresh pinned exits fail identically, including one inside this host's own ASN.",
+  "caveat": "36/36 versus 2/31 is a large gap but it is one host, one pool, one provider and one afternoon. Nothing here says the host address stays clean; it says the pool addresses are already burned.",
+  "coupling_between_runs_excluded": {
+    "question": "The maintainer asked whether the runs are coupled -- a pass on the first run and blocks afterwards would point at state carried between iterations, or at exits mixed inside one run.",
+    "what_the_sequences_actually_show": "The pattern is not 'first passes'. Of the eight first-runs through the pool across all rounds, one passed (the sticky DE opener); the two rare-country passes were AM #3 and GE #1, not #0. The real pattern is two passes early in the afternoon and none in the next 45 pooled runs, while direct passed every time throughout.",
+    "code": {
+      "browser": "CamoufoxRunner.fetch enters a fresh AsyncCamoufox per request (no persistent_context, no user-data-dir); Camoufox regenerates its fingerprint per launch (only the OS/WebGL claims are pinned by the profile); cookies and storage_state ride only on an explicit session_id, which none of these runs set.",
+      "proxy": "scrape_runner opens one proxy session per job. With session_type rotating the username carries no session token, so the gateway picks a new exit per TCP connection -- a warmup and the search that follows it can leave from different addresses. With session_type sticky the s-<id> token pins one exit for the whole run and across runs that reuse the id."
+    },
+    "instrument_calibration": {
+      "rotating": "3 runs -> 3 distinct exits",
+      "sticky_same_id_twice": "same exit both times",
+      "sticky_other_id": "different exit",
+      "meta": "applied_prem_targeting echoes the resolved suffix, e.g. c-am-s-<id>-filter-iqs"
+    },
+    "experiment": "One FRESH sticky id per Google run, so the warmup and the search share one pinned exit and no two runs share anything. After each run the exit was learned through the same id via an IP-echo page (recorded as /24). Every exit that passed was to be re-run twice on the same id; two blocked exits were re-run once; two direct runs closed the round.",
+    "results": {
+      "fresh_sticky": {
+        "AM": {
+          "passes": 0,
+          "total": 8
+        },
+        "GE": {
+          "passes": 0,
+          "total": 4
+        }
+      },
+      "distinct_exits": 12,
+      "AM_exit_networks": {
+        "AS12297 Telecom Armenia": 3,
+        "AS44395 Ucom": 1,
+        "AS49800 GNC-Alfa": 2,
+        "AS205368 Fnet": 1,
+        "AS48675 Diananet": 1
+      },
+      "outcomes": "10 of 12 landed on /sorry/index at HTTP 200; the other two (GE) were transport failures with no response",
+      "repeat_after_block_same_exit": {
+        "passes": 0,
+        "total": 2
+      },
+      "repeat_after_pass_same_exit": "did not run -- nothing passed",
+      "direct_control_after": {
+        "passes": 2,
+        "total": 2
+      }
+    },
+    "the_decisive_detail": "Exit 5.77.129.x sits in AS44395 Ucom, the SAME network this host's own address is in, and Google refused it with /sorry while the host's address passed 38 of 38. The verdict is therefore per address, not per ASN, not per country, not per fingerprint and not per session.",
+    "pool_to_date": {
+      "rotating": "2/31",
+      "fresh_sticky_AM_GE": "0/12",
+      "sticky_DE_GB_US_earlier": "1/9",
+      "combined": "3/52"
+    },
+    "direct_to_date": "38/38",
+    "verdict": "No coupling: a fresh browser, a fresh fingerprint and a fresh pinned exit per run reproduce the refusal exactly, and the same host passes in the same minutes. What the pool's addresses share is that Google already knows them as proxy exits."
+  }
+}

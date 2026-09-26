@@ -1,0 +1,320 @@
+{
+ "date": "2026-09-17",
+ "host": "k12",
+ "note": "Assembled from the stdout of the two committed scripts plus two ad-hoc curl loops (direct, and two other whitelisted UAs) run between 02:20 and 02:40Z, after the 108-run sweep; NOT a harness record. No exit addresses recorded. Query 'best laptop 2026'; URL shape and headers (Accept: */*, Cookie: CONSENT=YES+) identical to research/wml_probe_2026_09_11.py, which measured 16/16 direct and 9/16 through prem_res_rotating exits six days earlier.",
+ "browser_deployed_main_fae3e44": [
+  {
+   "country": "DE",
+   "engine": "chromium",
+   "device": "legacy_wap",
+   "render": false,
+   "http": 429,
+   "final": "www.google.com/sorry/index",
+   "retries": 3,
+   "links": 0,
+   "verdict": "Captcha/block detected by heuristic"
+  },
+  {
+   "country": "DE",
+   "engine": "firefox",
+   "device": "legacy_wap",
+   "render": false,
+   "http": 429,
+   "final": "www.google.com/sorry/index",
+   "retries": 3,
+   "links": 0,
+   "verdict": "Captcha/block detected by heuristic"
+  },
+  {
+   "country": "GB",
+   "engine": "chromium",
+   "device": "legacy_wap",
+   "render": false,
+   "http": 429,
+   "final": "www.google.com/sorry/index",
+   "retries": 3,
+   "links": 0,
+   "verdict": "Captcha/block detected by heuristic"
+  },
+  {
+   "country": "GB",
+   "engine": "firefox",
+   "device": "legacy_wap",
+   "render": false,
+   "http": 429,
+   "final": "www.google.com/sorry/index",
+   "retries": 3,
+   "links": 0,
+   "verdict": "Captcha/block detected by heuristic"
+  },
+  {
+   "country": "US",
+   "engine": "chromium",
+   "device": "legacy_wap",
+   "render": false,
+   "http": 429,
+   "final": "www.google.com/sorry/index",
+   "retries": 3,
+   "links": 0,
+   "verdict": "Captcha/block detected by heuristic"
+  },
+  {
+   "country": "US",
+   "engine": "firefox",
+   "device": "legacy_wap",
+   "render": false,
+   "http": 429,
+   "final": "www.google.com/sorry/index",
+   "retries": 3,
+   "links": 0,
+   "verdict": "Captcha/block detected by heuristic"
+  }
+ ],
+ "curl_nokia7610_via_prem_res_rotating": [
+  {
+   "country": "DE",
+   "run": 0,
+   "http": 302,
+   "size": 486,
+   "redirect": "/sorry",
+   "links": 0
+  },
+  {
+   "country": "DE",
+   "run": 1,
+   "http": 302,
+   "size": 486,
+   "redirect": "/sorry",
+   "links": 0
+  },
+  {
+   "country": "GB",
+   "run": 0,
+   "http": 302,
+   "size": 486,
+   "redirect": "/sorry",
+   "links": 0
+  },
+  {
+   "country": "GB",
+   "run": 1,
+   "http": 302,
+   "size": 486,
+   "redirect": "/sorry",
+   "links": 0
+  },
+  {
+   "country": "US",
+   "run": 0,
+   "http": 302,
+   "size": 486,
+   "redirect": "/sorry",
+   "links": 0
+  },
+  {
+   "country": "US",
+   "run": 1,
+   "http": 302,
+   "size": 486,
+   "redirect": "/sorry",
+   "links": 0
+  }
+ ],
+ "curl_other_whitelisted_uas_via_DE": [
+  {
+   "ua": "Nokia7610/2.0 (7.0642.0) SymbianOS/7.0s Series60/2.1 Profile/MIDP-2.0 Configuration/CLDC-1.0",
+   "run": 0,
+   "http": 302,
+   "size": 486,
+   "redirect": "/sorry",
+   "links": 0
+  },
+  {
+   "ua": "Nokia7610/2.0 (7.0642.0) SymbianOS/7.0s Series60/2.1 Profile/MIDP-2.0 Configuration/CLDC-1.0",
+   "run": 1,
+   "http": 302,
+   "size": 486,
+   "redirect": "/sorry",
+   "links": 0
+  },
+  {
+   "ua": "Nokia6230/2.0 (05.50) Profile/MIDP-2.0 Configuration/CLDC-1.1",
+   "run": 0,
+   "http": 302,
+   "size": 486,
+   "redirect": "/sorry",
+   "links": 0
+  },
+  {
+   "ua": "Nokia6230/2.0 (05.50) Profile/MIDP-2.0 Configuration/CLDC-1.1",
+   "run": 1,
+   "http": 302,
+   "size": 486,
+   "redirect": "/sorry",
+   "links": 0
+  }
+ ],
+ "curl_direct_no_proxy": [
+  {
+   "ua": "Nokia7610/2.0 (5.0509.0) ...",
+   "run": 0,
+   "http": 302,
+   "size": 486,
+   "redirect": "/sorry",
+   "links": 0
+  },
+  {
+   "ua": "Nokia7610/2.0 (5.0509.0) ...",
+   "run": 1,
+   "http": 302,
+   "size": 486,
+   "redirect": "/sorry",
+   "links": 0
+  },
+  {
+   "ua": "Chrome/143 desktop",
+   "run": 0,
+   "http": 200,
+   "size": 91990,
+   "redirect": null,
+   "links": 0,
+   "note": "the JS layout, as expected for a modern UA -- the same egress is not /sorry-walled as such"
+  }
+ ],
+ "summary": "/wml with a legacy UA answers 302 -> /sorry from every egress reachable from this host: 0/17 across the home IP, DE/GB/US residential exits, six whitelisted UAs, and both our browser engines. The route the legacy_wap device was shipped for (#130) is closed as of this date; whether Google closed it for everyone or flagged every egress we own cannot be told apart from here, but three residential countries plus the home IP all at 0 makes the former the parsimonious reading. The JS /search path from the same egresses still returns a SERP to curl. Addendum: SearXNG's current recipe -- the same Nokia UA over curl_cffi impersonate='chrome99_android', the fix its maintainer named for Google's TLS inspection on 2026-08-23 -- is 0/6 from here too (direct 0/2, DE/GB exits 0/4). So TLS impersonation does not reopen the route from any egress this host reaches; whether it still works from other egress classes is undetermined. Addendum 2: carrier-ASN exits (GB Three = AS206067 Hutchison 3G UK, US AT&T = AS7018) refuse it just the same, over plain TLS, chrome99_android and the browser path (0/7). Nothing this account can reach opens /wml.",
+ "curl_cffi_impersonate_chrome99_android": {
+  "why": "SearXNG's google engine (searx/engines/google.py at master, 2026-09-17) still sends a Nokia UA to /wml/search but sets impersonate='chrome99_android' per request; its maintainer wrote on 2026-08-23 (issue #6570) that Google 'are doing TLS inspection now' and that curl_cffi impersonation made the Nokia UA work again; the network layer migrated to curl_cffi on 2026-09-03 (PR #6620). This is that exact recipe, run from the worker image with curl_cffi 0.16.3; script: research/wml_refused_2026_09_17_impersonate.py.",
+  "direct_no_proxy": [
+   {
+    "run": 0,
+    "impersonate": "chrome99_android",
+    "http": 302,
+    "size": 486,
+    "redirect": "/sorry",
+    "links": 0
+   },
+   {
+    "run": 1,
+    "impersonate": "chrome99_android",
+    "http": 302,
+    "size": 486,
+    "redirect": "/sorry",
+    "links": 0
+   },
+   {
+    "run": 0,
+    "impersonate": null,
+    "http": 302,
+    "size": 486,
+    "redirect": "/sorry",
+    "links": 0
+   }
+  ],
+  "via_prem_res_rotating": [
+   {
+    "country": "DE",
+    "run": 0,
+    "impersonate": "chrome99_android",
+    "http": 302,
+    "size": 486,
+    "redirect": "/sorry",
+    "links": 0
+   },
+   {
+    "country": "DE",
+    "run": 1,
+    "impersonate": "chrome99_android",
+    "http": 302,
+    "size": 486,
+    "redirect": "/sorry",
+    "links": 0
+   },
+   {
+    "country": "GB",
+    "run": 0,
+    "impersonate": "chrome99_android",
+    "http": 302,
+    "size": 486,
+    "redirect": "/sorry",
+    "links": 0
+   },
+   {
+    "country": "GB",
+    "run": 1,
+    "impersonate": "chrome99_android",
+    "http": 302,
+    "size": 486,
+    "redirect": "/sorry",
+    "links": 0
+   }
+  ],
+  "public_instances": "searx.be answered my client with ITS OWN captcha page (0 results); searx.tiekoetter.com and priv.au 429; search.sapti.me unreachable -- no signal about whether the recipe works from their egresses today. SearXNG's two mid-September 'Bug: google engine' reports (#6729, #6732) were auto-closed for AI-policy with no content."
+ },
+ "carrier_asn_exits": {
+  "why": "The maintainer's hypothesis: a 2004 feature phone is plausible only from a carrier network, so the residential/home egresses were the tell. The account has no LTE category (proxy_type=mobile/mobile_shared -> no_more_proxies, category=lte, total=0 in DE/GB/US/RU), but the premium v2 pool lists carrier ISPs (GB 'Three', 'Vodafone UK'; US 'AT&T Wireless', 'Verizon'; DE 'O2 Deutschland', 'Vodafone Germany', 'Deutsche Telekom AG'), reachable through prem_proxy_options.isp. The exit's ASN org was read via ipinfo (address never recorded).",
+  "product_path_browser": [
+   {
+    "country": "GB",
+    "isp": "Three",
+    "device": "legacy_wap",
+    "render": false,
+    "http": 429,
+    "final": "www.google.com/sorry/index",
+    "retries": 3
+   },
+   {
+    "country": "US",
+    "isp": "AT&T Wireless",
+    "device": "legacy_wap",
+    "render": false,
+    "http": 429,
+    "final": "www.google.com/sorry/index",
+    "retries": 3
+   },
+   {
+    "country": "DE",
+    "isp": "O2 Deutschland",
+    "device": "legacy_wap",
+    "render": false,
+    "http": 429,
+    "final": "www.google.com/sorry/index",
+    "retries": 3
+   }
+  ],
+  "curl_cffi_nokia_ua": [
+   {
+    "country": "GB",
+    "isp": "Three",
+    "exit": 0,
+    "asn_org": "AS206067 Hutchison 3G UK Limited",
+    "plain_tls": "302 /sorry",
+    "chrome99_android": "302 /sorry"
+   },
+   {
+    "country": "GB",
+    "isp": "Three",
+    "exit": 1,
+    "asn_org": "lookup failed",
+    "plain_tls": "302 /sorry",
+    "chrome99_android": "302 /sorry"
+   },
+   {
+    "country": "US",
+    "isp": "AT&T Wireless",
+    "exit": 0,
+    "asn_org": "AS7018 AT&T Enterprises, LLC",
+    "plain_tls": "302 /sorry",
+    "chrome99_android": "timeout (40 s)"
+   },
+   {
+    "country": "US",
+    "isp": "AT&T Wireless",
+    "exit": 1,
+    "asn_org": "AS7018 AT&T Enterprises, LLC",
+    "plain_tls": "302 /sorry",
+    "chrome99_android": "302 /sorry"
+   }
+  ],
+  "verdict": "A genuine mobile-carrier ASN (Hutchison 3G UK, i.e. Three's mobile network) changes nothing: 0/4 with the Nokia UA over both TLS shapes, and 0/3 through the browser path. The carrier hypothesis is measured and closed, with the caveat that an ISP-targeted residential pool exit on a carrier's AS is not proof of a handset-class IP."
+ }
+}

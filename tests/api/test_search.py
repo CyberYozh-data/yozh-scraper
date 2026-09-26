@@ -369,15 +369,64 @@ class TestEngineRouting:
         assert any("Captcha" in w for w in res.warnings)
 
 
+def test_google_search_runs_the_camoufox_twin_on_dot_com():
+    """Pinned on the map itself, not on a word in a description (review on #136:
+    renaming `WALLED` would have let the route slide back to the refused engine
+    with everything green). Measured 2026-09-18: camoufox + www.google.com is
+    the combination that passes; chromium and every ccTLD are refused."""
+    from urllib.parse import urlsplit
+
+    from src.presets.materializer import PresetScrapeRequest, materialize
+
+    assert ENGINES["google"].preset == "google_search_camoufox"
+    preset = PresetStore().get("google_search_camoufox")
+    assert preset.request_defaults["browser_engine"] == "camoufox"
+    for locale in preset.locales:
+        scrape = materialize(preset, PresetScrapeRequest(
+            source=preset.name, preset_params={"query": "x"}, locale=locale))
+        assert urlsplit(str(scrape.url)).hostname == "www.google.com", locale
+
+
+def _store_with_serp_proxy(store, proxy_type: str):
+    """The SERP preset, with `proxy_type` forced to a value that is neither the
+    schema default nor any override under test, so inheritance is observable.
+
+    Wraps rather than writes: the builtin files stay untouched and the preset
+    keeps every other field it ships with.
+    """
+    name = ENGINES["google"].preset
+    patched = store.get(name).model_copy(
+        update={"request_defaults": {**store.get(name).request_defaults,
+                                     "proxy_type": proxy_type}}
+    )
+
+    class _PatchedStore:
+        def __getattr__(self, item):
+            return getattr(store, item)
+
+        def get(self, preset_name: str):
+            return patched if preset_name == name else store.get(preset_name)
+
+    return _PatchedStore()
+
+
 class TestSearchProxy:
     @pytest.mark.asyncio
     async def test_no_override_keeps_preset_proxy(self, store):
-        # Default-off: with no proxy fields, the SERP job keeps the
-        # google_search preset's own proxy (prem_res_rotating) — unchanged behaviour.
+        # Default-off: with no proxy fields, the SERP job inherits whatever the
+        # SERP preset declares. The preset's own value cannot be used as the
+        # expectation any more: since 2026-09-18 it is `none`, which is also
+        # `ScrapeRequest`'s schema default, so an assertion against it passes
+        # even when the inheritance is deleted (measured). The preset is given a
+        # value that is neither the default nor the override under test, which is
+        # the only shape that can fail.
         runner = _Runner(_SERP_DATA)
-        await build_search(SearchRequest(query="x"), store=store, run_job=runner)
-        serp = runner.calls[0][0]
-        assert serp.proxy_type == "prem_res_rotating"
+        await build_search(
+            SearchRequest(query="x"),
+            store=_store_with_serp_proxy(store, "res_rotating"),
+            run_job=runner,
+        )
+        assert runner.calls[0][0].proxy_type == "res_rotating"
 
     @pytest.mark.asyncio
     async def test_override_applied_to_serp(self, store):
@@ -399,27 +448,39 @@ class TestSearchProxy:
 
     @pytest.mark.asyncio
     async def test_override_can_disable_preset_proxy(self, store):
-        # Explicit "none" overrides the preset's prem_res_rotating (distinct from
-        # "field omitted", which keeps the preset default).
+        # Explicit "none" overrides whatever the preset declares (distinct from
+        # "field omitted", which keeps the preset default). The preset must
+        # declare something OTHER than "none" for this to be able to fail --
+        # against the shipped `none` the assertion holds even with the override
+        # stripped out, because "none" is the schema default too.
         runner = _Runner(_SERP_DATA)
         await build_search(
-            SearchRequest(query="x", proxy_type="none"), store=store, run_job=runner
+            SearchRequest(query="x", proxy_type="none"),
+            store=_store_with_serp_proxy(store, "res_rotating"),
+            run_job=runner,
         )
         assert runner.calls[0][0].proxy_type == "none"
 
     @pytest.mark.asyncio
-    async def test_empty_proxy_geo_keeps_locale_default(self, store):
+    @pytest.mark.parametrize("engine", ["google", "bing"])
+    async def test_empty_proxy_geo_keeps_locale_default(self, store, engine):
         # An all-None proxy_geo must NOT wipe the materializer's locale-derived
-        # geo: it should behave as if proxy_geo were omitted.
-        runner = _Runner(_SERP_DATA)
+        # geo: it has to behave exactly as if proxy_geo were omitted. Both paths
+        # derive one -- google's preset has no exit and pins the MARKET country,
+        # bing's exits through the pool and pins the EXIT country -- so the
+        # default engine is covered as well as a pooled one.
+        omitted, empty = _Runner(_SERP_DATA), _Runner(_SERP_DATA)
         await build_search(
-            SearchRequest(query="x", proxy_geo=ProxyGeo()),
-            store=store,
-            run_job=runner,
+            SearchRequest(query="x", engine=engine), store=store, run_job=omitted
         )
-        serp = runner.calls[0][0]
-        assert serp.proxy_geo is not None
-        assert serp.proxy_geo.country_code  # locale default survived
+        await build_search(
+            SearchRequest(query="x", engine=engine, proxy_geo=ProxyGeo()),
+            store=store,
+            run_job=empty,
+        )
+        expected = omitted.calls[0][0].proxy_geo
+        assert expected is not None and expected.country_code  # a real default
+        assert empty.calls[0][0].proxy_geo == expected
 
     @pytest.mark.asyncio
     async def test_override_applied_to_result_scrapes(self, store):

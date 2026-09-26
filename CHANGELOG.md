@@ -4,6 +4,67 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.1.14] - 2026-09-26
+
+Google release. Google had stopped answering this service entirely — a 108-run
+sweep on 2026-09-17 returned data on 0 of 12 `google_search` runs, every one a
+captcha served at HTTP 200, while Bing scored 12 of 12 and Yandex 8 of 8. The
+cause was the exit address, not the recipe: Google refuses the residential
+pool's exits by address. `engine: google` therefore moves to the Camoufox twin,
+on `google.com`, from the service's own egress.
+
+### Changed
+
+- **BREAKING (Google):** `GET /search?engine=google` and the built-in Google
+  presets now resolve to `google_search_camoufox` / `google_shopping_camoufox`,
+  which carry `proxy_type: none` — the SERP is fetched from the address the
+  service itself runs on, not from the proxy pool. A caller that supplies its
+  own proxy still gets it; only the default changed.
+- **BREAKING (Google locales):** every Google locale now requests
+  `www.google.com` with `gl`/`hl` rather than the country domain, so
+  `locale: de` returns `google.com?gl=de&hl=de` instead of `google.de`. The
+  result set and its ordering differ from the country domain. Preset `version`
+  bumps 5 → 6.
+- The chromium Google twins stay on the residential pool and are marked as
+  refused in their descriptions. They remain callable, but they are measured at
+  0 of 3 and are kept off the direct address deliberately: a request known to be
+  refused would spend the one egress the working recipe depends on.
+- A preset that runs on direct egress no longer applies a locale's proxy-country
+  override — there is no exit for it to override. The locale's market country is
+  still pinned, so `locale: de` remains a German browser identity; only the
+  exit-only override is dropped, and dropping it is logged. Presets that run
+  through a proxy are unaffected.
+
+### Added
+
+- `resolve_redirects` on the Google presets resolves the SERP's `/goto` stubs
+  from the service's own address, so `links` carries real destinations on the
+  new route too.
+- Measurement data for the whole investigation under `research/`: the 108-run
+  sweep that found the outage, the isolation matrix that separated engine from
+  domain from exit, the per-country pool calibration, and the end-to-end runs of
+  the shipped configuration.
+
+### Fixed
+
+- The `/search` route is now pinned by tests to the engine map and to
+  `www.google.com` for every locale, instead of to a word in a preset
+  description — renaming that word used to let the route slide back to the
+  refused engine with the suite still green.
+- Re-measured `ozon_*` and `mobile_de_*` descriptions: what each preset returns
+  today, on which engine, and what a refusal looks like.
+- The tester's Search tab no longer advises picking a residential pool for
+  Google, and `src/README.md` no longer names `google_search_chromium` as the
+  SERP source.
+
+### Known limits
+
+- The working route rests on one address, and its budget is finite and not yet
+  measured: the shipped configuration returned 6 of 8 on 2026-09-23, both misses
+  a refusal on that address, after 39 consecutive passes on 09-18 to 09-20.
+- Five of the six Google locales ship the new `.com` shape without an
+  end-to-end measurement; `us` is the measured one.
+
 ## [0.1.13] - 2026-09-16
 
 Extraction-correctness and identity-coherence release: a rule can be scoped to
