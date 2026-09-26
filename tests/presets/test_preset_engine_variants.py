@@ -57,6 +57,18 @@ ENGINE_KEYS = frozenset(
     }
 )
 
+# Bases whose twins may exit differently, each with its reason. Which proxy to
+# exit through is not an engine concern in general -- hence not in ENGINE_KEYS
+# -- but for Google the engine decides whether an egress is worth spending:
+# camoufox passes only from this host's own address, and the chromium twin,
+# measured refused there, must spend a pool exit rather than burn that address
+# (review on #136). Named, not blanket, so the exemption cannot spread; the test
+# below also pins WHICH way round it goes.
+EGRESS_MAY_DIFFER = {
+    "google_search": "camoufox passes only direct; the walled chromium twin stays on the pool",
+    "google_shopping": "camoufox passes only direct; the walled chromium twin stays on the pool",
+}
+
 # Everything else must match byte-for-byte. Expressed as what may differ rather
 # than as a list of what must match, so a field added to `Preset` later is
 # covered by this test on the day it is added instead of being silently exempt.
@@ -133,10 +145,21 @@ def test_twins_differ_only_on_engine_keys(base):
         for key in set(chromium) | set(camoufox)
         if chromium.get(key) != camoufox.get(key)
     }
-    assert differing <= ENGINE_KEYS, (
+    allowed = ENGINE_KEYS | ({"proxy_type"} if base in EGRESS_MAY_DIFFER else set())
+    assert differing <= allowed, (
         f"{base}: request_defaults differ on non-engine keys "
-        f"{sorted(differing - ENGINE_KEYS)}"
+        f"{sorted(differing - allowed)}"
     )
+
+
+@pytest.mark.parametrize("base", sorted(EGRESS_MAY_DIFFER))
+def test_an_egress_exemption_goes_the_way_its_reason_says(base):
+    """The exemption exists for one shape only: the camoufox twin direct, the
+    chromium twin on a real proxy. The reverse -- the walled engine spending
+    the host address -- is exactly what it was written to prevent."""
+    twins = _pairs()[base]
+    assert twins["camoufox"]["request_defaults"].get("proxy_type") == "none"
+    assert twins["chromium"]["request_defaults"].get("proxy_type") not in (None, "none")
 
 
 @pytest.mark.parametrize("base", BASES)

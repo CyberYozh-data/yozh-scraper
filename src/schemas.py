@@ -756,7 +756,11 @@ class SearchRequest(BaseModel):
     )
     locale: str | None = Field(
         default=None,
-        description="Engine locale key (us/uk/de/fr/ru/jp); preset default if unset.",
+        description=(
+            "A key of the engine preset's locales: us/uk/de/fr/ru/jp for google "
+            "and bing, yandex has its own (ru, gb, kz, ...). Unset takes the "
+            "preset's default: us for google and bing, ru for yandex."
+        ),
     )
     limit: int = Field(default=10, ge=1, le=50, description="Max results to return.")
     scrape: bool = Field(
@@ -773,8 +777,9 @@ class SearchRequest(BaseModel):
     )
     # Proxy override for the SERP fetch (and per-result scrapes when scrape=true).
     # When unset, the SERP keeps its engine's own preset's proxy (google ->
-    # google_search_chromium; see api/search.py ENGINES). Useful to route the
-    # Google fetch through a residential/mobile pool that isn't blocked.
+    # google_search_camoufox, whose proxy is `none` since 2026-09-18 because the
+    # premium pool passed 1 of ~15 against Google; see api/search.py ENGINES).
+    # Useful to route the Google fetch through a pool that isn't blocked.
     proxy_type: ScrapeProxyType | None = Field(
         default=None,
         description="Override the SERP preset's proxy_type; preset default if unset.",

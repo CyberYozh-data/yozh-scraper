@@ -1073,3 +1073,58 @@ class TestPresetMetaCarriesTheQuery:
         product preset was never applied, so it is not what the page answers."""
         req = materialize(_amazon_preset(), PresetScrapeRequest(source="amazon_product", preset_params={"asin": "B0", "query": "ignored"}))
         assert req.preset_meta.query is None
+
+
+class TestTheExitOverrideNeedsAnExit:
+    """`proxy_country` steers the EXIT. On the direct path (proxy_type none, or
+    absent -- the schema default) there is none, so the market country is the
+    pin (review on #136: `us` with proxy_country GB announced
+    en-GB/Europe/London over an Armenian address). The pin itself stays: without
+    it Chromium falls back to its device default, en-US/America/New_York, and a
+    direct preset's other locales would lose their identity."""
+
+    @staticmethod
+    def _preset(proxy_type):
+        defaults = {"device": "desktop"} if proxy_type is None else {"device": "desktop", "proxy_type": proxy_type}
+        return _amazon_preset(
+            request_defaults=defaults,
+            locales={
+                "us": LocaleProfile(domain="com", country="US", proxy_country="GB"),
+                "de": LocaleProfile(domain="de", country="DE"),
+            },
+        )
+
+    @staticmethod
+    def _geo(preset, locale, override=None):
+        req = PresetScrapeRequest(source="amazon_product", preset_params={"asin": "X"}, locale=locale,
+                                  request_override=override)
+        scrape = materialize(preset, req)
+        return scrape.proxy_geo.country_code if scrape.proxy_geo else None
+
+    @pytest.mark.parametrize("proxy_type", ["none", None])
+    def test_the_direct_path_pins_the_market_not_the_exit_override(self, proxy_type):
+        assert self._geo(self._preset(proxy_type), "us") == "US"
+
+    @pytest.mark.parametrize("proxy_type", ["none", None])
+    def test_a_direct_locale_without_an_override_keeps_its_identity(self, proxy_type):
+        assert self._geo(self._preset(proxy_type), "de") == "DE"
+
+    def test_a_proxied_preset_still_takes_the_override(self):
+        assert self._geo(self._preset("prem_res_rotating"), "us") == "GB"
+
+    def test_overriding_a_direct_preset_onto_a_proxy_brings_the_override_back(self):
+        assert self._geo(self._preset("none"), "us", {"proxy_type": "prem_res_rotating"}) == "GB"
+
+    def test_an_explicit_geo_on_the_direct_path_is_kept(self):
+        assert self._geo(self._preset("none"), "us", {"proxy_geo": {"country_code": "NL"}}) == "NL"
+
+    @pytest.mark.parametrize("name, expected", [
+        ("google_search_camoufox", "US"), ("google_shopping_camoufox", "US"),
+        ("google_search_chromium", "GB"), ("google_shopping_chromium", "GB"),
+    ])
+    def test_the_google_twins(self, name, expected):
+        preset = _builtin(name)
+        scrape = materialize(preset, PresetScrapeRequest(source=preset.name, preset_params={"query": "t"}, locale="us"))
+        assert scrape.proxy_geo.country_code == expected
+        assert "gl=us" in str(scrape.url)
+

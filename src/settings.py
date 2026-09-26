@@ -121,8 +121,10 @@ class Settings(BaseSettings):
             "which keys on `u=a1`, matched 0 of 10 with uBO on and 10 of 10 "
             "with it off. uBO also rewrites Google's instrumentation "
             "(`www.google.*##+js(set, rwt, noopFunc)`, `||google.com/gen_204?`), "
-            "which is why this switch is worth having while google_search_"
-            "camoufox is blocked 48/48. Note uBO is downloaded at first browser "
+            "which is why this switch is worth having. (That sentence used to "
+            "add 'while google_search_camoufox is blocked 48/48' -- reversed on "
+            "2026-09-18: camoufox is now the twin that answers Google and chromium "
+            "is the refused one.) Note uBO is downloaded at first browser "
             "LAUNCH, not at image build, so its filter lists change under a "
             "container recreate with nothing in this repo recording it."
         ),

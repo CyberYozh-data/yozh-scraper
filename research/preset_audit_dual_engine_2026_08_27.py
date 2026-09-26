@@ -1,4 +1,4 @@
-"""Run all twenty builtin presets AS SHIPPED, both engines, and judge by VALUES.
+"""Run all 28 builtin presets (twenty on 08-27; the four bases #122 added since 09-17) AS SHIPPED, both engines, and judge by VALUES.
 
 Every base ships twice -- `<base>_chromium` and `<base>_camoufox` -- with the
 same URL template, the same selectors and the same request defaults. The only
@@ -63,6 +63,17 @@ _BASES = [
     ("walmart_product",  ["us"],             {"product_id": "5689919121"},  ("title", "price")),
     ("yandex_search",    ["ru", "moscow"],   {"query": "купить ноутбук"},   ("titles", "links")),
     ("youtube_video",    ["global"],         {"video_id": "dQw4w9WgXcQ"},   ("title", "channel")),
+    # The four bases #122 added (2026-09-10), with the params their own
+    # 2026-09-06 measurement used (research/preset_audit_new_bases_2026_09_06.json)
+    # so the numbers stay comparable: 3500/20 is BMW 525 on mobile.de, and the
+    # ad is the one #127 re-measured at 0 of 6 behind Akamai.
+    ("ozon_search",      ["ru"],             {"query": "ноутбук"},          ("titles", "urls", "prices")),
+    # 3972904544 was DELISTED by 2026-09-17: with it the recipe takes the sold-out
+    # path by design (price null, price_last set), so this tuple cannot score
+    # full until a fresh in-stock id replaces it.
+    ("ozon_product",     ["ru"],             {"product_id": "3972904544"},  ("title", "price")),
+    ("mobile_de_search", ["de"],             {"make_id": "3500", "model_id": "20"}, ("titles", "urls", "prices")),
+    ("mobile_de_ad",     ["de"],             {"ad_id": "391420794"},        ("title", "price")),
 ]
 
 # Same params, same must-fill fields, both engines: the only variable is the

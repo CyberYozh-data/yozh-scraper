@@ -1,0 +1,225 @@
+{
+ "date": "2026-09-18",
+ "host": "k12",
+ "engine_under_test": "our deployed API on main fae3e44",
+ "why": "The maintainer refused the 'Google is closed' conclusion and asked for different experiments. It was right: the earlier rounds varied the ROUTE (/wml, endpoint shapes) and the EGRESS, but never crossed ENGINE x HOST x EGRESS on the ordinary /search path. Crossed here, one variable at a time.",
+ "headline": "A working recipe exists today: camoufox + www.google.com + the host's own egress (no proxy) -> 11 of 11 runs returned a real SERP (8-12 h3 titles, 14-68 /goto links) across four different queries, EN and RU, in 5.7-7.6 s.",
+ "variables": {
+  "engine": {
+   "camoufox": "PASS 11/11 direct",
+   "chromium": "block 3/3 direct, same url and settings",
+   "note": "the 2026-09-02 record had the opposite verdict (camoufox walled 24/24, stealth-off chromium through); the balance has flipped"
+  },
+  "host": {
+   "www.google.com": "PASS",
+   "www.google.de / www.google.co.uk / www.google.am": "block 4/4 even on the passing egress",
+   "note": "google.am is geographically COHERENT with this host's Armenian egress and is still refused, so it is the ccTLD itself, not a geo mismatch"
+  },
+  "egress": {
+   "direct (AS44395 Ucom, residential AM)": "PASS 11/11",
+   "prem_res_rotating DE/GB/US": "1 pass in ~15 runs (one sticky DE), i.e. effectively burned for browser sessions",
+   "res_rotating (non-premium)": "transport failure"
+  },
+  "settings_that_do_NOT_matter": {
+   "block_assets": "PASS both on and off",
+   "wait_until": "load and networkidle identical",
+   "stealth": "no effect on either engine",
+   "gl/hl params": "no effect on .com",
+   "session_type=sticky": "0/7 on DE/GB/US -- the single earlier pass did not reproduce"
+  }
+ },
+ "runs": {
+  "camoufox_direct_com": {
+   "passes": 11,
+   "total": 11,
+   "queries": [
+    "best laptop 2026",
+    "ozon.ru отзывы",
+    "python asyncio tutorial",
+    "wildberries доставка"
+   ],
+   "h3_range": [
+    8,
+    12
+   ],
+   "goto_range": [
+    14,
+    68
+   ],
+   "took_ms_range": [
+    5693,
+    7559
+   ]
+  },
+  "chromium_direct_com": {
+   "passes": 0,
+   "total": 3
+  },
+  "camoufox_direct_cctld": {
+   "passes": 0,
+   "total": 4
+  },
+  "camoufox_proxied_any": {
+   "passes": 1,
+   "total": 15
+  },
+  "camoufox_direct_com_rate_ceiling": {
+   "passes": 20,
+   "total": 20,
+   "cadence": "one request per ~15 s, sequential",
+   "elapsed_s": 308,
+   "queries": "20 distinct EN/RU queries",
+   "note": "stop rule was three consecutive blocks; it never triggered, so this is a floor, not the ceiling"
+  },
+  "shipped_recipe_end_to_end": {
+   "google_search_camoufox/us": {
+    "titles": 7,
+    "links": 7,
+    "goto_stubs_resolved": "7 of 7",
+    "examples": [
+     "wired.com",
+     "nytimes.com/wirecutter"
+    ]
+   },
+   "google_shopping_camoufox/us": {
+    "titles": 62,
+    "prices": 62
+   },
+   "google_search_chromium/us": {
+    "result": "blocked",
+    "note": "same egress, same moment"
+   },
+   "caveat": "locale=us only; the other five locales ship the new .com shape unmeasured end to end"
+  },
+  "shopping_specific": {
+   "note": "The 11/11 and the 20/20 are WEB SEARCH (no udm). Shopping's evidence is narrower: the 09-17 sweep's single Google pass in 24 runs was google_shopping_camoufox/us, and the 09-18 end-to-end run returned 62 products with prices. No udm=28 run was made through the isolation matrix."
+  }
+ },
+ "also_open_without_js": {
+  "news.google.com/rss/search": "200, 39-100 real items with titles and sources, answers non-news queries too (ozon.ru 39, python asyncio 20); link targets are news.google.com wrappers that are NOT plain-base64 decodable and follow into a consent page",
+  "scholar.google.com/scholar": "10 real results on 1 of 3 queries, one 429, one empty -- rate-limited but not JS-walled",
+  "trends.google.com/trending/rss": "200 with 10 items",
+  "cse.google.com/cse/element/v1 (keyless)": "403",
+  "google.com/complete/search": "200, suggestions only"
+ },
+ "caveats": "n=11 on one host on one day; the passing egress is this host's own address, so volume is bounded by what that address can spend before it too is refused -- untested. Nothing here says the proxied pool cannot be made to work with a different exit class; it says the one we have is refused for browser sessions today.",
+ "consequences_not_measured": {
+  "attempt_budget": "`proxy_type: none` resolves to DirectSession, whose max_attempts() is 1 (src/proxy/resolver.py), so these four presets are now SINGLE-ATTEMPT: the rotate-on-selector-miss recovery they document (tests/presets/test_google_search_interstitial.py) can no longer fire for Google.",
+  "geo_pin": "`proxy_country: GB` on the `us` locale no longer routes anything, but the materializer still emits proxy_geo from it, so the browser is pinned en-GB/Europe/London over this host's own address. The 31 passes were measured WITHOUT that pin (bare /scrape/page, no proxy_geo).",
+  "search_endpoint": "/search?engine=google moved from the chromium twin to the camoufox twin in the same change.",
+  "SUPERSEDED_2026_09_22": "Review on #136: the chromium twins went back to the pool, so only the two camoufox twins are single-attempt; and on the direct path the locale's proxy_country no longer applies, so `us` pins the market country (en-US), not the GB exit's en-GB/Europe/London."
+ },
+ "scope_of_the_31": {
+  "what_it_is": "31 requests from ONE address -- this dev host's own (AS44395 Ucom, residential AM) -- over one afternoon: 11 across the isolation scripts and 20 in the sequential series.",
+  "what_it_is_not": "Not 31 addresses, and not evidence about a production server: a different host has a different address with its own reputation, and nothing here measures it. Treat it as 'the recipe can work from a clean address', not as 'it will work in production'.",
+  "reproducibility": "The 20-run series was run from a scratch script that was not committed with the record (review on #136, 2026-09-22); it is committed now as google_reopened_2026_09_18_ceiling.py, unchanged. Its stop rule was three consecutive blocks and never fired, so 20/20 is a floor for that cadence, not a ceiling."
+ },
+ "shipped_config_end_to_end_2026_09_23": {
+  "what": "The exact configuration this PR ships, through /scrape/preset/page on the deployed branch head: camoufox twins, direct egress, market-country pin. Script: google_reopened_2026_09_23_shipped_config.py.",
+  "runs": [
+   {
+    "preset": "google_search_camoufox",
+    "locale": "us",
+    "query": "best laptop 2026",
+    "pass": false,
+    "http": 200,
+    "titles": 0,
+    "http_links": 0,
+    "applied_locale": "en-US",
+    "applied_timezone": "Asia/Yerevan",
+    "proxy_type": "none",
+    "took_ms": 7527
+   },
+   {
+    "preset": "google_search_camoufox",
+    "locale": "us",
+    "query": "python asyncio tutorial",
+    "pass": true,
+    "http": 200,
+    "titles": 8,
+    "http_links": 8,
+    "applied_locale": "en-US",
+    "applied_timezone": "Asia/Yerevan",
+    "proxy_type": "none",
+    "took_ms": 6641
+   },
+   {
+    "preset": "google_shopping_camoufox",
+    "locale": "us",
+    "query": "wireless mouse",
+    "pass": true,
+    "http": 200,
+    "titles": 66,
+    "http_links": 0,
+    "applied_locale": "en-US",
+    "applied_timezone": "Asia/Yerevan",
+    "proxy_type": "none",
+    "took_ms": 8550
+   },
+   {
+    "preset": "google_shopping_camoufox",
+    "locale": "us",
+    "query": "mechanical keyboard",
+    "pass": true,
+    "http": 200,
+    "titles": 66,
+    "http_links": 0,
+    "applied_locale": "en-US",
+    "applied_timezone": "Asia/Yerevan",
+    "proxy_type": "none",
+    "took_ms": 10746
+   },
+   {
+    "preset": "google_search_camoufox",
+    "locale": "de",
+    "query": "wärmepumpe kosten",
+    "pass": true,
+    "http": 200,
+    "titles": 9,
+    "http_links": 9,
+    "applied_locale": "de-DE",
+    "applied_timezone": "Asia/Yerevan",
+    "proxy_type": "none",
+    "took_ms": 7133
+   },
+   {
+    "preset": "google_search_camoufox",
+    "locale": "ru",
+    "query": "купить ноутбук",
+    "pass": true,
+    "http": 200,
+    "titles": 9,
+    "http_links": 9,
+    "applied_locale": "ru-RU",
+    "applied_timezone": "Asia/Yerevan",
+    "proxy_type": "none",
+    "took_ms": 10119
+   },
+   {
+    "preset": "google_search_camoufox",
+    "locale": "us",
+    "query": "best laptop 2026",
+    "pass": false,
+    "http": 200,
+    "note": "repeat of the failed run: final_url /sorry/index, block heuristic fired"
+   },
+   {
+    "preset": "google_search_camoufox",
+    "locale": "us",
+    "query": "best laptop 2026",
+    "pass": true,
+    "http": 200,
+    "titles": 8,
+    "note": "second repeat, 12 s later"
+   }
+  ],
+  "totals": {
+   "google_search_camoufox/us": "2 of 4",
+   "google_shopping_camoufox/us": "2 of 2 (66 products each)",
+   "google_search_camoufox/de": "1 of 1 (de-DE)",
+   "google_search_camoufox/ru": "1 of 1 (ru-RU)",
+   "all": "6 of 8"
+  },
+  "reading": "The recipe still answers from this host's address, and the pin now matches the market (en-US, de-DE, ru-RU; zone Asia/Yerevan from the host). But this is the first day the address itself was refused: /sorry on 2 of 8, against 39 of 39 on 09-18..09-20. That is the caveat about 31/31 made concrete -- the address's budget is finite and unmeasured, and every one of these presets is single-attempt, so a refusal is final. Nothing here says how fast the address recovers or what spends it."
+ }
+}

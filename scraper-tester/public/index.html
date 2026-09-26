@@ -1196,8 +1196,8 @@
           <span class="info-icon" tabindex="0">
             i
             <div class="info-tooltip">
-              <div>Google blocks SERP scraping from datacenter IPs. Pick a residential / mobile pool here to route the search (and result scrapes) through it.</div>
-              <div>Leave as <code>default (preset)</code> to use the <code>google_search_chromium</code> preset's own proxy.</div>
+              <div>Leave as <code>default (preset)</code> to use the engine's own preset. For Google that is <code>google_search_camoufox</code> with <b>no proxy</b>: it searches from <b>the scraper host's own address</b>, and every default Google search spends that address's standing with Google, which is limited. Do not loop tests on it. Bing and Yandex default to the premium residential pool.</div>
+              <div>Picking a proxy here routes the search (and result scrapes) through it. For Google, two caveats: Google refused the residential pool's exits by address when we measured them, and the SERP's <code>/goto</code> result links are resolved from the scraper host's own address whatever proxy you pick.</div>
             </div>
           </span>
         </div>

@@ -753,7 +753,9 @@ storing: a profile the scrape endpoints would reject with 422 is refused with
 `extract`, `preset_meta` and `parser_plan` are supplied per request and may not
 be set in `request_defaults`. Each locale's `country` must be usable as
 `proxy_geo.country_code` (two letters), which is what the materializer derives
-from it.
+from it. A locale's `proxy_country`, when set, steers a proxied preset's exit
+instead; on a direct preset (`proxy_type: none`) it does not apply -- there is
+no exit to steer -- and the market `country` stays the pin.
 | `POST /api/v1/presets/{name}/test` | Dry-run on `sample_url` or `sample_html` |
 | `GET /api/v1/presets/llm-models` | Models the configured keys can call |
 
@@ -855,10 +857,14 @@ shipped recipes still use the older shape; they are migrated separately.
 ## Search
 
 `POST /api/v1/search` runs a web search and returns ranked results in one
-**synchronous** call (no `job_id` to poll). It uses the built-in
-`google_search_chromium` preset as the SERP source, parses the organic
-results, and can optionally scrape each result page with the normal
-pipeline.
+**synchronous** call (no `job_id` to poll). It fetches the SERP with the
+engine's built-in preset -- `google_search_camoufox` for `engine: google` (the
+default), `bing_search_chromium` for `bing`, `yandex_search_camoufox` for
+`yandex` -- parses the organic results, and can optionally scrape each result
+page with the normal pipeline. The google preset runs with no proxy, so a
+google search leaves from this host's own address unless the request sets a
+proxy -- and the `/goto` result links on its SERP are resolved from this
+host's address either way.
 
 ```bash
 # SERP only
@@ -873,15 +879,18 @@ curl -s localhost:8000/api/v1/search \
        "scrape": true, "scrape_options": {"raw_html": true}}'
 ```
 
-Request fields: `query` (required), `locale` (`us`/`uk`/`de`/`fr`/`ru`/`jp`,
-default `us`), `limit` (1–50, default 10), `scrape` (bool), `scrape_options`
+Request fields: `query` (required), `engine` (`google`/`bing`/`yandex`, default
+`google`), `locale` (a key of the engine preset's locales: `us`/`uk`/`de`/
+`fr`/`ru`/`jp` for google and bing, yandex has its own list; unset takes the
+preset's default, `us` for google and bing, `ru` for yandex), `limit` (1–50,
+default 10), `scrape` (bool), `scrape_options`
 (forwarded to each result's scrape; internal fields are stripped, `session_id`
 is validated).
 
 Response: `{query, count, results: [{url, title, snippet, scrape?}], took_ms, warnings}`.
 A blocked/empty SERP degrades to `count: 0` plus a `warnings` entry (HTTP 200)
-rather than an error — results depend on a working residential proxy for the
-SERP fetch. A SERP that answered a different query than the one asked (an
+rather than an error — results depend on a working egress for the SERP fetch
+(this host's own address for google, a residential exit for bing and yandex). A SERP that answered a different query than the one asked (an
 engine's autocorrect, or Bing's cached page for someone else's query) carries
 a `serp_query_mismatch` warning next to its results — counts only, never the
 page's text.

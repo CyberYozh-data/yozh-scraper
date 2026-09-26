@@ -1,6 +1,6 @@
 """Web search endpoint: SERP + optional scrape in one call.
 
-Reuses the built-in `google_search_chromium` preset as the SERP source — materialize it
+Reuses the built-in `google_search_camoufox` preset as the SERP source — materialize it
 with the query, run it through the normal job queue, parse the organic result
 blocks, and (optionally) scrape each result page with the same pipeline. The
 search logic is factored into `build_search` with an injected `run_job` so it
@@ -57,15 +57,20 @@ class EngineProfile:
 
 # One entry per engine — adding a fourth is a new preset + one line here.
 #
-# Each entry names an engine-suffixed variant explicitly. The three chosen here
-# are the engines these presets used before they were split in two, so this
-# endpoint's behaviour is unchanged by the split: google and bing ran Chromium,
+# Each entry names an engine-suffixed variant explicitly. Two of them are the
+# engines these presets used before they were split in two: bing ran Chromium,
 # yandex ran Camoufox (which is why it was adopted — it passes SmartCaptcha).
+# Google MOVED to Camoufox on 2026-09-18: measured that day, camoufox returns a
+# SERP 11 of 11 where chromium is refused 3 of 3 on the same url, settings and
+# egress, and `google_search_chromium` now carries the WALLED marker. Pointing
+# this map at a walled preset would aim every /search caller at the engine that
+# does not answer — `tests/api/test_search.py` pins this entry and that every
+# locale of it materializes to www.google.com.
 # Letting a caller pick the other twin through /search is deliberately not
 # wired up here; it is a separate change.
 ENGINES: dict[str, EngineProfile] = {
     "google": EngineProfile(
-        "google_search_chromium", "h3", "div[data-sncf='1'], .VwiC3b"
+        "google_search_camoufox", "h3", "div[data-sncf='1'], .VwiC3b"
     ),
     "bing": EngineProfile(
         "bing_search_chromium", "h2", ".b_caption p, p.b_lineclamp2"
